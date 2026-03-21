@@ -239,10 +239,6 @@
 
   <!-- Contenido -->
   <div class="wrap">
-    <div class="month-bar">
-      <label>Mes</label>
-      <input type="month" id="monthPicker" />
-    </div>
 
     <!-- KPIs -->
     <div class="kpi-grid">
@@ -311,9 +307,7 @@
     const API = "/api";
 
     const now = new Date();
-    const monthPicker = document.getElementById("monthPicker");
-    monthPicker.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
-    monthPicker.addEventListener("change", load);
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
 
     function el(id) { return document.getElementById(id); }
 
@@ -453,7 +447,7 @@
     }
 
     async function load() {
-      const month = monthPicker.value;
+      const month = currentMonth;
       if (!month) return;
       const cached = cacheGet(month);
       if (cached) {
