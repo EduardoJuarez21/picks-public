@@ -1,0 +1,458 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Picks · Estadísticas</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 64 64'%3E%3Crect width='64' height='64' rx='12' fill='%230b0f17'/%3E%3Cpath d='M14 20h36v6H14zm0 18h36v6H14z' fill='%237aa7ff'/%3E%3C/svg%3E">
+  <style>
+    :root {
+      --bg:     #0b0f17;
+      --card:   rgba(255,255,255,.06);
+      --stroke: rgba(255,255,255,.12);
+      --text:   rgba(255,255,255,.92);
+      --muted:  rgba(255,255,255,.5);
+      --ok:     #2fe28f;
+      --bad:    #ff5b6e;
+      --accent: #7aa7ff;
+      --r:      18px;
+      --mono:   'SF Mono', 'Fira Code', monospace;
+      --shadow: 0 18px 60px rgba(0,0,0,.45);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
+
+    /* ── Hero ── */
+    .hero {
+      background: linear-gradient(160deg, #0d1525 0%, #0b0f17 60%);
+      border-bottom: 1px solid var(--stroke);
+      padding: 48px 20px 40px;
+      text-align: center;
+    }
+    .hero-logo {
+      width: 56px; height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #1a2540, #0d1525);
+      border: 1px solid var(--stroke);
+      display: inline-flex; align-items: center; justify-content: center;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-size: 32px; font-weight: 700; letter-spacing: -.5px;
+      background: linear-gradient(135deg, #fff 40%, var(--accent));
+      -webkit-background-clip: text; -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero p {
+      color: var(--muted); margin-top: 8px; font-size: 15px;
+    }
+
+    /* ── CTA Telegram ── */
+    .tg-cta {
+      display: inline-flex; align-items: center; gap: 10px;
+      margin-top: 28px;
+      padding: 14px 28px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #229ED9, #1a7db5);
+      color: #fff; font-weight: 700; font-size: 15px;
+      text-decoration: none;
+      box-shadow: 0 8px 32px rgba(34,158,217,.35);
+      transition: transform .15s, box-shadow .15s;
+    }
+    .tg-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(34,158,217,.5);
+    }
+    .tg-cta svg { flex-shrink: 0; }
+
+    /* ── Wrap ── */
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 36px 20px 60px;
+    }
+
+    /* ── Selector de mes ── */
+    .month-bar {
+      display: flex; align-items: center; gap: 12px;
+      margin-bottom: 28px;
+    }
+    .month-bar label { color: var(--muted); font-size: 12px; }
+    .month-bar input[type="month"] {
+      background: rgba(255,255,255,.06);
+      border: 1px solid var(--stroke);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 7px 12px;
+      font-size: 13px;
+    }
+
+    /* ── KPI Grid ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .kpi-card {
+      background: linear-gradient(180deg, rgba(255,255,255,.08), rgba(255,255,255,.04));
+      border: 1px solid var(--stroke);
+      border-radius: var(--r);
+      padding: 18px 16px;
+      text-align: center;
+    }
+    .kpi-label { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; color: var(--muted); }
+    .kpi-value { font-size: 28px; font-weight: 700; margin: 6px 0 2px; }
+    .kpi-value.accent { color: var(--accent); }
+    .kpi-value.ok     { color: var(--ok); }
+    .kpi-value.bad    { color: var(--bad); }
+    .kpi-sub { font-size: 11px; color: var(--muted); }
+
+    /* ── Section title ── */
+    .section-title {
+      font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+      color: var(--muted); margin: 28px 0 12px;
+    }
+
+    /* ── Liga rows ── */
+    .league-list { display: grid; gap: 10px; }
+
+    .league-row {
+      background: linear-gradient(180deg, rgba(255,255,255,.07), rgba(255,255,255,.03));
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      padding: 12px 14px;
+      display: grid; gap: 8px;
+    }
+    .league-top {
+      display: flex; align-items: center; justify-content: space-between; gap: 8px;
+    }
+    .league-name { font-weight: 600; font-size: 13px; }
+    .league-right { display: flex; align-items: center; gap: 8px; flex-shrink: 0; }
+
+    .wr-badge {
+      font-size: 11px; font-weight: 700; font-family: var(--mono);
+      padding: 2px 8px; border-radius: 999px;
+      border: 1px solid rgba(255,255,255,.15);
+      color: var(--muted);
+    }
+    .wr-badge.good { color: var(--ok); border-color: rgba(47,226,143,.4); background: rgba(47,226,143,.1); }
+    .wr-badge.bad  { color: var(--bad); border-color: rgba(255,91,110,.4); background: rgba(255,91,110,.1); }
+
+    .pnl-inline { font-size: 12px; font-family: var(--mono); font-weight: 600; color: var(--muted); }
+    .pnl-inline.pos { color: var(--ok); }
+    .pnl-inline.neg { color: var(--bad); }
+
+    .league-meta { font-size: 11px; color: var(--muted); }
+
+    .bar-track {
+      height: 5px; border-radius: 99px;
+      background: rgba(255,255,255,.07);
+      overflow: hidden; display: flex;
+    }
+    .bar-seg { height: 100%; }
+    .bar-seg.win     { background: var(--ok); }
+    .bar-seg.lose    { background: var(--bad); }
+    .bar-seg.push    { background: rgba(255,255,255,.3); }
+    .bar-seg.pending { background: rgba(255,255,255,.12); }
+
+    /* ── Historial picks ── */
+    .picks-table { width: 100%; border-collapse: collapse; font-size: 12px; }
+    .picks-table th {
+      text-align: left; font-size: 10px; text-transform: uppercase;
+      letter-spacing: .06em; color: var(--muted);
+      padding: 6px 10px; border-bottom: 1px solid var(--stroke);
+    }
+    .picks-table td {
+      padding: 9px 10px; border-bottom: 1px solid rgba(255,255,255,.05);
+      vertical-align: middle;
+    }
+    .picks-table tr:last-child td { border-bottom: none; }
+    .picks-table tbody tr:hover { background: rgba(255,255,255,.03); }
+
+    .badge {
+      display: inline-flex; align-items: center;
+      padding: 3px 7px; border-radius: 6px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.06);
+      font-size: 11px; font-weight: 600; font-family: var(--mono);
+    }
+    .res { font-weight: 700; font-family: var(--mono); }
+    .res.g { color: var(--ok); }
+    .res.p { color: var(--bad); }
+    .res.n { color: var(--muted); }
+    .res.pend { color: rgba(255,255,255,.3); font-style: italic; }
+
+    .decision-bet    { color: var(--accent); font-weight: 600; }
+    .decision-no-bet { color: var(--muted); }
+
+    /* ── Empty / loading ── */
+    .empty {
+      text-align: center; color: var(--muted);
+      padding: 40px 20px; font-size: 13px;
+    }
+
+    /* ── Footer ── */
+    .footer {
+      text-align: center; color: var(--muted);
+      font-size: 11px; padding: 24px 20px;
+      border-top: 1px solid var(--stroke);
+    }
+
+    /* ── Mobile ── */
+    @media (max-width: 600px) {
+      .hero h1 { font-size: 24px; }
+      .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .picks-table th:nth-child(4),
+      .picks-table td:nth-child(4),
+      .picks-table th:nth-child(5),
+      .picks-table td:nth-child(5) { display: none; }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hero -->
+  <div class="hero">
+    <div class="hero-logo">
+      <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
+        <path d="M14 20h36v6H14zm0 18h36v6H14z" fill="#7aa7ff"/>
+      </svg>
+    </div>
+    <h1>Picks Deportivos</h1>
+    <p>Estadísticas reales · Transparencia total</p>
+    <a class="tg-cta" href="https://t.me/PicksEJTbot" target="_blank" rel="noopener">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/>
+      </svg>
+      Unirse al canal de Telegram
+    </a>
+  </div>
+
+  <!-- Contenido -->
+  <div class="wrap">
+    <div class="month-bar">
+      <label>Mes</label>
+      <input type="month" id="monthPicker" />
+    </div>
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">BET Picks</div>
+        <div class="kpi-value accent" id="kpiTotal">--</div>
+        <div class="kpi-sub" id="kpiSub">del mes</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Win Rate</div>
+        <div class="kpi-value" id="kpiWr">--%</div>
+        <div class="kpi-sub" id="kpiWrSub">resueltos</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">PnL (1u)</div>
+        <div class="kpi-value" id="kpiPnl">--</div>
+        <div class="kpi-sub">unidades</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ganados</div>
+        <div class="kpi-value ok" id="kpiG">--</div>
+        <div class="kpi-sub">picks G</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Perdidos</div>
+        <div class="kpi-value bad" id="kpiP">--</div>
+        <div class="kpi-sub">picks P</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Pendientes</div>
+        <div class="kpi-value" id="kpiPend">--</div>
+        <div class="kpi-sub">por resolver</div>
+      </div>
+    </div>
+
+    <!-- Por liga -->
+    <div class="section-title">Por liga</div>
+    <div class="league-list" id="leagueList">
+      <div class="empty">Cargando…</div>
+    </div>
+
+    <!-- Historial de picks BET -->
+    <div class="section-title" style="margin-top:32px;">Picks del mes</div>
+    <div style="background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid var(--stroke);border-radius:var(--r);overflow:hidden;">
+      <table class="picks-table">
+        <thead>
+          <tr>
+            <th>Partido</th>
+            <th>Mercado</th>
+            <th>Pick</th>
+            <th>Cuota</th>
+            <th>Decision</th>
+            <th>Resultado</th>
+          </tr>
+        </thead>
+        <tbody id="picksTbody">
+          <tr><td colspan="6" class="empty">Cargando…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <div class="footer">Datos actualizados en tiempo real · Solo picks BET visibles</div>
+
+  <script>
+    const API = "/api";
+
+    const now = new Date();
+    const monthPicker = document.getElementById("monthPicker");
+    monthPicker.value = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
+    monthPicker.addEventListener("change", load);
+
+    function el(id) { return document.getElementById(id); }
+
+    function buildLeagueSeries(items) {
+      const map = new Map();
+      for (const it of items) {
+        if ((it.decision ?? "").toUpperCase() !== "BET") continue;
+        const key = String(it.league ?? "sin_liga").toLowerCase();
+        if (!map.has(key)) map.set(key, { key, label: leagueLabel(key), total:0, g:0, p:0, n:0, pending:0, pnl:0 });
+        const r = map.get(key);
+        r.total++;
+        const res = (it.result ?? "").toUpperCase();
+        const odds = parseFloat(it.odds) || 0;
+        if (res === "G") { r.g++; r.pnl += odds - 1; }
+        else if (res === "P") { r.p++; r.pnl -= 1; }
+        else if (res === "N") r.n++;
+        else r.pending++;
+      }
+      return [...map.values()].sort((a,b) => b.total - a.total);
+    }
+
+    function leagueLabel(key) {
+      const map = { epl:"EPL", laliga:"LaLiga", ligamx:"Liga MX", seriea:"Serie A",
+        ligue1:"Ligue 1", bundesliga:"Bundesliga", mls:"MLS", nba:"NBA", nfl:"NFL",
+        eredivisie:"Eredivisie", primeiraliga:"Primeira Liga",
+        segundadivision:"LaLiga 2", championship:"Championship" };
+      return map[key] || key.replace(/_/g," ").replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    function renderKpis(items) {
+      const bet = items.filter(it => (it.decision ?? "").toUpperCase() === "BET");
+      const g = bet.filter(it => (it.result ?? "").toUpperCase() === "G").length;
+      const p = bet.filter(it => (it.result ?? "").toUpperCase() === "P").length;
+      const n = bet.filter(it => (it.result ?? "").toUpperCase() === "N").length;
+      const pend = bet.filter(it => !(it.result ?? "")).length;
+      const resolved = g + p + n;
+      const wr = resolved > 0 ? ((g / resolved) * 100).toFixed(1) : null;
+      let pnl = 0;
+      for (const it of bet) {
+        const res = (it.result ?? "").toUpperCase();
+        const odds = parseFloat(it.odds) || 0;
+        if (res === "G") pnl += odds - 1;
+        else if (res === "P") pnl -= 1;
+      }
+      el("kpiTotal").textContent = bet.length;
+      el("kpiSub").textContent = `${items.length} picks totales`;
+      el("kpiWr").textContent = wr !== null ? `${wr}%` : "--%";
+      el("kpiWr").className = "kpi-value" + (wr === null ? "" : parseFloat(wr) >= 55 ? " ok" : parseFloat(wr) < 45 ? " bad" : "");
+      el("kpiWrSub").textContent = `${g}G / ${resolved} resueltos`;
+      const sign = pnl >= 0 ? "+" : "";
+      el("kpiPnl").textContent = `${sign}${pnl.toFixed(2)}`;
+      el("kpiPnl").className = "kpi-value" + (pnl > 0 ? " ok" : pnl < 0 ? " bad" : "");
+      el("kpiG").textContent = g;
+      el("kpiP").textContent = p;
+      el("kpiPend").textContent = pend;
+    }
+
+    function renderLeagues(items) {
+      const series = buildLeagueSeries(items);
+      const list = el("leagueList");
+      if (!series.length) { list.innerHTML = '<div class="empty">Sin datos.</div>'; return; }
+      list.innerHTML = "";
+      for (const row of series) {
+        const tot = row.total || 1;
+        const gPct = (row.g / tot * 100).toFixed(1);
+        const pPct = (row.p / tot * 100).toFixed(1);
+        const nPct = (row.n / tot * 100).toFixed(1);
+        const pendPct = Math.max(0, 100 - parseFloat(gPct) - parseFloat(pPct) - parseFloat(nPct)).toFixed(1);
+        const resolved = row.g + row.p + row.n;
+        const wr = resolved > 0 ? ((row.g / resolved) * 100).toFixed(0) : null;
+        const wrClass = wr === null ? "" : parseFloat(wr) >= 55 ? "good" : parseFloat(wr) < 45 ? "bad" : "";
+        const pnlSign = row.pnl >= 0 ? "+" : "";
+        const pnlClass = row.pnl > 0 ? "pos" : row.pnl < 0 ? "neg" : "";
+        const div = document.createElement("div");
+        div.className = "league-row";
+        div.innerHTML = `
+          <div class="league-top">
+            <span class="league-name">${row.label}</span>
+            <span class="league-right">
+              ${wr !== null ? `<span class="wr-badge ${wrClass}">${wr}% WR</span>` : ""}
+              <span class="pnl-inline ${pnlClass}">${pnlSign}${row.pnl.toFixed(2)}</span>
+            </span>
+          </div>
+          <div class="league-meta">${row.total} picks · G:${row.g} · P:${row.p} · N:${row.n}${row.pending > 0 ? ` · Pend:${row.pending}` : ""}</div>
+          <div class="bar-track">
+            <span class="bar-seg win"     style="width:${gPct}%"></span>
+            <span class="bar-seg lose"    style="width:${pPct}%"></span>
+            <span class="bar-seg push"    style="width:${nPct}%"></span>
+            <span class="bar-seg pending" style="width:${pendPct}%"></span>
+          </div>`;
+        list.appendChild(div);
+      }
+    }
+
+    function renderPicks(items) {
+      const tbody = el("picksTbody");
+      const bet = items.filter(it => (it.decision ?? "").toUpperCase() === "BET");
+      if (!bet.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Sin picks BET este mes.</td></tr>'; return; }
+      tbody.innerHTML = "";
+      for (const it of bet) {
+        const res = (it.result ?? "").toUpperCase();
+        const resClass = res === "G" ? "g" : res === "P" ? "p" : res === "N" ? "n" : "pend";
+        const resLabel = res || "Pend";
+        const pick = (it.pick ?? "").toUpperCase();
+        const line = it.line != null && String(it.line).trim() ? ` ${it.line}` : "";
+        const mkt  = (it.pick_market ?? "").toUpperCase();
+        const odds = parseFloat(it.odds);
+        const dec  = (it.decision ?? "").toUpperCase() === "BET";
+        const tr = document.createElement("tr");
+        tr.innerHTML = `
+          <td>${it.match ?? `${it.home} vs ${it.away}`}</td>
+          <td><span class="badge">${mkt}</span></td>
+          <td><span class="badge">${pick}${line}</span></td>
+          <td>${Number.isFinite(odds) ? odds.toFixed(3) : "--"}</td>
+          <td class="${dec ? "decision-bet" : "decision-no-bet"}">${dec ? "BET" : "NO BET"}</td>
+          <td><span class="res ${resClass}">${resLabel}</span></td>`;
+        tbody.appendChild(tr);
+      }
+    }
+
+    async function load() {
+      const month = monthPicker.value;
+      if (!month) return;
+      el("leagueList").innerHTML = '<div class="empty">Cargando…</div>';
+      el("picksTbody").innerHTML = '<tr><td colspan="6" class="empty">Cargando…</td></tr>';
+      try {
+        const res = await fetch(`${API}/picks/all/month?month=${encodeURIComponent(month)}`);
+        const data = await res.json();
+        const items = Array.isArray(data?.items) ? data.items : [];
+        renderKpis(items);
+        renderLeagues(items);
+        renderPicks(items);
+      } catch(e) {
+        el("leagueList").innerHTML = '<div class="empty">Error al cargar datos.</div>';
+        el("picksTbody").innerHTML = '<tr><td colspan="6" class="empty">Error al cargar datos.</td></tr>';
+      }
+    }
+
+    load();
+  </script>
+</body>
+</html>
