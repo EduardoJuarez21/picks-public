@@ -410,7 +410,9 @@
       for (const it of bet) {
         const res = (it.result ?? "").toUpperCase();
         const resClass = res === "G" ? "g" : res === "P" ? "p" : res === "N" ? "n" : "pend";
-        const resLabel = res || "Pend";
+        const score = (it.score_home != null && it.score_away != null && String(it.score_home).trim() !== "" && String(it.score_away).trim() !== "")
+          ? ` ${it.score_home}-${it.score_away}` : "";
+        const resLabel = (res || "Pend") + score;
         const pick = (it.pick ?? "").toUpperCase();
         const line = it.line != null && String(it.line).trim() ? ` ${it.line}` : "";
         const mkt  = (it.pick_market ?? "").toUpperCase();
