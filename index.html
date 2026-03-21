@@ -434,15 +434,41 @@
       }
     }
 
+    const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 horas
+
+    function cacheKey(month) { return `picks_cache_${month}`; }
+
+    function cacheGet(month) {
+      try {
+        const raw = localStorage.getItem(cacheKey(month));
+        if (!raw) return null;
+        const { ts, items } = JSON.parse(raw);
+        if (Date.now() - ts > CACHE_TTL) { localStorage.removeItem(cacheKey(month)); return null; }
+        return items;
+      } catch { return null; }
+    }
+
+    function cacheSet(month, items) {
+      try { localStorage.setItem(cacheKey(month), JSON.stringify({ ts: Date.now(), items })); } catch {}
+    }
+
     async function load() {
       const month = monthPicker.value;
       if (!month) return;
+      const cached = cacheGet(month);
+      if (cached) {
+        renderKpis(cached);
+        renderLeagues(cached);
+        renderPicks(cached);
+        return;
+      }
       el("leagueList").innerHTML = '<div class="empty">Cargando…</div>';
       el("picksTbody").innerHTML = '<tr><td colspan="6" class="empty">Cargando…</td></tr>';
       try {
         const res = await fetch(`${API}/picks/all/month?month=${encodeURIComponent(month)}`);
         const data = await res.json();
         const items = Array.isArray(data?.items) ? data.items : [];
+        cacheSet(month, items);
         renderKpis(items);
         renderLeagues(items);
         renderPicks(items);
