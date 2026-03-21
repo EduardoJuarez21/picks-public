@@ -257,7 +257,7 @@
         <div class="kpi-sub" id="kpiWrSub">resueltos</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">PnL (1u)</div>
+        <div class="kpi-label">PnL (100u)</div>
         <div class="kpi-value" id="kpiPnl">--</div>
         <div class="kpi-sub">unidades</div>
       </div>
@@ -327,8 +327,8 @@
         r.total++;
         const res = (it.result ?? "").toUpperCase();
         const odds = parseFloat(it.odds) || 0;
-        if (res === "G") { r.g++; r.pnl += odds - 1; }
-        else if (res === "P") { r.p++; r.pnl -= 1; }
+        if (res === "G") { r.g++; r.pnl += (odds - 1) * 100; }
+        else if (res === "P") { r.p++; r.pnl -= 100; }
         else if (res === "N") r.n++;
         else r.pending++;
       }
@@ -355,8 +355,8 @@
       for (const it of bet) {
         const res = (it.result ?? "").toUpperCase();
         const odds = parseFloat(it.odds) || 0;
-        if (res === "G") pnl += odds - 1;
-        else if (res === "P") pnl -= 1;
+        if (res === "G") pnl += (odds - 1) * 100;
+        else if (res === "P") pnl -= 100;
       }
       el("kpiTotal").textContent = bet.length;
       el("kpiSub").textContent = `${items.length} picks totales`;
