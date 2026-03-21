@@ -404,7 +404,7 @@
 
     function renderPicks(items) {
       const tbody = el("picksTbody");
-      const bet = items.filter(it => (it.decision ?? "").toUpperCase() === "BET");
+      const bet = items.filter(it => (it.decision ?? "").toUpperCase() === "BET" && ["G","P","N"].includes((it.result ?? "").toUpperCase()));
       if (!bet.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Sin picks BET este mes.</td></tr>'; return; }
       tbody.innerHTML = "";
       for (const it of bet) {
@@ -459,7 +459,7 @@
       el("leagueList").innerHTML = '<div class="empty">Cargando…</div>';
       el("picksTbody").innerHTML = '<tr><td colspan="6" class="empty">Cargando…</td></tr>';
       try {
-        const res = await fetch(`${API}/picks/all/month?month=${encodeURIComponent(month)}`);
+        const res = await fetch(`${API}/picks/all/month?month=${encodeURIComponent(month)}&resolved_only=true`);
         const data = await res.json();
         const items = Array.isArray(data?.items) ? data.items : [];
         cacheSet(month, items);
