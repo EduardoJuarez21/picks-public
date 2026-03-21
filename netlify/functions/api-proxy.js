@@ -1,4 +1,33 @@
+// Rate limiting: max 20 requests per IP per minute
+const rateLimitMap = new Map();
+const RATE_LIMIT = 20;
+const RATE_WINDOW = 60 * 1000;
+
+function isRateLimited(ip) {
+  const now = Date.now();
+  const entry = rateLimitMap.get(ip) || { count: 0, start: now };
+  if (now - entry.start > RATE_WINDOW) {
+    rateLimitMap.set(ip, { count: 1, start: now });
+    return false;
+  }
+  entry.count++;
+  rateLimitMap.set(ip, entry);
+  if (rateLimitMap.size > 1000) {
+    for (const [k, v] of rateLimitMap) {
+      if (now - v.start > RATE_WINDOW) rateLimitMap.delete(k);
+    }
+  }
+  return entry.count > RATE_LIMIT;
+}
+
 exports.handler = async function handler(event) {
+  const ip = getHeader(event.headers, "x-forwarded-for").split(",")[0].trim()
+           || getHeader(event.headers, "x-nf-client-connection-ip")
+           || "unknown";
+  if (isRateLimited(ip)) {
+    return json(429, { status: "error", error: "too many requests" });
+  }
+
   const path = extractProxyPath(event);
   const route = getRouteKey(path);
   const backendBaseRaw = selectBackendBase(route);
