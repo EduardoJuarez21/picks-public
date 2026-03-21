@@ -332,7 +332,7 @@
         else if (res === "N") r.n++;
         else r.pending++;
       }
-      return [...map.values()].sort((a,b) => b.total - a.total);
+      return [...map.values()].sort((a,b) => b.pnl - a.pnl);
     }
 
     function leagueLabel(key) {
@@ -364,7 +364,7 @@
       el("kpiWr").className = "kpi-value" + (wr === null ? "" : parseFloat(wr) >= 55 ? " ok" : parseFloat(wr) < 45 ? " bad" : "");
       el("kpiWrSub").textContent = `${g}G / ${resolved} resueltos`;
       const sign = pnl >= 0 ? "+" : "";
-      el("kpiPnl").textContent = `${sign}${pnl.toFixed(2)}`;
+      el("kpiPnl").textContent = `${sign}${pnl.toFixed(0)}`;
       el("kpiPnl").className = "kpi-value" + (pnl > 0 ? " ok" : pnl < 0 ? " bad" : "");
       el("kpiG").textContent = g;
       el("kpiP").textContent = p;
@@ -394,7 +394,7 @@
             <span class="league-name">${row.label}</span>
             <span class="league-right">
               ${wr !== null ? `<span class="wr-badge ${wrClass}">${wr}% WR</span>` : ""}
-              <span class="pnl-inline ${pnlClass}">${pnlSign}${row.pnl.toFixed(2)}</span>
+              <span class="pnl-inline ${pnlClass}">${pnlSign}${row.pnl.toFixed(0)}</span>
             </span>
           </div>
           <div class="league-meta">${row.total} picks · G:${row.g} · P:${row.p} · N:${row.n}${row.pending > 0 ? ` · Pend:${row.pending}` : ""}</div>
