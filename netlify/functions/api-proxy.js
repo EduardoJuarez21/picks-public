@@ -34,21 +34,8 @@ exports.handler = async function handler(event) {
   const authHeader = "X-API-Token";
   const authToken = selectAuthToken(route);
 
-  if (!backendBaseRaw) {
-    return json(500, {
-      status: "error",
-      error: "backend base not configured",
-      route,
-      expected_env: expectedBackendEnv(route),
-    });
-  }
-  if (!authToken) {
-    return json(500, {
-      status: "error",
-      error: "api auth token not configured",
-      route,
-      expected_env: expectedTokenEnv(route),
-    });
+  if (!backendBaseRaw || !authToken) {
+    return json(500, { status: "error", error: "service unavailable" });
   }
 
   const backendBase = backendBaseRaw.replace(/\/+$/, "");
@@ -84,19 +71,8 @@ exports.handler = async function handler(event) {
       headers: responseHeaders,
       body: text,
     };
-  } catch (err) {
-    const cause = err && typeof err === "object" ? err.cause : undefined;
-    const causeCode = cause && typeof cause === "object" ? cause.code : "";
-    const causeMsg = cause && typeof cause === "object" ? cause.message : "";
-    return json(502, {
-      status: "error",
-      error: "proxy request failed",
-      route,
-      target: targetUrl,
-      detail: String(err),
-      cause_code: causeCode || undefined,
-      cause: causeMsg || undefined,
-    });
+  } catch {
+    return json(502, { status: "error", error: "service unavailable" });
   }
 };
 
@@ -148,17 +124,6 @@ function selectAuthToken(route) {
   return firstNonEmpty(process.env.API_AUTH_TOKEN);
 }
 
-function expectedBackendEnv(route) {
-  if (route === "nba") return ["NBA_BACKEND_BASE", "BACKEND_BASE_NBA", "BACKEND_BASE", "API_BASE"];
-  if (route === "nfl") return ["NFL_BACKEND_BASE", "BACKEND_BASE_NFL", "BACKEND_BASE", "API_BASE"];
-  return ["BACKEND_BASE", "API_BASE"];
-}
-
-function expectedTokenEnv(route) {
-  if (route === "nba") return ["NBA_API_AUTH_TOKEN", "API_AUTH_TOKEN_NBA", "API_AUTH_TOKEN"];
-  if (route === "nfl") return ["NFL_API_AUTH_TOKEN", "API_AUTH_TOKEN_NFL", "API_AUTH_TOKEN"];
-  return ["API_AUTH_TOKEN"];
-}
 
 function firstNonEmpty(...values) {
   for (const value of values) {
