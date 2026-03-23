@@ -415,7 +415,8 @@
           ? ` ${it.score_home}-${it.score_away}` : "";
         const resLabel = (res || "Pend") + score;
         const pick = (it.pick ?? "").toUpperCase();
-        const line = it.line != null && String(it.line).trim() ? ` ${it.line}` : "";
+        const lineVal = parseFloat(it.line);
+        const line = it.line != null && String(it.line).trim() && lineVal !== 0 ? ` ${it.line}` : "";
         const mkt  = (it.pick_market ?? "").toUpperCase();
         const odds = parseFloat(it.odds);
         const dec  = (it.decision ?? "").toUpperCase() === "BET";
