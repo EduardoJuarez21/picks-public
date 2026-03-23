@@ -420,7 +420,7 @@
         const odds = parseFloat(it.odds);
         const dec  = (it.decision ?? "").toUpperCase() === "BET";
         const tr = document.createElement("tr");
-        const rawDate = it.date ?? it.match_date ?? it.game_date ?? it.created_at ?? "";
+        const rawDate = it.day ?? "";
         const fmtDate = rawDate ? new Date(rawDate).toLocaleDateString("es-MX", { day:"2-digit", month:"short" }) : "--";
         tr.innerHTML = `
           <td style="white-space:nowrap;color:var(--muted)">${fmtDate}</td>
