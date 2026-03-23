@@ -211,10 +211,10 @@
     @media (max-width: 600px) {
       .hero h1 { font-size: 24px; }
       .kpi-grid { grid-template-columns: repeat(2, 1fr); }
-      .picks-table th:nth-child(4),
-      .picks-table td:nth-child(4),
       .picks-table th:nth-child(5),
-      .picks-table td:nth-child(5) { display: none; }
+      .picks-table td:nth-child(5),
+      .picks-table th:nth-child(6),
+      .picks-table td:nth-child(6) { display: none; }
     }
   </style>
 </head>
@@ -286,6 +286,7 @@
       <table class="picks-table">
         <thead>
           <tr>
+            <th>Fecha</th>
             <th>Partido</th>
             <th>Mercado</th>
             <th>Pick</th>
@@ -295,7 +296,7 @@
           </tr>
         </thead>
         <tbody id="picksTbody">
-          <tr><td colspan="6" class="empty">Cargando…</td></tr>
+          <tr><td colspan="7" class="empty">Cargando…</td></tr>
         </tbody>
       </table>
     </div>
@@ -419,7 +420,10 @@
         const odds = parseFloat(it.odds);
         const dec  = (it.decision ?? "").toUpperCase() === "BET";
         const tr = document.createElement("tr");
+        const rawDate = it.date ?? it.match_date ?? it.game_date ?? it.created_at ?? "";
+        const fmtDate = rawDate ? new Date(rawDate).toLocaleDateString("es-MX", { day:"2-digit", month:"short" }) : "--";
         tr.innerHTML = `
+          <td style="white-space:nowrap;color:var(--muted)">${fmtDate}</td>
           <td>${it.match ?? `${it.home} vs ${it.away}`}</td>
           <td><span class="badge">${mkt}</span></td>
           <td><span class="badge">${pick}${line}</span></td>
@@ -470,7 +474,7 @@
         renderPicks(items);
       } catch(e) {
         el("leagueList").innerHTML = '<div class="empty">Error al cargar datos.</div>';
-        el("picksTbody").innerHTML = '<tr><td colspan="6" class="empty">Error al cargar datos.</td></tr>';
+        el("picksTbody").innerHTML = '<tr><td colspan="7" class="empty">Error al cargar datos.</td></tr>';
       }
     }
 
