@@ -6,6 +6,12 @@
   directory = "netlify/functions"
 
 [[redirects]]
+  from = "/stripe-webhook"
+  to = "/.netlify/functions/stripe-webhook"
+  status = 200
+  force = true
+
+[[redirects]]
   from = "/api/*"
   to = "/.netlify/functions/api-proxy/:splat"
   status = 200
