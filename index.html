@@ -819,8 +819,7 @@
           block.className = "cal-league";
           block.innerHTML = `<div class="cal-league-name">${leagueLabel(league)}</div>`;
           for (const f of fixtures) {
-            const ko = f.kickoff_utc ? new Date(f.kickoff_utc) : null;
-            const timeStr = ko ? ko.toLocaleTimeString("es-MX", { hour: "2-digit", minute: "2-digit", hour12: false }) : "--:--";
+            const timeStr = f.kickoff_utc ? f.kickoff_utc.substring(11, 16) : "--:--";
             const row = document.createElement("div");
             row.className = "cal-fixture";
             row.innerHTML = `
