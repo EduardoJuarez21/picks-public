@@ -262,6 +262,26 @@
     </div>
   </div>
 
+  <!-- Banda de valor -->
+  <div style="background:linear-gradient(90deg,rgba(122,167,255,.07),rgba(47,226,143,.05));border-bottom:1px solid var(--stroke);padding:20px;text-align:center;">
+    <div style="max-width:800px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:center;gap:28px;">
+      <div style="text-align:center;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">Metodología</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">Modelos estadísticos · Valor esperado positivo</div>
+      </div>
+      <div style="width:1px;background:var(--stroke);"></div>
+      <div style="text-align:center;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">Transparencia</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">Historial público · Sin resultados ocultos</div>
+      </div>
+      <div style="width:1px;background:var(--stroke);"></div>
+      <div style="text-align:center;">
+        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">Selección</div>
+        <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">Solo picks con edge real · Filtramos el ruido</div>
+      </div>
+    </div>
+  </div>
+
   <!-- Contenido -->
   <div class="wrap">
 
@@ -304,9 +324,23 @@
     </div>
 
     <!-- Por liga -->
-    <div class="section-title">Por liga</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin:28px 0 12px;">
+      <div class="section-title" style="margin:0;">Por liga</div>
+      <div style="display:inline-flex;align-items:center;gap:6px;background:rgba(47,226,143,.08);border:1px solid rgba(47,226,143,.25);border-radius:999px;padding:5px 12px;font-size:11px;color:rgba(47,226,143,.9);font-weight:600;">
+        <svg width="10" height="10" viewBox="0 0 10 10" fill="none"><circle cx="5" cy="5" r="4" fill="#2fe28f"/></svg>
+        Apuesta en ligas con win rate verde
+      </div>
+    </div>
     <div class="league-list" id="leagueList">
       <div class="empty">Cargando…</div>
+    </div>
+
+    <!-- Nota del modelo -->
+    <div style="margin:16px 0 32px;background:rgba(122,167,255,.06);border:1px solid rgba(122,167,255,.15);border-radius:12px;padding:14px 18px;font-size:12px;color:rgba(255,255,255,.6);line-height:1.6;">
+      <strong style="color:rgba(122,167,255,.9);">¿Cómo funciona el modelo?</strong>
+      Cada pick es el resultado de un análisis cuantitativo que evalúa probabilidades implícitas del mercado, valor esperado (EV) y consistencia histórica por liga.
+      Solo se publican picks donde el modelo detecta una ventaja estadística real frente a las casas de apuestas.
+      <strong style="color:rgba(255,255,255,.8);">Las ligas en verde son las de mejor rendimiento histórico — ahí se concentra el edge.</strong>
     </div>
 
     <!-- Historial de picks BET -->
