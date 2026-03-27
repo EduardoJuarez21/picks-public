@@ -1,4 +1,5 @@
 const crypto = require('crypto');
+const { Client } = require('pg');
 
 function verifyStripeSignature(rawBody, sigHeader, secret) {
   try {
@@ -31,6 +32,26 @@ function getHeader(headers, name) {
   return headers[name] || headers[name.toLowerCase()] || '';
 }
 
+async function saveVipToDB(telegramId, telegramName) {
+  const dbUrl = process.env.DATABASE_URL;
+  if (!dbUrl) return;
+  const client = new Client({ connectionString: dbUrl, ssl: { rejectUnauthorized: false } });
+  try {
+    await client.connect();
+    const expiresAt = new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+    await client.query(`
+      INSERT INTO trial_users (user_id, username, first_name, expires_at, plan)
+      VALUES ($1, $2, $3, $4, 'vip')
+      ON CONFLICT (user_id) DO UPDATE
+        SET expires_at  = EXCLUDED.expires_at,
+            plan        = 'vip',
+            removed_at  = NULL
+    `, [telegramId, '', telegramName]);
+  } finally {
+    await client.end();
+  }
+}
+
 exports.handler = async (event) => {
   const sig     = getHeader(event.headers, 'stripe-signature');
   const secret  = process.env.STRIPE_WEBHOOK_SECRET;
@@ -54,11 +75,14 @@ exports.handler = async (event) => {
   }
 
   if (stripeEvent.type === 'checkout.session.completed') {
-    const session     = stripeEvent.data.object;
-    const telegramId  = session.metadata?.telegram_id;
+    const session      = stripeEvent.data.object;
+    const telegramId   = session.metadata?.telegram_id;
     const telegramName = session.metadata?.telegram_name || '';
 
     if (telegramId && token && channel) {
+      // Actualizar DB a plan VIP con 30 días
+      await saveVipToDB(parseInt(telegramId), telegramName);
+
       // Crear invite link con 24h de vigencia
       const expireDate = Math.floor(Date.now() / 1000) + 24 * 60 * 60;
       const inviteData = await tgPost(token, 'createChatInviteLink', {
@@ -76,12 +100,12 @@ exports.handler = async (event) => {
         });
       }
 
-      // Notificar al admin para registrar en DB
+      // Notificar al admin
       if (inbox) {
         await tgPost(token, 'sendMessage', {
           chat_id: inbox,
           parse_mode: 'HTML',
-          text: `💰 <b>Nuevo pago Stripe</b>\n👤 ${telegramName} [${telegramId}]\n\nRegistra con: /invite ${telegramId}`,
+          text: `💰 <b>Nuevo pago Stripe</b>\n👤 ${telegramName} [${telegramId}]\n✅ Plan VIP activado automáticamente (30 días)`,
         });
       }
     }
