@@ -425,6 +425,16 @@
         font-size: 24px;
       }
 
+      .valor-banda > div[style*="width:1px"] {
+        display: none;
+      }
+
+      .valor-banda {
+        flex-direction: column;
+        align-items: center;
+        gap: 16px !important;
+      }
+
       .kpi-grid {
         grid-template-columns: repeat(2, 1fr);
       }
@@ -444,11 +454,13 @@
   <!-- Hero -->
   <div class="hero">
     <div class="hero-logo">
-      <svg width="28" height="28" viewBox="0 0 64 64" fill="none">
-        <path d="M14 20h36v6H14zm0 18h36v6H14z" fill="#7aa7ff" />
+      <svg width="48" height="48" viewBox="0 0 64 72" fill="none">
+        <path d="M32 2L6 14v20c0 16 11 30 26 36C47 64 58 50 58 34V14L32 2z" fill="#b91c1c"/>
+        <path d="M32 2L6 14v20c0 16 11 30 26 36C47 64 58 50 58 34V14L32 2z" fill="none" stroke="#f59e0b" stroke-width="2.5"/>
+        <path d="M22 36l7 7 13-15" stroke="#f59e0b" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
       </svg>
     </div>
-    <h1>Picks Deportivos</h1>
+    <h1>Pickster</h1>
     <p>Estadísticas reales · Transparencia total</p>
     <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:28px;">
       <a class="tg-cta" style="margin-top:0;" href="https://t.me/PicksterV_bot" target="_blank" rel="noopener">
@@ -478,7 +490,7 @@
   <!-- Banda de valor1 -->
   <div
     style="background:linear-gradient(90deg,rgba(122,167,255,.07),rgba(47,226,143,.05));border-bottom:1px solid var(--stroke);padding:20px;text-align:center;">
-    <div style="max-width:800px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:center;gap:28px;">
+    <div style="max-width:800px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:center;gap:28px;" class="valor-banda">
       <div style="text-align:center;">
         <div
           style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">
