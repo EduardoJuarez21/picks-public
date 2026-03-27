@@ -335,12 +335,6 @@
       <div class="empty">Cargando…</div>
     </div>
 
-    <!-- Por mercado -->
-    <div class="section-title" style="margin-top:28px;">Por mercado</div>
-    <div class="league-list" id="marketList">
-      <div class="empty">Cargando…</div>
-    </div>
-
     <!-- Nota del modelo -->
     <div style="margin:16px 0 32px;background:rgba(122,167,255,.06);border:1px solid rgba(122,167,255,.15);border-radius:12px;padding:14px 18px;font-size:12px;color:rgba(255,255,255,.6);line-height:1.6;">
       <strong style="color:rgba(122,167,255,.9);">¿Cómo funciona el modelo?</strong>
@@ -384,61 +378,6 @@
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,"0")}`;
 
     function el(id) { return document.getElementById(id); }
-
-    function buildMarketSeries(items) {
-      const map = new Map();
-      for (const it of items) {
-        if ((it.decision ?? "").toUpperCase() !== "BET") continue;
-        const key = (it.pick_market ?? "otro").toUpperCase();
-        if (!map.has(key)) map.set(key, { key, total:0, g:0, p:0, n:0, pending:0, pnl:0 });
-        const r = map.get(key);
-        r.total++;
-        const res = (it.result ?? "").toUpperCase();
-        const odds = parseFloat(it.odds) || 0;
-        if (res === "G") { r.g++; r.pnl += (odds - 1) * 100; }
-        else if (res === "P") { r.p++; r.pnl -= 100; }
-        else if (res === "N") r.n++;
-        else r.pending++;
-      }
-      return [...map.values()].sort((a,b) => b.total - a.total);
-    }
-
-    function renderMarkets(items) {
-      const series = buildMarketSeries(items);
-      const list = el("marketList");
-      if (!series.length) { list.innerHTML = '<div class="empty">Sin datos.</div>'; return; }
-      list.innerHTML = "";
-      for (const row of series) {
-        const tot = row.total || 1;
-        const gPct = (row.g / tot * 100).toFixed(1);
-        const pPct = (row.p / tot * 100).toFixed(1);
-        const nPct = (row.n / tot * 100).toFixed(1);
-        const pendPct = Math.max(0, 100 - parseFloat(gPct) - parseFloat(pPct) - parseFloat(nPct)).toFixed(1);
-        const resolved = row.g + row.p + row.n;
-        const wr = resolved > 0 ? ((row.g / resolved) * 100).toFixed(0) : null;
-        const wrClass = wr === null ? "" : parseFloat(wr) >= 55 ? "good" : parseFloat(wr) < 45 ? "bad" : "";
-        const pnlSign = row.pnl >= 0 ? "+" : "";
-        const pnlClass = row.pnl > 0 ? "pos" : row.pnl < 0 ? "neg" : "";
-        const div = document.createElement("div");
-        div.className = "league-row";
-        div.innerHTML = `
-          <div class="league-top">
-            <span class="league-name">${row.key}</span>
-            <span class="league-right">
-              ${wr !== null ? `<span class="wr-badge ${wrClass}">${wr}% WR</span>` : ""}
-              <span class="pnl-inline ${pnlClass}">${pnlSign}${row.pnl.toFixed(0)}</span>
-            </span>
-          </div>
-          <div class="league-meta">${row.total} picks · G:${row.g} · P:${row.p} · N:${row.n}${row.pending > 0 ? ` · Pend:${row.pending}` : ""}</div>
-          <div class="bar-track">
-            <span class="bar-seg win"     style="width:${gPct}%"></span>
-            <span class="bar-seg lose"    style="width:${pPct}%"></span>
-            <span class="bar-seg push"    style="width:${nPct}%"></span>
-            <span class="bar-seg pending" style="width:${pendPct}%"></span>
-          </div>`;
-        list.appendChild(div);
-      }
-    }
 
     function buildLeagueSeries(items) {
       const map = new Map();
@@ -588,7 +527,6 @@
       if (cached) {
         renderKpis(cached);
         renderLeagues(cached);
-        renderMarkets(cached);
         renderPicks(cached);
         return;
       }
@@ -601,7 +539,6 @@
         cacheSet(month, items);
         renderKpis(items);
         renderLeagues(items);
-        renderMarkets(items);
         renderPicks(items);
       } catch(e) {
         el("leagueList").innerHTML = '<div class="empty">Error al cargar datos.</div>';
