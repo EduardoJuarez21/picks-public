@@ -554,8 +554,8 @@
       <div class="section-title" style="margin:0;">Predicciones</div>
     </div>
     <div class="date-nav">
-      <button id="btnToday" onclick="loadDate('today')">Hoy</button>
-      <button id="btnTomorrow" onclick="loadDate('tomorrow')" class="active">Mañana</button>
+      <button id="btnToday" onclick="loadDate('today')" class="active">Hoy</button>
+      <button id="btnTomorrow" onclick="loadDate('tomorrow')">Mañana</button>
       <input type="date" id="datePicker" onchange="loadDate('custom')" />
     </div>
     <div class="games-grid" id="gamesGrid">
@@ -793,9 +793,9 @@
     }
 
     // ── Init S──────────────────────────────────────────────────────────────────
-    el("datePicker").value = tomorrowStr;
+    el("datePicker").value = todayStr;
     loadStats();
-    loadDate("tomorrow");
+    loadDate("today");
     loadHistory();
   </script>
 </body>
