@@ -438,6 +438,42 @@
       color: var(--accent);
     }
 
+    /* ── Paginación ── */
+    .pager-btn {
+      padding: 5px 12px;
+      border-radius: 8px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .12s, color .12s;
+      min-width: 34px;
+    }
+
+    .pager-btn:hover:not(:disabled) {
+      background: rgba(255,255,255,.1);
+      color: var(--text);
+    }
+
+    .pager-btn.active {
+      background: rgba(122,167,255,.15);
+      border-color: rgba(122,167,255,.4);
+      color: var(--accent);
+    }
+
+    .pager-btn:disabled {
+      opacity: .3;
+      cursor: default;
+    }
+
+    .pager-info {
+      font-size: 11px;
+      color: var(--muted);
+      padding: 0 4px;
+    }
+
     /* ── CTA bottom ── */
     .cta-bottom {
       text-align: center;
@@ -630,6 +666,7 @@
         </tbody>
       </table>
     </div>
+    <div id="picksPager" style="display:flex;align-items:center;justify-content:center;gap:6px;margin-top:12px;"></div>
 
     <!-- Calendario de hoy -->
     <div class="section-title" style="margin-top:32px;">Partidos por analizar</div>
@@ -769,15 +806,26 @@
 
     let _allBetItems = [];
     let _activeLeague = "all";
+    let _currentPage = 1;
+    const PAGE_SIZE = 10;
 
     function renderPicksFiltered() {
       const tbody = el("picksTbody");
+      const pager = el("picksPager");
       const filtered = _activeLeague === "all"
         ? _allBetItems
         : _allBetItems.filter(it => String(it.league ?? "sin_liga").toLowerCase() === _activeLeague);
-      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Sin picks en esta liga.</td></tr>'; return; }
+      if (!filtered.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Sin picks en esta liga.</td></tr>';
+        pager.innerHTML = "";
+        return;
+      }
+      const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+      if (_currentPage > totalPages) _currentPage = totalPages;
+      const start = (_currentPage - 1) * PAGE_SIZE;
+      const page = filtered.slice(start, start + PAGE_SIZE);
       tbody.innerHTML = "";
-      for (const it of filtered) {
+      for (const it of page) {
         const res = (it.result ?? "").toUpperCase();
         const resClass = res === "G" ? "g" : res === "P" ? "p" : res === "N" ? "n" : "pend";
         const score = (it.score_home != null && it.score_away != null && String(it.score_home).trim() !== "" && String(it.score_away).trim() !== "")
@@ -803,6 +851,39 @@
           <td><span class="res ${resClass}">${resLabel}</span></td>`;
         tbody.appendChild(tr);
       }
+
+      // Render pager
+      pager.innerHTML = "";
+      if (totalPages <= 1) return;
+      const mkBtn = (label, page, disabled, active) => {
+        const btn = document.createElement("button");
+        btn.className = "pager-btn" + (active ? " active" : "");
+        btn.textContent = label;
+        btn.disabled = disabled;
+        btn.addEventListener("click", () => { _currentPage = page; renderPicksFiltered(); });
+        return btn;
+      };
+      pager.appendChild(mkBtn("←", _currentPage - 1, _currentPage === 1, false));
+      const range = [];
+      for (let i = 1; i <= totalPages; i++) {
+        if (i === 1 || i === totalPages || Math.abs(i - _currentPage) <= 1) range.push(i);
+        else if (range[range.length - 1] !== "…") range.push("…");
+      }
+      for (const r of range) {
+        if (r === "…") {
+          const s = document.createElement("span");
+          s.className = "pager-info";
+          s.textContent = "…";
+          pager.appendChild(s);
+        } else {
+          pager.appendChild(mkBtn(r, r, false, r === _currentPage));
+        }
+      }
+      pager.appendChild(mkBtn("→", _currentPage + 1, _currentPage === totalPages, false));
+      const info = document.createElement("span");
+      info.className = "pager-info";
+      info.textContent = `${start + 1}–${Math.min(start + PAGE_SIZE, filtered.length)} de ${filtered.length}`;
+      pager.appendChild(info);
     }
 
     function buildLeagueFilter(items) {
@@ -817,6 +898,7 @@
         btn.dataset.league = key;
         btn.addEventListener("click", () => {
           _activeLeague = key;
+          _currentPage = 1;
           bar.querySelectorAll(".league-filter-btn").forEach(b => b.classList.toggle("active", b.dataset.league === key));
           renderPicksFiltered();
         });
@@ -829,6 +911,7 @@
     function renderPicks(items) {
       _allBetItems = items.filter(it => (it.decision ?? "").toUpperCase() === "BET" && ["G", "P", "N"].includes((it.result ?? "").toUpperCase()));
       _activeLeague = "all";
+      _currentPage = 1;
       buildLeagueFilter(_allBetItems);
       renderPicksFiltered();
     }
