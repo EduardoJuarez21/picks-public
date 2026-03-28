@@ -669,6 +669,18 @@
       } catch (e) { el("gamesGrid").innerHTML = '<div class="empty">Error de conexión.</div>'; }
     }
 
+    function fmtGameTime(utcStr) {
+      if (!utcStr) return null;
+      const d = new Date(utcStr);
+      // UTC-6
+      const local = new Date(d.getTime() - 6 * 60 * 60 * 1000);
+      const h = local.getUTCHours();
+      const m = String(local.getUTCMinutes()).padStart(2, "0");
+      const ampm = h >= 12 ? "pm" : "am";
+      const h12 = h % 12 || 12;
+      return `${h12}:${m} ${ampm}`;
+    }
+
     function renderGames(preds) {
       const grid = el("gamesGrid");
       if (!preds.length) { grid.innerHTML = '<div class="empty">Sin predicciones para esta fecha.</div>'; return; }
@@ -679,7 +691,7 @@
         const mlTeam = p.ml_pick === "home" ? p.home_team : p.away_team;
         const ouLine = p.ou_line || 8.5;
         const hasResult = p.home_score != null && p.away_score != null;
-        const score = hasResult ? `${p.away_score} - ${p.home_score}` : null;
+        const gameTime = fmtGameTime(p.game_time_utc);
 
         const card = document.createElement("div");
         card.className = "game-card" + (isHigh ? " high" : "");
@@ -690,7 +702,10 @@
             <span class="sep">@</span>
             <span class="home">${p.home_abbr}</span>
           </div>
-          <div class="game-date-label">${p.game_date}</div>
+          <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            ${gameTime ? `<span style="font-size:12px;font-family:var(--mono);color:var(--accent);font-weight:600;">${gameTime}</span>` : ""}
+            <span class="game-date-label">${p.game_date}</span>
+          </div>
         </div>
         ${p.away_pitcher_name || p.home_pitcher_name ? `
         <div class="pitchers">
@@ -703,9 +718,12 @@
             <div class="pick-conf">${conf}% confianza</div>
           </div>
           <div class="pick-block">
-            <div class="pick-label">Over/Under ${ouLine}</div>
-            <div class="pick-value ${p.ou_pick}">${p.ou_pick === 'over' ? 'OVER' : 'UNDER'}</div>
-            <div class="pick-conf">pred. ${parseFloat(p.total_runs_pred).toFixed(1)} runs</div>
+            <div class="pick-label">O/U ${ouLine}</div>
+            <div style="display:flex;align-items:baseline;gap:6px;">
+              <div class="pick-value ${p.ou_pick}">${p.ou_pick === 'over' ? 'OVER' : 'UNDER'}</div>
+              <div style="font-size:12px;font-family:var(--mono);color:var(--muted);">${parseFloat(p.total_runs_pred).toFixed(1)}</div>
+            </div>
+            <div class="pick-conf">línea: ${ouLine} runs</div>
           </div>
         </div>
         ${hasResult ? `
