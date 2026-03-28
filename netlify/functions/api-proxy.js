@@ -101,6 +101,7 @@ function getRouteKey(path) {
     .toLowerCase();
   if (first === "nba") return "nba";
   if (first === "nfl") return "nfl";
+  if (first === "mlb") return "mlb";
   return "default";
 }
 
@@ -111,6 +112,9 @@ function selectBackendBase(route) {
   if (route === "nfl") {
     return firstNonEmpty(process.env.NFL_BACKEND_BASE, process.env.BACKEND_BASE_NFL, process.env.BACKEND_BASE, process.env.API_BASE);
   }
+  if (route === "mlb") {
+    return firstNonEmpty(process.env.MLB_BACKEND_BASE, process.env.BACKEND_BASE, process.env.API_BASE);
+  }
   return firstNonEmpty(process.env.BACKEND_BASE, process.env.API_BASE);
 }
 
@@ -120,6 +124,9 @@ function selectAuthToken(route) {
   }
   if (route === "nfl") {
     return firstNonEmpty(process.env.NFL_API_AUTH_TOKEN, process.env.API_AUTH_TOKEN_NFL, process.env.API_AUTH_TOKEN);
+  }
+  if (route === "mlb") {
+    return firstNonEmpty(process.env.MLB_API_AUTH_TOKEN, process.env.API_AUTH_TOKEN);
   }
   return firstNonEmpty(process.env.API_AUTH_TOKEN);
 }
