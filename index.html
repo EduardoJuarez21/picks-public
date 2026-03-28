@@ -407,6 +407,51 @@
       color: var(--muted);
     }
 
+    /* ── Filtro liga ── */
+    .league-filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .league-filter-btn {
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255,255,255,.05);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .12s, color .12s, border-color .12s;
+    }
+
+    .league-filter-btn:hover {
+      background: rgba(255,255,255,.1);
+      color: var(--text);
+    }
+
+    .league-filter-btn.active {
+      background: rgba(122,167,255,.15);
+      border-color: rgba(122,167,255,.4);
+      color: var(--accent);
+    }
+
+    /* ── CTA bottom ── */
+    .cta-bottom {
+      text-align: center;
+      padding: 40px 20px;
+      border-top: 1px solid var(--stroke);
+      background: linear-gradient(180deg, rgba(122,167,255,.04), transparent);
+    }
+
+    .cta-bottom p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
     /* ── Empty / loading ── */
     .empty {
       text-align: center;
@@ -560,7 +605,10 @@
     </div>
 
     <!-- Historial de picks BET -->
-    <div class="section-title" style="margin-top:32px;">Picks del mes</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:32px;margin-bottom:10px;">
+      <div class="section-title" style="margin:0;">Picks del mes</div>
+    </div>
+    <div class="league-filter-bar" id="leagueFilterBar"></div>
     <div
       style="background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid var(--stroke);border-radius:var(--r);overflow:hidden;">
       <table class="picks-table">
@@ -588,6 +636,18 @@
     <div id="calContainer">
       <div class="empty">Cargando…</div>
     </div>
+  </div>
+
+  <!-- CTA final -->
+  <div class="cta-bottom">
+    <p>¿Convencido? Accede al canal privado y recibe cada pick antes del partido.</p>
+    <a class="tg-cta" href="https://t.me/PicksterV_bot" target="_blank" rel="noopener">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+        <path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/>
+      </svg>
+      Probar 7 días gratis
+    </a>
+    <p style="margin-top:12px;font-size:12px;">7 días gratis · luego MXN 250/mes · cancela cuando quieras</p>
   </div>
 
   <div class="footer">
@@ -703,12 +763,21 @@
       }
     }
 
-    function renderPicks(items) {
+    function capitalize(str) {
+      return (str || "").replace(/\b\w/g, c => c.toUpperCase());
+    }
+
+    let _allBetItems = [];
+    let _activeLeague = "all";
+
+    function renderPicksFiltered() {
       const tbody = el("picksTbody");
-      const bet = items.filter(it => (it.decision ?? "").toUpperCase() === "BET" && ["G", "P", "N"].includes((it.result ?? "").toUpperCase()));
-      if (!bet.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Sin picks BET este mes.</td></tr>'; return; }
+      const filtered = _activeLeague === "all"
+        ? _allBetItems
+        : _allBetItems.filter(it => String(it.league ?? "sin_liga").toLowerCase() === _activeLeague);
+      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Sin picks en esta liga.</td></tr>'; return; }
       tbody.innerHTML = "";
-      for (const it of bet) {
+      for (const it of filtered) {
         const res = (it.result ?? "").toUpperCase();
         const resClass = res === "G" ? "g" : res === "P" ? "p" : res === "N" ? "n" : "pend";
         const score = (it.score_home != null && it.score_away != null && String(it.score_home).trim() !== "" && String(it.score_away).trim() !== "")
@@ -723,9 +792,10 @@
         const tr = document.createElement("tr");
         const rawDate = it.day ?? "";
         const fmtDate = rawDate ? new Date(rawDate).toLocaleDateString("es-MX", { day: "2-digit", month: "short" }) : "--";
+        const matchStr = it.match ? capitalize(it.match) : `${capitalize(it.home)} vs ${capitalize(it.away)}`;
         tr.innerHTML = `
           <td style="white-space:nowrap;color:var(--muted)">${fmtDate}</td>
-          <td>${it.match ?? `${it.home} vs ${it.away}`}</td>
+          <td>${matchStr}</td>
           <td><span class="badge">${mkt}</span></td>
           <td><span class="badge">${pick}${line}</span></td>
           <td>${Number.isFinite(odds) ? odds.toFixed(3) : "--"}</td>
@@ -733,6 +803,34 @@
           <td><span class="res ${resClass}">${resLabel}</span></td>`;
         tbody.appendChild(tr);
       }
+    }
+
+    function buildLeagueFilter(items) {
+      const bar = el("leagueFilterBar");
+      const leagues = [...new Set(items.map(it => String(it.league ?? "sin_liga").toLowerCase()))];
+      if (leagues.length <= 1) { bar.innerHTML = ""; return; }
+      bar.innerHTML = "";
+      const makeBtn = (key, label) => {
+        const btn = document.createElement("button");
+        btn.className = "league-filter-btn" + (key === _activeLeague ? " active" : "");
+        btn.textContent = label;
+        btn.dataset.league = key;
+        btn.addEventListener("click", () => {
+          _activeLeague = key;
+          bar.querySelectorAll(".league-filter-btn").forEach(b => b.classList.toggle("active", b.dataset.league === key));
+          renderPicksFiltered();
+        });
+        return btn;
+      };
+      bar.appendChild(makeBtn("all", "Todas"));
+      for (const key of leagues) bar.appendChild(makeBtn(key, leagueLabel(key)));
+    }
+
+    function renderPicks(items) {
+      _allBetItems = items.filter(it => (it.decision ?? "").toUpperCase() === "BET" && ["G", "P", "N"].includes((it.result ?? "").toUpperCase()));
+      _activeLeague = "all";
+      buildLeagueFilter(_allBetItems);
+      renderPicksFiltered();
     }
 
     const CACHE_TTL = 6 * 60 * 60 * 1000; // 6 horas
