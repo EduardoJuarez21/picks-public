@@ -1,5 +1,6 @@
 <!doctype html>
 <html lang="es">
+
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -8,302 +9,681 @@
   <style>
     :root {
       --bg: #0b0f17;
-      --card: rgba(255,255,255,.06);
-      --stroke: rgba(255,255,255,.12);
-      --text: rgba(255,255,255,.92);
-      --muted: rgba(255,255,255,.5);
+      --card: rgba(255, 255, 255, .06);
+      --stroke: rgba(255, 255, 255, .12);
+      --text: rgba(255, 255, 255, .92);
+      --muted: rgba(255, 255, 255, .5);
       --ok: #2fe28f;
       --bad: #ff5b6e;
       --accent: #7aa7ff;
       --r: 18px;
-      --mono: 'SF Mono','Fira Code',monospace;
+      --mono: 'SF Mono', 'Fira Code', monospace;
     }
-    *,*::before,*::after { box-sizing:border-box; margin:0; padding:0; }
-    body { background:var(--bg); color:var(--text); font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; font-size:14px; min-height:100vh; }
+
+    *,
+    *::before,
+    *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      font-size: 14px;
+      min-height: 100vh;
+    }
 
     /* ── Hero ── */
-    .hero { background:linear-gradient(160deg,#0d1525 0%,#0b0f17 60%); border-bottom:1px solid var(--stroke); padding:48px 20px 40px; text-align:center; }
-    .hero-logo { width:56px; height:56px; border-radius:14px; background:linear-gradient(135deg,#1a2540,#0d1525); border:1px solid var(--stroke); display:inline-flex; align-items:center; justify-content:center; margin-bottom:16px; }
-    .hero h1 { font-size:32px; font-weight:700; letter-spacing:-.5px; background:linear-gradient(135deg,#fff 40%,var(--accent)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
-    .hero p { color:var(--muted); margin-top:8px; font-size:15px; }
-    .tg-cta { display:inline-flex; align-items:center; gap:10px; margin-top:28px; padding:14px 28px; border-radius:999px; background:linear-gradient(135deg,#229ED9,#1a7db5); color:#fff; font-weight:700; font-size:15px; text-decoration:none; box-shadow:0 8px 32px rgba(34,158,217,.35); transition:transform .15s,box-shadow .15s; }
-    .tg-cta:hover { transform:translateY(-2px); box-shadow:0 12px 40px rgba(34,158,217,.5); }
+    .hero {
+      background: linear-gradient(160deg, #0d1525 0%, #0b0f17 60%);
+      border-bottom: 1px solid var(--stroke);
+      padding: 48px 20px 40px;
+      text-align: center;
+    }
+
+    .hero-logo {
+      width: 56px;
+      height: 56px;
+      border-radius: 14px;
+      background: linear-gradient(135deg, #1a2540, #0d1525);
+      border: 1px solid var(--stroke);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 16px;
+    }
+
+    .hero h1 {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -.5px;
+      background: linear-gradient(135deg, #fff 40%, var(--accent));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .hero p {
+      color: var(--muted);
+      margin-top: 8px;
+      font-size: 15px;
+    }
+
+    .tg-cta {
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 28px;
+      padding: 14px 28px;
+      border-radius: 999px;
+      background: linear-gradient(135deg, #229ED9, #1a7db5);
+      color: #fff;
+      font-weight: 700;
+      font-size: 15px;
+      text-decoration: none;
+      box-shadow: 0 8px 32px rgba(34, 158, 217, .35);
+      transition: transform .15s, box-shadow .15s;
+    }
+
+    .tg-cta:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 12px 40px rgba(34, 158, 217, .5);
+    }
 
     /* ── Layout ── */
-    .wrap { max-width:900px; margin:0 auto; padding:20px 20px 60px; }
+    .wrap {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px 20px 60px;
+    }
 
     /* ── KPIs ── */
-    .kpi-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(130px,1fr)); gap:12px; margin-bottom:24px; }
-    .kpi-card { background:linear-gradient(180deg,rgba(255,255,255,.08),rgba(255,255,255,.04)); border:1px solid var(--stroke); border-radius:var(--r); padding:18px 16px; text-align:center; }
-    .kpi-label { font-size:10px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); }
-    .kpi-value { font-size:28px; font-weight:700; margin:6px 0 2px; }
-    .kpi-value.accent { color:var(--accent); }
-    .kpi-value.ok { color:var(--ok); }
-    .kpi-value.bad { color:var(--bad); }
-    .kpi-sub { font-size:11px; color:var(--muted); }
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .kpi-card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, .08), rgba(255, 255, 255, .04));
+      border: 1px solid var(--stroke);
+      border-radius: var(--r);
+      padding: 18px 16px;
+      text-align: center;
+    }
+
+    .kpi-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+    }
+
+    .kpi-value {
+      font-size: 28px;
+      font-weight: 700;
+      margin: 6px 0 2px;
+    }
+
+    .kpi-value.accent {
+      color: var(--accent);
+    }
+
+    .kpi-value.ok {
+      color: var(--ok);
+    }
+
+    .kpi-value.bad {
+      color: var(--bad);
+    }
+
+    .kpi-sub {
+      font-size: 11px;
+      color: var(--muted);
+    }
 
     /* ── Section title ── */
-    .section-title { font-size:11px; text-transform:uppercase; letter-spacing:.08em; color:var(--muted); margin:28px 0 12px; }
+    .section-title {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      margin: 28px 0 12px;
+    }
 
     /* ── Date nav ── */
-    .date-nav { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
-    .date-nav button { padding:6px 14px; border-radius:999px; border:1px solid var(--stroke); background:rgba(255,255,255,.05); color:var(--muted); font-size:12px; font-weight:600; cursor:pointer; transition:background .12s,color .12s; }
-    .date-nav button:hover { background:rgba(255,255,255,.1); color:var(--text); }
-    .date-nav button.active { background:rgba(122,167,255,.15); border-color:rgba(122,167,255,.4); color:var(--accent); }
-    .date-nav input[type="date"] { background:rgba(255,255,255,.06); border:1px solid var(--stroke); color:var(--text); border-radius:10px; padding:7px 12px; font-size:13px; }
+    .date-nav {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+
+    .date-nav button {
+      padding: 6px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, .05);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .12s, color .12s;
+    }
+
+    .date-nav button:hover {
+      background: rgba(255, 255, 255, .1);
+      color: var(--text);
+    }
+
+    .date-nav button.active {
+      background: rgba(122, 167, 255, .15);
+      border-color: rgba(122, 167, 255, .4);
+      color: var(--accent);
+    }
+
+    .date-nav input[type="date"] {
+      background: rgba(255, 255, 255, .06);
+      border: 1px solid var(--stroke);
+      color: var(--text);
+      border-radius: 10px;
+      padding: 7px 12px;
+      font-size: 13px;
+    }
 
     /* ── Game cards ── */
-    .games-grid { display:grid; gap:10px; }
-    .game-card { background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03)); border:1px solid var(--stroke); border-radius:14px; padding:16px; }
-    .game-card.high { border-color:rgba(122,167,255,.3); background:linear-gradient(180deg,rgba(122,167,255,.08),rgba(122,167,255,.02)); }
-    .game-header { display:flex; align-items:center; justify-content:space-between; margin-bottom:12px; gap:8px; }
-    .game-matchup { font-size:15px; font-weight:700; }
-    .game-matchup .away { color:var(--muted); }
-    .game-matchup .sep { color:var(--stroke); margin:0 6px; }
-    .game-matchup .home { color:var(--text); }
-    .game-date-label { font-size:11px; color:var(--muted); font-family:var(--mono); flex-shrink:0; }
-    .pitchers { font-size:11px; color:var(--muted); margin-bottom:12px; }
+    .games-grid {
+      display: grid;
+      gap: 10px;
+    }
+
+    .game-card {
+      background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .03));
+      border: 1px solid var(--stroke);
+      border-radius: 14px;
+      padding: 16px;
+    }
+
+    .game-card.high {
+      border-color: rgba(122, 167, 255, .3);
+      background: linear-gradient(180deg, rgba(122, 167, 255, .08), rgba(122, 167, 255, .02));
+    }
+
+    .game-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      gap: 8px;
+    }
+
+    .game-matchup {
+      font-size: 15px;
+      font-weight: 700;
+    }
+
+    .game-matchup .away {
+      color: var(--muted);
+    }
+
+    .game-matchup .sep {
+      color: var(--stroke);
+      margin: 0 6px;
+    }
+
+    .game-matchup .home {
+      color: var(--text);
+    }
+
+    .game-date-label {
+      font-size: 11px;
+      color: var(--muted);
+      font-family: var(--mono);
+      flex-shrink: 0;
+    }
+
+    .pitchers {
+      font-size: 11px;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
 
     /* ── Picks row ── */
-    .picks-row { display:flex; gap:10px; flex-wrap:wrap; }
-    .pick-block { flex:1; min-width:120px; background:rgba(0,0,0,.2); border:1px solid var(--stroke); border-radius:10px; padding:10px 12px; }
-    .pick-label { font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); margin-bottom:4px; }
-    .pick-value { font-size:18px; font-weight:700; line-height:1; }
-    .pick-value.home-pick { color:var(--accent); }
-    .pick-value.away-pick { color:#f9a825; }
-    .pick-value.over { color:var(--ok); }
-    .pick-value.under { color:#7aa7ff; }
-    .pick-conf { font-size:11px; color:var(--muted); margin-top:2px; font-family:var(--mono); }
+    .picks-row {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .pick-block {
+      flex: 1;
+      min-width: 120px;
+      background: rgba(0, 0, 0, .2);
+      border: 1px solid var(--stroke);
+      border-radius: 10px;
+      padding: 10px 12px;
+    }
+
+    .pick-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      margin-bottom: 4px;
+    }
+
+    .pick-value {
+      font-size: 18px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .pick-value.home-pick {
+      color: var(--accent);
+    }
+
+    .pick-value.away-pick {
+      color: #f9a825;
+    }
+
+    .pick-value.over {
+      color: var(--ok);
+    }
+
+    .pick-value.under {
+      color: #7aa7ff;
+    }
+
+    .pick-conf {
+      font-size: 11px;
+      color: var(--muted);
+      margin-top: 2px;
+      font-family: var(--mono);
+    }
 
     /* ── Result badge ── */
-    .result-row { display:flex; gap:8px; margin-top:10px; align-items:center; font-size:12px; }
-    .result-score { font-family:var(--mono); font-weight:700; color:var(--text); }
-    .res-badge { padding:2px 8px; border-radius:6px; font-size:11px; font-weight:700; font-family:var(--mono); }
-    .res-badge.ok { background:rgba(47,226,143,.12); border:1px solid rgba(47,226,143,.3); color:var(--ok); }
-    .res-badge.bad { background:rgba(255,91,110,.1); border:1px solid rgba(255,91,110,.25); color:var(--bad); }
-    .res-badge.pend { background:rgba(255,255,255,.05); border:1px solid var(--stroke); color:var(--muted); font-style:italic; }
+    .result-row {
+      display: flex;
+      gap: 8px;
+      margin-top: 10px;
+      align-items: center;
+      font-size: 12px;
+    }
+
+    .result-score {
+      font-family: var(--mono);
+      font-weight: 700;
+      color: var(--text);
+    }
+
+    .res-badge {
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--mono);
+    }
+
+    .res-badge.ok {
+      background: rgba(47, 226, 143, .12);
+      border: 1px solid rgba(47, 226, 143, .3);
+      color: var(--ok);
+    }
+
+    .res-badge.bad {
+      background: rgba(255, 91, 110, .1);
+      border: 1px solid rgba(255, 91, 110, .25);
+      color: var(--bad);
+    }
+
+    .res-badge.pend {
+      background: rgba(255, 255, 255, .05);
+      border: 1px solid var(--stroke);
+      color: var(--muted);
+      font-style: italic;
+    }
 
     /* ── Historial table ── */
-    .picks-table { width:100%; border-collapse:collapse; font-size:12px; }
-    .picks-table th { text-align:left; font-size:10px; text-transform:uppercase; letter-spacing:.06em; color:var(--muted); padding:6px 10px; border-bottom:1px solid var(--stroke); }
-    .picks-table td { padding:9px 10px; border-bottom:1px solid rgba(255,255,255,.05); vertical-align:middle; }
-    .picks-table tr:last-child td { border-bottom:none; }
-    .picks-table tbody tr:hover { background:rgba(255,255,255,.03); }
-    .badge { display:inline-flex; align-items:center; padding:3px 7px; border-radius:6px; border:1px solid var(--stroke); background:rgba(255,255,255,.06); font-size:11px; font-weight:600; font-family:var(--mono); }
+    .picks-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 12px;
+    }
+
+    .picks-table th {
+      text-align: left;
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: .06em;
+      color: var(--muted);
+      padding: 6px 10px;
+      border-bottom: 1px solid var(--stroke);
+    }
+
+    .picks-table td {
+      padding: 9px 10px;
+      border-bottom: 1px solid rgba(255, 255, 255, .05);
+      vertical-align: middle;
+    }
+
+    .picks-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .picks-table tbody tr:hover {
+      background: rgba(255, 255, 255, .03);
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 3px 7px;
+      border-radius: 6px;
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, .06);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--mono);
+    }
 
     /* ── Conf filter ── */
-    .filter-bar { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:12px; }
-    .filter-btn { padding:4px 12px; border-radius:999px; border:1px solid var(--stroke); background:rgba(255,255,255,.05); color:var(--muted); font-size:11px; font-weight:600; cursor:pointer; transition:background .12s,color .12s; }
-    .filter-btn:hover { background:rgba(255,255,255,.1); color:var(--text); }
-    .filter-btn.active { background:rgba(122,167,255,.15); border-color:rgba(122,167,255,.4); color:var(--accent); }
+    .filter-bar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+
+    .filter-btn {
+      padding: 4px 12px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, .05);
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .12s, color .12s;
+    }
+
+    .filter-btn:hover {
+      background: rgba(255, 255, 255, .1);
+      color: var(--text);
+    }
+
+    .filter-btn.active {
+      background: rgba(122, 167, 255, .15);
+      border-color: rgba(122, 167, 255, .4);
+      color: var(--accent);
+    }
 
     /* ── Misc ── */
-    .empty { text-align:center; color:var(--muted); padding:40px 20px; font-size:13px; }
-    .cta-bottom { text-align:center; padding:40px 20px; border-top:1px solid var(--stroke); }
-    .cta-bottom p { color:var(--muted); font-size:13px; margin-bottom:20px; }
-    .footer { text-align:center; color:var(--muted); font-size:11px; padding:24px 20px; border-top:1px solid var(--stroke); }
+    .empty {
+      text-align: center;
+      color: var(--muted);
+      padding: 40px 20px;
+      font-size: 13px;
+    }
+
+    .cta-bottom {
+      text-align: center;
+      padding: 40px 20px;
+      border-top: 1px solid var(--stroke);
+    }
+
+    .cta-bottom p {
+      color: var(--muted);
+      font-size: 13px;
+      margin-bottom: 20px;
+    }
+
+    .footer {
+      text-align: center;
+      color: var(--muted);
+      font-size: 11px;
+      padding: 24px 20px;
+      border-top: 1px solid var(--stroke);
+    }
 
     @media(max-width:600px) {
-      .hero h1 { font-size:24px; }
-      .kpi-grid { grid-template-columns:repeat(2,1fr); }
-      .picks-table th:nth-child(4), .picks-table td:nth-child(4),
-      .picks-table th:nth-child(6), .picks-table td:nth-child(6) { display:none; }
+      .hero h1 {
+        font-size: 24px;
+      }
+
+      .kpi-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+
+      .picks-table th:nth-child(4),
+      .picks-table td:nth-child(4),
+      .picks-table th:nth-child(6),
+      .picks-table td:nth-child(6) {
+        display: none;
+      }
     }
   </style>
 </head>
+
 <body>
 
-<!-- Hero -->
-<div class="hero">
-  <div class="hero-logo">
-    <img src="/icono-p.png" alt="Pickster" width="90" height="90" style="border-radius:12px;">
+  <!-- Heros -->
+  <div class="hero">
+    <div class="hero-logo">
+      <img src="/icono-p.png" alt="Pickster" width="90" height="90" style="border-radius:12px;">
+    </div>
+    <h1>Pickster MLB</h1>
+    <p>Predicciones de béisbol generadas por modelo XGBoost · Moneyline + Over/Under</p>
+    <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:28px;">
+      <a class="tg-cta" style="margin-top:0;" href="https://t.me/PicksterV_bot" target="_blank" rel="noopener">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+          <path
+            d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z" />
+        </svg>
+        Probar 7 días gratis
+      </a>
+      <a href="/"
+        style="display:inline-flex;align-items:center;gap:8px;margin-top:0;padding:14px 24px;border-radius:999px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:var(--muted);font-weight:600;font-size:14px;text-decoration:none;">←
+        Volver</a>
+    </div>
   </div>
-  <h1>Pickster MLB</h1>
-  <p>Predicciones de béisbol generadas por modelo XGBoost · Moneyline + Over/Under</p>
-  <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:28px;">
-    <a class="tg-cta" style="margin-top:0;" href="https://t.me/PicksterV_bot" target="_blank" rel="noopener">
-      <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
+
+  <div class="wrap">
+
+    <!-- KPIs -->
+    <div class="kpi-grid">
+      <div class="kpi-card">
+        <div class="kpi-label">ML Accuracy</div>
+        <div class="kpi-value" id="kpiMlAcc">--%</div>
+        <div class="kpi-sub" id="kpiMlSub">últimos 30 días</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">O/U Accuracy</div>
+        <div class="kpi-value" id="kpiOuAcc">--%</div>
+        <div class="kpi-sub">últimos 30 días</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Evaluados</div>
+        <div class="kpi-value accent" id="kpiTotal">--</div>
+        <div class="kpi-sub">predicciones</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Correctos ML</div>
+        <div class="kpi-value ok" id="kpiCorrect">--</div>
+        <div class="kpi-sub">aciertos</div>
+      </div>
+    </div>
+
+    <!-- Info modelo -->
+    <div
+      style="background:linear-gradient(90deg,rgba(122,167,255,.07),rgba(47,226,143,.05));border:1px solid var(--stroke);border-radius:var(--r);padding:16px 20px;margin:0 0 28px;">
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:24px;">
+        <div style="text-align:center;">
+          <div
+            style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">
+            Modelo</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">XGBoost · Entrenado con 7,400+ juegos
+            MLB</div>
+        </div>
+        <div style="width:1px;background:var(--stroke);"></div>
+        <div style="text-align:center;">
+          <div
+            style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">
+            Features</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">Win%, ERA, WHIP, OBP, SLG, Run
+            Differential</div>
+        </div>
+        <div style="width:1px;background:var(--stroke);"></div>
+        <div style="text-align:center;">
+          <div
+            style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">
+            Baseline</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">+3% sobre predecir siempre al equipo
+            local</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Picks del día -->
+    <div
+      style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+      <div class="section-title" style="margin:0;">Predicciones</div>
+    </div>
+    <div class="date-nav">
+      <button id="btnToday" onclick="loadDate('today')">Hoy</button>
+      <button id="btnTomorrow" onclick="loadDate('tomorrow')" class="active">Mañana</button>
+      <input type="date" id="datePicker" onchange="loadDate('custom')" />
+    </div>
+    <div class="games-grid" id="gamesGrid">
+      <div class="empty">Cargando…</div>
+    </div>
+
+    <!-- Historial -->
+    <div class="section-title" style="margin-top:36px;">Historial reciente</div>
+    <div class="filter-bar" id="confFilter">
+      <button class="filter-btn active" onclick="setConfFilter(0,this)">Todos</button>
+      <button class="filter-btn" onclick="setConfFilter(0.55,this)">+55%</button>
+      <button class="filter-btn" onclick="setConfFilter(0.60,this)">+60%</button>
+      <button class="filter-btn" onclick="setConfFilter(0.65,this)">+65%</button>
+    </div>
+    <div
+      style="background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid var(--stroke);border-radius:var(--r);overflow:hidden;">
+      <table class="picks-table">
+        <thead>
+          <tr>
+            <th>Fecha</th>
+            <th>Partido</th>
+            <th>Pick ML</th>
+            <th>Conf.</th>
+            <th>O/U</th>
+            <th>Score</th>
+            <th>R</th>
+          </tr>
+        </thead>
+        <tbody id="historyTbody">
+          <tr>
+            <td colspan="7" class="empty">Cargando…</td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+
+  </div>
+
+  <!-- CTA -->
+  <div class="cta-bottom">
+    <p>¿Te gustan los picks? Entra al canal privado y recíbelos antes del partido.</p>
+    <a class="tg-cta" href="https://t.me/PicksterV_bot" target="_blank" rel="noopener">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
+        <path
+          d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z" />
+      </svg>
       Probar 7 días gratis
     </a>
-    <a href="/" style="display:inline-flex;align-items:center;gap:8px;margin-top:0;padding:14px 24px;border-radius:999px;border:1px solid var(--stroke);background:rgba(255,255,255,.06);color:var(--muted);font-weight:600;font-size:14px;text-decoration:none;">← Volver</a>
-  </div>
-</div>
-
-<div class="wrap">
-
-  <!-- KPIs -->
-  <div class="kpi-grid">
-    <div class="kpi-card">
-      <div class="kpi-label">ML Accuracy</div>
-      <div class="kpi-value" id="kpiMlAcc">--%</div>
-      <div class="kpi-sub" id="kpiMlSub">últimos 30 días</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">O/U Accuracy</div>
-      <div class="kpi-value" id="kpiOuAcc">--%</div>
-      <div class="kpi-sub">últimos 30 días</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Evaluados</div>
-      <div class="kpi-value accent" id="kpiTotal">--</div>
-      <div class="kpi-sub">predicciones</div>
-    </div>
-    <div class="kpi-card">
-      <div class="kpi-label">Correctos ML</div>
-      <div class="kpi-value ok" id="kpiCorrect">--</div>
-      <div class="kpi-sub">aciertos</div>
-    </div>
+    <p style="margin-top:12px;font-size:12px;">7 días gratis · luego MXN 250/mes · cancela cuando quieras</p>
   </div>
 
-  <!-- Info modelo -->
-  <div style="background:linear-gradient(90deg,rgba(122,167,255,.07),rgba(47,226,143,.05));border:1px solid var(--stroke);border-radius:var(--r);padding:16px 20px;margin:0 0 28px;">
-    <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:24px;">
-      <div style="text-align:center;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">Modelo</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">XGBoost · Entrenado con 7,400+ juegos MLB</div>
-      </div>
-      <div style="width:1px;background:var(--stroke);"></div>
-      <div style="text-align:center;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">Features</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">Win%, ERA, WHIP, OBP, SLG, Run Differential</div>
-      </div>
-      <div style="width:1px;background:var(--stroke);"></div>
-      <div style="text-align:center;">
-        <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">Baseline</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">+3% sobre predecir siempre al equipo local</div>
-      </div>
-    </div>
+  <div class="footer">
+    Predicciones generadas automáticamente · Modelo entrenado con datos históricos MLB
+    &nbsp;·&nbsp;
+    <a href="/terms.html" style="color:var(--accent);text-decoration:none;">Términos y condiciones</a>
   </div>
 
-  <!-- Picks del día -->
-  <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
-    <div class="section-title" style="margin:0;">Predicciones</div>
-  </div>
-  <div class="date-nav">
-    <button id="btnToday" onclick="loadDate('today')">Hoy</button>
-    <button id="btnTomorrow" onclick="loadDate('tomorrow')" class="active">Mañana</button>
-    <input type="date" id="datePicker" onchange="loadDate('custom')" />
-  </div>
-  <div class="games-grid" id="gamesGrid">
-    <div class="empty">Cargando…</div>
-  </div>
+  <script>
+    const API = "/api";
 
-  <!-- Historial -->
-  <div class="section-title" style="margin-top:36px;">Historial reciente</div>
-  <div class="filter-bar" id="confFilter">
-    <button class="filter-btn active" onclick="setConfFilter(0,this)">Todos</button>
-    <button class="filter-btn" onclick="setConfFilter(0.55,this)">+55%</button>
-    <button class="filter-btn" onclick="setConfFilter(0.60,this)">+60%</button>
-    <button class="filter-btn" onclick="setConfFilter(0.65,this)">+65%</button>
-  </div>
-  <div style="background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid var(--stroke);border-radius:var(--r);overflow:hidden;">
-    <table class="picks-table">
-      <thead>
-        <tr>
-          <th>Fecha</th>
-          <th>Partido</th>
-          <th>Pick ML</th>
-          <th>Conf.</th>
-          <th>O/U</th>
-          <th>Score</th>
-          <th>R</th>
-        </tr>
-      </thead>
-      <tbody id="historyTbody">
-        <tr><td colspan="7" class="empty">Cargando…</td></tr>
-      </tbody>
-    </table>
-  </div>
+    const now = new Date();
+    const todayStr = fmtDate(now);
+    const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
+    const tomorrowStr = fmtDate(tomorrow);
 
-</div>
+    let currentConf = 0;
+    let historyData = [];
 
-<!-- CTA -->
-<div class="cta-bottom">
-  <p>¿Te gustan los picks? Entra al canal privado y recíbelos antes del partido.</p>
-  <a class="tg-cta" href="https://t.me/PicksterV_bot" target="_blank" rel="noopener">
-    <svg width="22" height="22" viewBox="0 0 24 24" fill="white"><path d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z"/></svg>
-    Probar 7 días gratis
-  </a>
-  <p style="margin-top:12px;font-size:12px;">7 días gratis · luego MXN 250/mes · cancela cuando quieras</p>
-</div>
+    function fmtDate(d) {
+      return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+    }
 
-<div class="footer">
-  Predicciones generadas automáticamente · Modelo entrenado con datos históricos MLB
-  &nbsp;·&nbsp;
-  <a href="/terms.html" style="color:var(--accent);text-decoration:none;">Términos y condiciones</a>
-</div>
+    function el(id) { return document.getElementById(id); }
 
-<script>
-  const API = "/api";
+    // ── KPIs ──────────────────────────────────────────────────────────────────
 
-  const now      = new Date();
-  const todayStr = fmtDate(now);
-  const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
-  const tomorrowStr = fmtDate(tomorrow);
+    async function loadStats() {
+      try {
+        const r = await fetch(`${API}/mlb/stats/accuracy?days=30`);
+        if (!r.ok) return;
+        const d = await r.json();
+        const mlAcc = parseFloat(d.ml_accuracy_pct) || 0;
+        const ouAcc = parseFloat(d.ou_accuracy_pct) || 0;
+        el("kpiMlAcc").textContent = d.ml_accuracy_pct != null ? `${d.ml_accuracy_pct}%` : "--%";
+        el("kpiMlAcc").className = "kpi-value " + (mlAcc >= 55 ? "ok" : mlAcc < 50 ? "bad" : "accent");
+        el("kpiOuAcc").textContent = d.ou_accuracy_pct != null ? `${d.ou_accuracy_pct}%` : "--%";
+        el("kpiOuAcc").className = "kpi-value " + (ouAcc >= 55 ? "ok" : ouAcc < 50 ? "bad" : "accent");
+        el("kpiTotal").textContent = d.total_evaluated ?? "--";
+        el("kpiCorrect").textContent = d.ml_correct ?? "--";
+        if (d.from_date && d.to_date) {
+          el("kpiMlSub").textContent = `${d.from_date} → ${d.to_date}`;
+        }
+      } catch (e) { console.error("stats:", e); }
+    }
 
-  let currentConf = 0;
-  let historyData  = [];
+    // ── Predicciones del día ──────────────────────────────────────────────────
 
-  function fmtDate(d) {
-    return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
-  }
+    async function loadDate(which) {
+      let target;
+      if (which === "today") { target = todayStr; el("btnToday").classList.add("active"); el("btnTomorrow").classList.remove("active"); }
+      else if (which === "tomorrow") { target = tomorrowStr; el("btnTomorrow").classList.add("active"); el("btnToday").classList.remove("active"); }
+      else { target = el("datePicker").value; el("btnToday").classList.remove("active"); el("btnTomorrow").classList.remove("active"); }
 
-  function el(id) { return document.getElementById(id); }
+      if (!target) return;
+      el("gamesGrid").innerHTML = '<div class="empty">Cargando…</div>';
+      try {
+        const r = await fetch(`${API}/mlb/predictions?date=${target}`);
+        if (!r.ok) { el("gamesGrid").innerHTML = '<div class="empty">Error cargando datos.</div>'; return; }
+        const d = await r.json();
+        renderGames(d.predictions || []);
+      } catch (e) { el("gamesGrid").innerHTML = '<div class="empty">Error de conexión.</div>'; }
+    }
 
-  // ── KPIs ──────────────────────────────────────────────────────────────────
+    function renderGames(preds) {
+      const grid = el("gamesGrid");
+      if (!preds.length) { grid.innerHTML = '<div class="empty">Sin predicciones para esta fecha.</div>'; return; }
+      grid.innerHTML = "";
+      for (const p of preds) {
+        const conf = parseFloat(p.ml_confidence_pct) || 0;
+        const isHigh = conf >= 60;
+        const mlTeam = p.ml_pick === "home" ? p.home_team : p.away_team;
+        const ouLine = p.ou_line || 8.5;
+        const hasResult = p.home_score != null && p.away_score != null;
+        const score = hasResult ? `${p.away_score} - ${p.home_score}` : null;
 
-  async function loadStats() {
-    try {
-      const r = await fetch(`${API}/mlb/stats/accuracy?days=30`);
-      if (!r.ok) return;
-      const d = await r.json();
-      const mlAcc = parseFloat(d.ml_accuracy_pct) || 0;
-      const ouAcc = parseFloat(d.ou_accuracy_pct) || 0;
-      el("kpiMlAcc").textContent  = d.ml_accuracy_pct != null ? `${d.ml_accuracy_pct}%` : "--%";
-      el("kpiMlAcc").className    = "kpi-value " + (mlAcc >= 55 ? "ok" : mlAcc < 50 ? "bad" : "accent");
-      el("kpiOuAcc").textContent  = d.ou_accuracy_pct != null ? `${d.ou_accuracy_pct}%` : "--%";
-      el("kpiOuAcc").className    = "kpi-value " + (ouAcc >= 55 ? "ok" : ouAcc < 50 ? "bad" : "accent");
-      el("kpiTotal").textContent  = d.total_evaluated ?? "--";
-      el("kpiCorrect").textContent = d.ml_correct ?? "--";
-      if (d.from_date && d.to_date) {
-        el("kpiMlSub").textContent = `${d.from_date} → ${d.to_date}`;
-      }
-    } catch(e) { console.error("stats:", e); }
-  }
-
-  // ── Predicciones del día ──────────────────────────────────────────────────
-
-  async function loadDate(which) {
-    let target;
-    if (which === "today")    { target = todayStr;   el("btnToday").classList.add("active");    el("btnTomorrow").classList.remove("active"); }
-    else if (which === "tomorrow") { target = tomorrowStr; el("btnTomorrow").classList.add("active"); el("btnToday").classList.remove("active"); }
-    else { target = el("datePicker").value; el("btnToday").classList.remove("active"); el("btnTomorrow").classList.remove("active"); }
-
-    if (!target) return;
-    el("gamesGrid").innerHTML = '<div class="empty">Cargando…</div>';
-    try {
-      const r = await fetch(`${API}/mlb/predictions?date=${target}`);
-      if (!r.ok) { el("gamesGrid").innerHTML = '<div class="empty">Error cargando datos.</div>'; return; }
-      const d = await r.json();
-      renderGames(d.predictions || []);
-    } catch(e) { el("gamesGrid").innerHTML = '<div class="empty">Error de conexión.</div>'; }
-  }
-
-  function renderGames(preds) {
-    const grid = el("gamesGrid");
-    if (!preds.length) { grid.innerHTML = '<div class="empty">Sin predicciones para esta fecha.</div>'; return; }
-    grid.innerHTML = "";
-    for (const p of preds) {
-      const conf = parseFloat(p.ml_confidence_pct) || 0;
-      const isHigh = conf >= 60;
-      const mlTeam = p.ml_pick === "home" ? p.home_team : p.away_team;
-      const ouLine = p.ou_line || 8.5;
-      const hasResult = p.home_score != null && p.away_score != null;
-      const score = hasResult ? `${p.away_score} - ${p.home_score}` : null;
-
-      const card = document.createElement("div");
-      card.className = "game-card" + (isHigh ? " high" : "");
-      card.innerHTML = `
+        const card = document.createElement("div");
+        card.className = "game-card" + (isHigh ? " high" : "");
+        card.innerHTML = `
         <div class="game-header">
           <div class="game-matchup">
             <span class="away">${p.away_abbr}</span>
@@ -339,66 +719,67 @@
           </span>
         </div>` : ""}
       `;
-      grid.appendChild(card);
-    }
-  }
-
-  // ── Historial ─────────────────────────────────────────────────────────────
-
-  async function loadHistory() {
-    // Últimas 2 semanas con resultados
-    const from = new Date(now); from.setDate(now.getDate() - 14);
-    try {
-      const r = await fetch(`${API}/mlb/predictions?date=${todayStr}&min_confidence=0`);
-      // Cargamos varios días en paralelo
-      const days = [];
-      for (let i = 1; i <= 14; i++) {
-        const d = new Date(now); d.setDate(now.getDate() - i);
-        days.push(fmtDate(d));
+        grid.appendChild(card);
       }
-      const results = await Promise.all(
-        days.map(d => fetch(`${API}/mlb/predictions?date=${d}`).then(r => r.ok ? r.json() : {predictions:[]}).catch(()=>({predictions:[]})))
-      );
-      historyData = results.flatMap(r => r.predictions || []).filter(p => p.home_score != null);
+    }
+
+    // ── Historial ─────────────────────────────────────────────────────────────
+
+    async function loadHistory() {
+      // Últimas 2 semanas con resultados
+      const from = new Date(now); from.setDate(now.getDate() - 14);
+      try {
+        const r = await fetch(`${API}/mlb/predictions?date=${todayStr}&min_confidence=0`);
+        // Cargamos varios días en paralelo
+        const days = [];
+        for (let i = 1; i <= 14; i++) {
+          const d = new Date(now); d.setDate(now.getDate() - i);
+          days.push(fmtDate(d));
+        }
+        const results = await Promise.all(
+          days.map(d => fetch(`${API}/mlb/predictions?date=${d}`).then(r => r.ok ? r.json() : { predictions: [] }).catch(() => ({ predictions: [] })))
+        );
+        historyData = results.flatMap(r => r.predictions || []).filter(p => p.home_score != null);
+        renderHistory();
+      } catch (e) { console.error("history:", e); }
+    }
+
+    function setConfFilter(conf, btn) {
+      currentConf = conf;
+      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      btn.classList.add("active");
       renderHistory();
-    } catch(e) { console.error("history:", e); }
-  }
+    }
 
-  function setConfFilter(conf, btn) {
-    currentConf = conf;
-    document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    renderHistory();
-  }
-
-  function renderHistory() {
-    const tbody = el("historyTbody");
-    const filtered = historyData.filter(p => (parseFloat(p.ml_confidence_pct)||0) >= currentConf * 100);
-    if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Sin historial disponible aún.</td></tr>'; return; }
-    const sorted = [...filtered].sort((a,b) => b.game_date.localeCompare(a.game_date)).slice(0, 50);
-    tbody.innerHTML = sorted.map(p => {
-      const mlTeam = p.ml_pick === "home" ? p.home_abbr : p.away_abbr;
-      const mlR  = p.ml_correct === true ? '<span class="res-badge ok">✓</span>' : p.ml_correct === false ? '<span class="res-badge bad">✗</span>' : '<span class="res-badge pend">–</span>';
-      const ouR  = p.ou_correct === true ? '<span class="res-badge ok">✓</span>' : p.ou_correct === false ? '<span class="res-badge bad">✗</span>' : '<span class="res-badge pend">–</span>';
-      const conf = parseFloat(p.ml_confidence_pct) || 0;
-      const score = p.home_score != null ? `${p.away_score}-${p.home_score}` : "–";
-      return `<tr>
+    function renderHistory() {
+      const tbody = el("historyTbody");
+      const filtered = historyData.filter(p => (parseFloat(p.ml_confidence_pct) || 0) >= currentConf * 100);
+      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Sin historial disponible aún.</td></tr>'; return; }
+      const sorted = [...filtered].sort((a, b) => b.game_date.localeCompare(a.game_date)).slice(0, 50);
+      tbody.innerHTML = sorted.map(p => {
+        const mlTeam = p.ml_pick === "home" ? p.home_abbr : p.away_abbr;
+        const mlR = p.ml_correct === true ? '<span class="res-badge ok">✓</span>' : p.ml_correct === false ? '<span class="res-badge bad">✗</span>' : '<span class="res-badge pend">–</span>';
+        const ouR = p.ou_correct === true ? '<span class="res-badge ok">✓</span>' : p.ou_correct === false ? '<span class="res-badge bad">✗</span>' : '<span class="res-badge pend">–</span>';
+        const conf = parseFloat(p.ml_confidence_pct) || 0;
+        const score = p.home_score != null ? `${p.away_score}-${p.home_score}` : "–";
+        return `<tr>
         <td style="color:var(--muted)">${p.game_date}</td>
         <td><b>${p.away_abbr}</b> @ <b>${p.home_abbr}</b></td>
         <td><span class="badge">${mlTeam}</span></td>
-        <td style="font-family:var(--mono);color:${conf>=60?'var(--accent)':'var(--muted)'}">${conf}%</td>
-        <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${p.ou_pick?.toUpperCase()}</span></td>
+        <td style="font-family:var(--mono);color:${conf >= 60 ? 'var(--accent)' : 'var(--muted)'}">${conf}%</td>
+        <td><span class="badge" style="color:${p.ou_pick === 'over' ? 'var(--ok)' : '#7aa7ff'}">${p.ou_pick?.toUpperCase()}</span></td>
         <td style="font-family:var(--mono)">${score}</td>
         <td style="display:flex;gap:4px">${mlR}${ouR}</td>
       </tr>`;
-    }).join("");
-  }
+      }).join("");
+    }
 
-  // ── Init ──────────────────────────────────────────────────────────────────
-  el("datePicker").value = tomorrowStr;
-  loadStats();
-  loadDate("tomorrow");
-  loadHistory();
-</script>
+    // ── Init ──────────────────────────────────────────────────────────────────
+    el("datePicker").value = tomorrowStr;
+    loadStats();
+    loadDate("tomorrow");
+    loadHistory();
+  </script>
 </body>
+
 </html>
