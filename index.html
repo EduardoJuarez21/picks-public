@@ -837,7 +837,9 @@
         const pick = (it.pick ?? "").toUpperCase();
         const lineVal = parseFloat(it.line);
         const line = it.line != null && String(it.line).trim() && lineVal !== 0 ? ` ${it.line}` : "";
-        const mkt = (it.pick_market ?? "").toUpperCase();
+        const mktRaw = (it.pick_market ?? "").toUpperCase();
+        const mktAbbr = { CORNERS: "COR", OVER: "O/U", UNDER: "O/U", MONEYLINE: "ML", "1X2": "1X2" };
+        const mkt = mktAbbr[mktRaw] ?? mktRaw;
         const odds = parseFloat(it.odds);
         const dec = (it.decision ?? "").toUpperCase() === "BET";
         const tr = document.createElement("tr");
