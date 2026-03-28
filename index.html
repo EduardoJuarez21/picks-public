@@ -379,6 +379,7 @@
     .res {
       font-weight: 700;
       font-family: var(--mono);
+      white-space: nowrap;
     }
 
     .res.g {
@@ -757,9 +758,11 @@
       el("kpiG").textContent = g;
       el("kpiP").textContent = p;
       el("kpiPend").textContent = pend;
-      if (pnl !== 0) {
+      const monthName = new Date().toLocaleString("es", { month: "long" });
+      if (pnl !== 0 || resolved > 0) {
         const sign = pnl >= 0 ? "+" : "";
-        el("heroSub").textContent = `${sign}${pnl.toFixed(0)}u de ganancia este mes`;
+        const wrPart = wr !== null ? ` · ${wr}% acierto` : "";
+        el("heroSub").textContent = `${sign}${pnl.toFixed(0)}u en ${monthName}${wrPart}`;
       }
     }
 
