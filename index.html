@@ -456,60 +456,17 @@
       <img src="/icono-p.png" alt="Pickster" width="90" height="90" style="border-radius:12px;">
     </div>
     <h1>Pickster</h1>
-    <p>Estadísticas reales · Transparencia total</p>
+    <p id="heroSub">Picks deportivos basados en análisis estadístico real</p>
     <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:28px;">
       <a class="tg-cta" style="margin-top:0;" href="https://t.me/PicksterV_bot" target="_blank" rel="noopener">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
           <path
             d="M12 0C5.373 0 0 5.373 0 12s5.373 12 12 12 12-5.373 12-12S18.627 0 12 0zm5.894 8.221-1.97 9.28c-.145.658-.537.818-1.084.508l-3-2.21-1.447 1.394c-.16.16-.295.295-.605.295l.213-3.053 5.56-5.023c.242-.213-.054-.333-.373-.12L8.32 14.617l-2.96-.924c-.643-.204-.657-.643.136-.953l11.57-4.461c.537-.194 1.006.131.828.942z" />
         </svg>
-        Unirse al canal
-      </a>
-      <a href="/terms.html"
-        style="display:inline-flex;align-items:center;gap:8px;padding:14px 24px;border-radius:999px;border:1px solid rgba(255,255,255,.2);color:rgba(255,255,255,.75);font-weight:600;font-size:15px;text-decoration:none;transition:border-color .15s,color .15s;"
-        onmouseover="this.style.color='#fff';this.style.borderColor='rgba(255,255,255,.5)'"
-        onmouseout="this.style.color='rgba(255,255,255,.75)';this.style.borderColor='rgba(255,255,255,.2)'">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"
-          stroke-linecap="round" stroke-linejoin="round">
-          <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z" />
-          <polyline points="14 2 14 8 20 8" />
-          <line x1="16" y1="13" x2="8" y2="13" />
-          <line x1="16" y1="17" x2="8" y2="17" />
-          <polyline points="10 9 9 9 8 9" />
-        </svg>
-        Términos y condiciones
+        Probar 7 días gratis
       </a>
     </div>
-  </div>
-
-  <!-- Banda de valor1 -->
-  <div
-    style="background:linear-gradient(90deg,rgba(122,167,255,.07),rgba(47,226,143,.05));border-bottom:1px solid var(--stroke);padding:20px;text-align:center;">
-    <div style="max-width:800px;margin:0 auto;display:flex;flex-wrap:wrap;justify-content:center;gap:28px;" class="valor-banda">
-      <div style="text-align:center;">
-        <div
-          style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">
-          Metodología</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">Modelos estadísticos · Valor esperado
-          positivo</div>
-      </div>
-      <div style="width:1px;background:var(--stroke);"></div>
-      <div style="text-align:center;">
-        <div
-          style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">
-          Transparencia</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">Historial público · Sin resultados
-          ocultos</div>
-      </div>
-      <div style="width:1px;background:var(--stroke);"></div>
-      <div style="text-align:center;">
-        <div
-          style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">
-          Selección</div>
-        <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">Solo picks con edge real · Filtramos el
-          ruido</div>
-      </div>
-    </div>
+    <p style="margin-top:14px;font-size:13px;color:rgba(255,255,255,.45);">7 días gratis · luego MXN 250/mes · cancela cuando quieras</p>
   </div>
 
   <!-- Contenido -->
@@ -546,6 +503,26 @@
         <div class="kpi-label">Pendientes</div>
         <div class="kpi-value" id="kpiPend">--</div>
         <div class="kpi-sub">por resolver</div>
+      </div>
+    </div>
+
+    <!-- Banda de metodología -->
+    <div style="background:linear-gradient(90deg,rgba(122,167,255,.07),rgba(47,226,143,.05));border:1px solid var(--stroke);border-radius:var(--r);padding:16px 20px;margin:20px 0;" >
+      <div style="display:flex;flex-wrap:wrap;justify-content:center;gap:24px;" class="valor-banda">
+        <div style="text-align:center;">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">Metodología</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">Modelos estadísticos · Valor esperado positivo</div>
+        </div>
+        <div style="width:1px;background:var(--stroke);"></div>
+        <div style="text-align:center;">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">Transparencia</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">Historial público · Sin resultados ocultos</div>
+        </div>
+        <div style="width:1px;background:var(--stroke);"></div>
+        <div style="text-align:center;">
+          <div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">Selección</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">Solo picks con edge real · Filtramos el ruido</div>
+        </div>
       </div>
     </div>
 
@@ -677,6 +654,10 @@
       el("kpiG").textContent = g;
       el("kpiP").textContent = p;
       el("kpiPend").textContent = pend;
+      if (wr !== null) {
+        const sign = pnl >= 0 ? "+" : "";
+        el("heroSub").textContent = `${wr}% de acierto · ${sign}${pnl.toFixed(0)}u de ganancia este mes`;
+      }
     }
 
     function renderLeagues(items) {
