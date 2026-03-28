@@ -578,7 +578,7 @@
     </div>
 
     <!-- Calendario de hoy -->
-    <div class="section-title" style="margin-top:32px;">Partidos de hoy</div>
+    <div class="section-title" style="margin-top:32px;">Partidos por analizar · <span id="calDate"></span></div>
     <div id="calContainer">
       <div class="empty">Cargando…</div>
     </div>
@@ -810,6 +810,7 @@
       }
     }
 
+    el("calDate").textContent = new Date().toLocaleDateString("es-MX", { day: "numeric", month: "short", year: "numeric" });
     load();
     loadCalendar();
   </script>
