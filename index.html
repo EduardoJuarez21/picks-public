@@ -475,17 +475,17 @@
     <!-- KPIs -->
     <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-label">BET Picks</div>
+        <div class="kpi-label">Picks apostados</div>
         <div class="kpi-value accent" id="kpiTotal">--</div>
         <div class="kpi-sub" id="kpiSub">del mes</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Win Rate</div>
+        <div class="kpi-label">% Acierto</div>
         <div class="kpi-value" id="kpiWr">--%</div>
         <div class="kpi-sub" id="kpiWrSub">resueltos</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">PnL (100u)</div>
+        <div class="kpi-label">Ganancia (100u)</div>
         <div class="kpi-value" id="kpiPnl">--</div>
         <div class="kpi-sub">unidades</div>
       </div>
@@ -654,9 +654,9 @@
       el("kpiG").textContent = g;
       el("kpiP").textContent = p;
       el("kpiPend").textContent = pend;
-      if (wr !== null) {
+      if (pnl !== 0) {
         const sign = pnl >= 0 ? "+" : "";
-        el("heroSub").textContent = `${wr}% de acierto · ${sign}${pnl.toFixed(0)}u de ganancia este mes`;
+        el("heroSub").textContent = `${sign}${pnl.toFixed(0)}u de ganancia este mes`;
       }
     }
 
