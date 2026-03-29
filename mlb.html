@@ -630,13 +630,40 @@
 
     function el(id) { return document.getElementById(id); }
 
+    // ── Caché local ───────────────────────────────────────────────────────────
+    // Predicciones de hoy/mañana: 30 min. Días pasados: 24 h. Stats: 30 min.
+
+    function cacheSet(key, data, ttlMs) {
+      try {
+        localStorage.setItem("mlb_" + key, JSON.stringify({ ts: Date.now(), ttl: ttlMs, data }));
+      } catch (e) { /* cuota llena – ignorar */ }
+    }
+
+    function cacheGet(key) {
+      try {
+        const raw = localStorage.getItem("mlb_" + key);
+        if (!raw) return null;
+        const obj = JSON.parse(raw);
+        if (Date.now() - obj.ts > obj.ttl) { localStorage.removeItem("mlb_" + key); return null; }
+        return obj.data;
+      } catch (e) { return null; }
+    }
+
+    const TTL = 6 * 60 * 60 * 1000; // 6 horas para todo
+
+    function picksTTL() { return TTL; }
+
     // ── KPIs ──────────────────────────────────────────────────────────────────
 
     async function loadStats() {
       try {
-        const r = await fetch(`${API}/mlb/stats/accuracy?days=30`);
-        if (!r.ok) return;
-        const d = await r.json();
+        let d = cacheGet("stats_30");
+        if (!d) {
+          const r = await fetch(`${API}/mlb/stats/accuracy?days=30`);
+          if (!r.ok) return;
+          d = await r.json();
+          cacheSet("stats_30", d, TTL);
+        }
         const mlAcc = parseFloat(d.ml_accuracy_pct) || 0;
         const ouAcc = parseFloat(d.ou_accuracy_pct) || 0;
         el("kpiMlAcc").textContent = d.ml_accuracy_pct != null ? `${d.ml_accuracy_pct}%` : "--%";
@@ -653,6 +680,16 @@
 
     // ── Predicciones del día ──────────────────────────────────────────────────
 
+    async function fetchPredictions(dateStr) {
+      const cached = cacheGet("preds_" + dateStr);
+      if (cached) return cached;
+      const r = await fetch(`${API}/mlb/predictions?date=${dateStr}`);
+      if (!r.ok) throw new Error("http " + r.status);
+      const d = await r.json();
+      cacheSet("preds_" + dateStr, d, picksTTL());
+      return d;
+    }
+
     async function loadDate(which) {
       let target;
       if (which === "today") { target = todayStr; el("btnToday").classList.add("active"); el("btnTomorrow").classList.remove("active"); }
@@ -662,9 +699,7 @@
       if (!target) return;
       el("gamesGrid").innerHTML = '<div class="empty">Cargando…</div>';
       try {
-        const r = await fetch(`${API}/mlb/predictions?date=${target}`);
-        if (!r.ok) { el("gamesGrid").innerHTML = '<div class="empty">Error cargando datos.</div>'; return; }
-        const d = await r.json();
+        const d = await fetchPredictions(target);
         renderGames(d.predictions || []);
       } catch (e) { el("gamesGrid").innerHTML = '<div class="empty">Error de conexión.</div>'; }
     }
@@ -744,18 +779,14 @@
     // ── Historial ─────────────────────────────────────────────────────────────
 
     async function loadHistory() {
-      // Últimas 2 semanas con resultados
-      const from = new Date(now); from.setDate(now.getDate() - 14);
       try {
-        const r = await fetch(`${API}/mlb/predictions?date=${todayStr}&min_confidence=0`);
-        // Cargamos varios días en paralelo
         const days = [];
         for (let i = 1; i <= 14; i++) {
           const d = new Date(now); d.setDate(now.getDate() - i);
           days.push(fmtDate(d));
         }
         const results = await Promise.all(
-          days.map(d => fetch(`${API}/mlb/predictions?date=${d}`).then(r => r.ok ? r.json() : { predictions: [] }).catch(() => ({ predictions: [] })))
+          days.map(d => fetchPredictions(d).catch(() => ({ predictions: [] })))
         );
         historyData = results.flatMap(r => r.predictions || []).filter(p => p.home_score != null);
         renderHistory();
