@@ -758,7 +758,7 @@
               <div class="pick-value ${p.ou_pick}">${p.ou_pick === 'over' ? 'OVER' : 'UNDER'}</div>
               <div style="font-size:12px;font-family:var(--mono);color:var(--muted);">${parseFloat(p.total_runs_pred).toFixed(1)}</div>
             </div>
-            <div class="pick-conf">línea: ${ouLine} runs</div>
+            <div class="pick-conf">edge: ${(Math.abs(parseFloat(p.total_runs_pred) - ouLine)).toFixed(1)} runs</div>
           </div>
         </div>
         ${hasResult ? `
@@ -816,7 +816,10 @@
         <td><b>${p.away_abbr}</b> @ <b>${p.home_abbr}</b></td>
         <td><span class="badge">${mlTeam}</span></td>
         <td style="font-family:var(--mono);color:${conf >= 60 ? 'var(--accent)' : 'var(--muted)'}">${conf}%</td>
-        <td><span class="badge" style="color:${p.ou_pick === 'over' ? 'var(--ok)' : '#7aa7ff'}">${p.ou_pick?.toUpperCase()}</span></td>
+        <td>
+          <span class="badge" style="color:${p.ou_pick === 'over' ? 'var(--ok)' : '#7aa7ff'}">${p.ou_pick?.toUpperCase()}</span>
+          <span style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-left:4px;">${p.total_runs_pred != null ? (Math.abs(parseFloat(p.total_runs_pred) - (p.ou_line || 8.5))).toFixed(1) : ''}</span>
+        </td>
         <td style="font-family:var(--mono)">${score}</td>
         <td style="display:flex;gap:4px">${mlR}${ouR}</td>
       </tr>`;
