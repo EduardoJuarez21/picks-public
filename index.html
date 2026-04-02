@@ -305,6 +305,26 @@
       color: var(--muted);
     }
 
+    .mkt-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+      margin-top: 6px;
+    }
+
+    .mkt-tag {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, .05);
+      font-size: 11px;
+      font-weight: 600;
+      font-family: var(--mono);
+      color: var(--muted);
+    }
+
     .bar-track {
       height: 5px;
       border-radius: 99px;
@@ -709,12 +729,15 @@
 
     function el(id) { return document.getElementById(id); }
 
+    const MKT_ABBR = { CORNERS: "COR", OVER: "O/U", UNDER: "O/U", MONEYLINE: "ML", "1X2": "1X2", BTTS: "BTTS" };
+    function mktLabel(raw) { return MKT_ABBR[(raw ?? "").toUpperCase()] ?? (raw ?? "").toUpperCase(); }
+
     function buildLeagueSeries(items) {
       const map = new Map();
       for (const it of items) {
         if ((it.decision ?? "").toUpperCase() !== "BET") continue;
         const key = String(it.league ?? "sin_liga").toLowerCase();
-        if (!map.has(key)) map.set(key, { key, label: leagueLabel(key), total: 0, g: 0, p: 0, n: 0, pending: 0, pnl: 0 });
+        if (!map.has(key)) map.set(key, { key, label: leagueLabel(key), total: 0, g: 0, p: 0, n: 0, pending: 0, pnl: 0, markets: new Map() });
         const r = map.get(key);
         r.total++;
         const res = (it.result ?? "").toUpperCase();
@@ -723,6 +746,14 @@
         else if (res === "P") { r.p++; r.pnl -= 100; }
         else if (res === "N") r.n++;
         else r.pending++;
+        // track per-market G/P
+        const mkt = mktLabel(it.pick_market);
+        if (mkt) {
+          if (!r.markets.has(mkt)) r.markets.set(mkt, { g: 0, p: 0 });
+          const m = r.markets.get(mkt);
+          if (res === "G") m.g++;
+          else if (res === "P") m.p++;
+        }
       }
       return [...map.values()].sort((a, b) => b.pnl - a.pnl);
     }
@@ -789,6 +820,10 @@
         const pnlClass = row.pnl > 0 ? "pos" : row.pnl < 0 ? "neg" : "";
         const div = document.createElement("div");
         div.className = "league-row";
+        const mktTags = [...row.markets.entries()]
+          .filter(([, m]) => m.g + m.p > 0)
+          .map(([name, m]) => `<span class="mkt-tag">${name} ${m.g}G·${m.p}P</span>`)
+          .join("");
         div.innerHTML = `
           <div class="league-top">
             <span class="league-name">${row.label}</span>
@@ -798,6 +833,7 @@
             </span>
           </div>
           <div class="league-meta">${row.total} picks · G:${row.g} · P:${row.p} · N:${row.n}${row.pending > 0 ? ` · Pend:${row.pending}` : ""}</div>
+          ${mktTags ? `<div class="mkt-tags">${mktTags}</div>` : ""}
           <div class="bar-track">
             <span class="bar-seg win"     style="width:${gPct}%"></span>
             <span class="bar-seg lose"    style="width:${pPct}%"></span>
@@ -842,9 +878,7 @@
         const pick = (it.pick ?? "").toUpperCase();
         const lineVal = parseFloat(it.line);
         const line = it.line != null && String(it.line).trim() && lineVal !== 0 ? ` ${it.line}` : "";
-        const mktRaw = (it.pick_market ?? "").toUpperCase();
-        const mktAbbr = { CORNERS: "COR", OVER: "O/U", UNDER: "O/U", MONEYLINE: "ML", "1X2": "1X2" };
-        const mkt = mktAbbr[mktRaw] ?? mktRaw;
+        const mkt = mktLabel(it.pick_market);
         const odds = parseFloat(it.odds);
         const dec = (it.decision ?? "").toUpperCase() === "BET";
         const tr = document.createElement("tr");
