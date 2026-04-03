@@ -2,6 +2,18 @@
   command = "echo ok"
   publish = "."
 
+# El HTML nunca se cachea — los clientes siempre reciben la versión más reciente
+[[headers]]
+  for = "/*.html"
+  [headers.values]
+    Cache-Control = "no-cache, no-store, must-revalidate"
+
+# Los assets estáticos se pueden cachear largo tiempo (no cambian frecuentemente)
+[[headers]]
+  for = "/icono-p.png"
+  [headers.values]
+    Cache-Control = "public, max-age=31536000, immutable"
+
 [functions]
   directory = "netlify/functions"
 
