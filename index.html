@@ -514,6 +514,37 @@
       margin-bottom: 20px;
     }
 
+    /* ── Month switcher ── */
+    .month-switcher {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+
+    .month-btn {
+      padding: 7px 18px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, .05);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: background .12s, color .12s, border-color .12s;
+    }
+
+    .month-btn:hover {
+      background: rgba(255, 255, 255, .1);
+      color: var(--text);
+    }
+
+    .month-btn.active {
+      background: rgba(122, 167, 255, .15);
+      border-color: rgba(122, 167, 255, .4);
+      color: var(--accent);
+    }
+
     /* ── Empty / loading ── */
     .empty {
       text-align: center;
@@ -584,6 +615,12 @@
 
   <!-- Contenido -->
   <div class="wrap">
+
+    <!-- Selector de mes -->
+    <div class="month-switcher">
+      <button class="month-btn active" id="btnThisMonth">Este mes</button>
+      <button class="month-btn" id="btnLastMonth">← Mes anterior</button>
+    </div>
 
     <!-- KPIs -->
     <div class="kpi-grid">
@@ -726,6 +763,11 @@
 
     const now = new Date();
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}`;
+    const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+    const lastMonth = `${lastMonthDate.getFullYear()}-${String(lastMonthDate.getMonth() + 1).padStart(2, "0")}`;
+    const lastMonthLabel = lastMonthDate.toLocaleString("es", { month: "long", year: "numeric" });
+
+    let activeMonth = currentMonth;
 
     function el(id) { return document.getElementById(id); }
 
@@ -794,7 +836,8 @@
       el("kpiG").textContent = g;
       el("kpiP").textContent = p;
       el("kpiPend").textContent = pend;
-      const monthName = new Date().toLocaleString("es", { month: "long" });
+      const displayDate = new Date(activeMonth + "-15");
+      const monthName = displayDate.toLocaleString("es", { month: "long" });
       if (pnl !== 0 || resolved > 0) {
         const sign = pnl >= 0 ? "+" : "";
         const wrPart = wr !== null ? ` · ${wr}% acierto` : "";
@@ -978,8 +1021,7 @@
       try { localStorage.setItem(cacheKey(month), JSON.stringify({ ts: Date.now(), items })); } catch { }
     }
 
-    async function load() {
-      const month = currentMonth;
+    async function load(month) {
       if (!month) return;
       const cached = cacheGet(month);
       if (cached) {
@@ -1002,6 +1044,14 @@
         el("leagueList").innerHTML = '<div class="empty">Error al cargar datos.</div>';
         el("picksTbody").innerHTML = '<tr><td colspan="7" class="empty">Error al cargar datos.</td></tr>';
       }
+    }
+
+    function switchMonth(month) {
+      activeMonth = month;
+      const isThis = month === currentMonth;
+      el("btnThisMonth").classList.toggle("active", isThis);
+      el("btnLastMonth").classList.toggle("active", !isThis);
+      load(month);
     }
 
     async function loadCalendar() {
@@ -1043,7 +1093,11 @@
       }
     }
 
-load();
+    el("btnLastMonth").textContent = `← ${lastMonthLabel.charAt(0).toUpperCase() + lastMonthLabel.slice(1)}`;
+    el("btnThisMonth").addEventListener("click", () => switchMonth(currentMonth));
+    el("btnLastMonth").addEventListener("click", () => switchMonth(lastMonth));
+
+    load(currentMonth);
     loadCalendar();
   </script>
 </body>
