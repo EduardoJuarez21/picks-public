@@ -633,7 +633,7 @@
     <div
       style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
       <div class="section-title" style="margin:0;">Predicciones</div>
-      <button id="btnBetDay" class="filter-btn" onclick="toggleBetDay(this)">💰 Solo apostados</button>
+      <button id="btnBetDay" class="filter-btn active" onclick="toggleBetDay(this)">💰 Solo apostados</button>
     </div>
     <div class="date-nav">
       <button id="btnToday" onclick="loadDate('today')" class="active">Hoy</button>
@@ -709,7 +709,7 @@
 
     let currentConf = 0;
     let historyData = [];
-    let betOnlyDay     = false;
+    let betOnlyDay     = true;
     let betOnlyHistory = false;
 
     function fmtDate(d) {
