@@ -593,9 +593,14 @@
         <div class="kpi-sub">predicciones</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Correctos ML</div>
+        <div class="kpi-label">Correctos</div>
         <div class="kpi-value ok" id="kpiCorrect">--</div>
-        <div class="kpi-sub">aciertos</div>
+        <div class="kpi-sub">ML + O/U</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Pendientes</div>
+        <div class="kpi-value accent" id="kpiPending">--</div>
+        <div class="kpi-sub">sin resultado</div>
       </div>
     </div>
 
@@ -760,7 +765,8 @@
         el("kpiOuAcc").textContent = d.ou_accuracy_pct != null ? `${d.ou_accuracy_pct}%` : "--%";
         el("kpiOuAcc").className = "kpi-value " + (ouAcc >= 55 ? "ok" : ouAcc < 50 ? "bad" : "accent");
         el("kpiTotal").textContent = d.total_evaluated ?? "--";
-        el("kpiCorrect").textContent = d.ml_correct ?? "--";
+        el("kpiCorrect").textContent = (d.ml_correct != null && d.ou_correct != null) ? (d.ml_correct + d.ou_correct) : (d.ml_correct ?? "--");
+        el("kpiPending").textContent = d.pending ?? "--";
         if (d.from_date && d.to_date) {
           el("kpiMlSub").textContent = `${d.from_date} → ${d.to_date}`;
         }
@@ -883,6 +889,10 @@
         );
         historyData = results.flatMap(r => r.predictions || []);
         renderHistory();
+        const pending = historyData.filter(p => !!p.bet).reduce((n, p) => {
+          return n + (p.ml_correct == null ? 1 : 0) + (p.ou_correct == null ? 1 : 0);
+        }, 0);
+        el("kpiPending").textContent = pending;
       } catch (e) { console.error("history:", e); }
     }
 
