@@ -875,14 +875,13 @@
       try {
         const days = [];
         const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
-        for (let d = new Date(firstOfMonth); d <= yesterday; d.setDate(d.getDate() + 1)) {
+        for (let d = new Date(firstOfMonth); d <= now; d.setDate(d.getDate() + 1)) {
           days.push(fmtDate(new Date(d)));
         }
         const results = await Promise.all(
           days.map(d => fetchPredictions(d).catch(() => ({ predictions: [] })))
         );
-        historyData = results.flatMap(r => r.predictions || []).filter(p => p.home_score != null);
+        historyData = results.flatMap(r => r.predictions || []);
         renderHistory();
       } catch (e) { console.error("history:", e); }
     }
@@ -929,7 +928,7 @@
         const mlR = p.ml_correct === true ? '<span class="res-badge ok">✓</span>' : p.ml_correct === false ? '<span class="res-badge bad">✗</span>' : '<span class="res-badge pend">–</span>';
         const ouR = p.ou_correct === true ? '<span class="res-badge ok">✓</span>' : p.ou_correct === false ? '<span class="res-badge bad">✗</span>' : '<span class="res-badge pend">–</span>';
         const conf = parseFloat(p.ml_confidence_pct) || 0;
-        const score = p.home_score != null ? `${p.away_score}–${p.home_score}` : "–";
+        const score = p.home_score != null ? `${p.away_score}–${p.home_score}` : `<span style="color:var(--muted);font-style:italic;font-size:11px;">pendiente</span>`;
         const edge = p.total_runs_pred != null ? (Math.abs(parseFloat(p.total_runs_pred) - (p.ou_line || 8.5))).toFixed(1) : '–';
         const isBet = !!p.bet;
         const rowStyle = isBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '';
