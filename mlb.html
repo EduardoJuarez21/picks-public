@@ -642,7 +642,6 @@
     </div>
     <div class="date-nav">
       <button id="btnToday" onclick="loadDate('today')" class="active">Hoy</button>
-      <button id="btnTomorrow" onclick="loadDate('tomorrow')">Mañana</button>
       <input type="date" id="datePicker" onchange="loadDate('custom')" />
     </div>
     <div class="games-grid" id="gamesGrid">
@@ -785,9 +784,8 @@
 
     async function loadDate(which) {
       let target;
-      if (which === "today") { target = todayStr; el("btnToday").classList.add("active"); el("btnTomorrow").classList.remove("active"); }
-      else if (which === "tomorrow") { target = tomorrowStr; el("btnTomorrow").classList.add("active"); el("btnToday").classList.remove("active"); }
-      else { target = el("datePicker").value; el("btnToday").classList.remove("active"); el("btnTomorrow").classList.remove("active"); }
+      if (which === "today") { target = todayStr; el("btnToday").classList.add("active"); }
+      else { target = el("datePicker").value; el("btnToday").classList.remove("active"); }
 
       if (!target) return;
       el("gamesGrid").innerHTML = '<div class="empty">Cargando…</div>';
@@ -887,10 +885,11 @@
         );
         historyData = results.flatMap(r => r.predictions || []);
         renderHistory();
-        const pending = historyData.filter(p => !!p.bet).reduce((n, p) => {
-          return n + (p.ml_correct == null ? 1 : 0) + (p.ou_correct == null ? 1 : 0);
-        }, 0);
+        const bets = historyData.filter(p => !!p.bet);
+        const pending = bets.reduce((n, p) => n + (p.ml_correct == null ? 1 : 0) + (p.ou_correct == null ? 1 : 0), 0);
+        const evaluated = bets.reduce((n, p) => n + (p.ml_correct != null ? 1 : 0) + (p.ou_correct != null ? 1 : 0), 0);
         el("kpiPending").textContent = pending;
+        el("kpiTotal").textContent = evaluated;
       } catch (e) { console.error("history:", e); }
     }
 
