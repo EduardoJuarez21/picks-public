@@ -874,9 +874,10 @@
     async function loadHistory() {
       try {
         const days = [];
-        for (let i = 1; i <= 14; i++) {
-          const d = new Date(now); d.setDate(now.getDate() - i);
-          days.push(fmtDate(d));
+        const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
+        const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+        for (let d = new Date(firstOfMonth); d <= yesterday; d.setDate(d.getDate() + 1)) {
+          days.push(fmtDate(new Date(d)));
         }
         const results = await Promise.all(
           days.map(d => fetchPredictions(d).catch(() => ({ predictions: [] })))
