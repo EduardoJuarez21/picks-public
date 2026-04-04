@@ -422,7 +422,27 @@
       color: var(--accent);
     }
 
-    /* ── Misc ── */
+    /* ── Bet ── */
+    .game-card.bet {
+      border-color: rgba(255, 196, 0, .45);
+      background: linear-gradient(180deg, rgba(255, 196, 0, .07), rgba(255, 196, 0, .02));
+    }
+
+    .bet-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      font-family: var(--mono);
+      background: rgba(255, 196, 0, .12);
+      border: 1px solid rgba(255, 196, 0, .35);
+      color: #ffd600;
+    }
+
+/* ── Misc ── */
     .empty {
       text-align: center;
       color: var(--muted);
@@ -805,13 +825,15 @@
       for (const p of preds) {
         const conf = parseFloat(p.ml_confidence_pct) || 0;
         const isHigh = conf >= 60;
+        const isBet = !!p.bet;
         const mlTeam = p.ml_pick === "home" ? p.home_team : p.away_team;
         const ouLine = p.ou_line || 8.5;
         const hasResult = p.home_score != null && p.away_score != null;
         const gameTime = fmtGameTime(p.game_time_utc);
 
         const card = document.createElement("div");
-        card.className = "game-card" + (isHigh ? " high" : "");
+        card.className = "game-card" + (isHigh ? " high" : "") + (isBet ? " bet" : "");
+        card.dataset.predId = p.id;
         card.innerHTML = `
         <div class="game-header">
           <div class="game-matchup">
@@ -820,6 +842,7 @@
             <span class="home">${p.home_abbr}</span>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+            ${isBet ? '<span class="bet-badge">💰 Apostado</span>' : ''}
             ${gameTime ? `<span style="font-size:12px;font-family:var(--mono);color:var(--accent);font-weight:600;">${gameTime}</span>` : ""}
             <span class="game-date-label">${p.game_date}</span>
           </div>
@@ -893,7 +916,10 @@
         const ouR = p.ou_correct === true ? '<span class="res-badge ok">O/U ✓</span>' : p.ou_correct === false ? '<span class="res-badge bad">O/U ✗</span>' : '<span class="res-badge pend">O/U –</span>';
         const conf = parseFloat(p.ml_confidence_pct) || 0;
         const score = p.home_score != null ? `${p.away_score}-${p.home_score}` : "–";
-        return `<tr>
+        const isBet = !!p.bet;
+        const betCell = isBet ? '<span class="bet-badge">💰</span>' : '';
+        const rowStyle = isBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '';
+        return `<tr data-pred-id="${p.id}" class="${isBet ? 'bet-row' : ''}" style="${rowStyle}">
         <td style="color:var(--muted)">${p.game_date}</td>
         <td><b>${p.away_abbr}</b> @ <b>${p.home_abbr}</b></td>
         <td><span class="badge">${mlTeam}</span></td>
@@ -903,12 +929,12 @@
           <span style="font-size:10px;font-family:var(--mono);color:var(--muted);margin-left:4px;">${p.total_runs_pred != null ? (Math.abs(parseFloat(p.total_runs_pred) - (p.ou_line || 8.5))).toFixed(1) : ''}</span>
         </td>
         <td style="font-family:var(--mono)">${score}</td>
-        <td style="display:flex;gap:4px">${mlR}${ouR}</td>
+        <td style="display:flex;gap:4px;align-items:center">${mlR}${ouR}${betCell}</td>
       </tr>`;
       }).join("");
     }
 
-    // ── Init S──────────────────────────────────────────────────────────────────
+    // ── Init ──────────────────────────────────────────────────────────────────
     el("datePicker").value = todayStr;
     loadStats();
     loadDate("today");
