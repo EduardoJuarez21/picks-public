@@ -654,6 +654,7 @@
     <div
       style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
       <div class="section-title" style="margin:0;">Predicciones</div>
+      <button id="btnBetDay" class="filter-btn" onclick="toggleBetDay(this)">💰 Solo apostados</button>
     </div>
     <div class="date-nav">
       <button id="btnToday" onclick="loadDate('today')" class="active">Hoy</button>
@@ -671,6 +672,7 @@
       <button class="filter-btn" onclick="setConfFilter(0.55,this)">+55%</button>
       <button class="filter-btn" onclick="setConfFilter(0.60,this)">+60%</button>
       <button class="filter-btn" onclick="setConfFilter(0.65,this)">+65%</button>
+      <button class="filter-btn" id="btnBetHistory" onclick="toggleBetHistory(this)">💰 Apostados</button>
     </div>
     <div
       style="background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid var(--stroke);border-radius:var(--r);overflow:hidden;">
@@ -725,6 +727,8 @@
 
     let currentConf = 0;
     let historyData = [];
+    let betOnlyDay     = false;
+    let betOnlyHistory = false;
 
     function fmtDate(d) {
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -820,9 +824,10 @@
 
     function renderGames(preds) {
       const grid = el("gamesGrid");
-      if (!preds.length) { grid.innerHTML = '<div class="empty">Sin predicciones para esta fecha.</div>'; return; }
+      const list = betOnlyDay ? preds.filter(p => !!p.bet) : preds;
+      if (!list.length) { grid.innerHTML = `<div class="empty">${betOnlyDay ? 'Sin picks apostados para esta fecha.' : 'Sin predicciones para esta fecha.'}</div>`; return; }
       grid.innerHTML = "";
-      for (const p of preds) {
+      for (const p of list) {
         const conf = parseFloat(p.ml_confidence_pct) || 0;
         const isHigh = conf >= 60;
         const isBet = !!p.bet;
@@ -898,16 +903,41 @@
       } catch (e) { console.error("history:", e); }
     }
 
+    function toggleBetDay(btn) {
+      betOnlyDay = !betOnlyDay;
+      btn.classList.toggle("active", betOnlyDay);
+      // re-render con los datos ya cacheados
+      const cached = cacheGet("preds_" + (el("datePicker").value || todayStr));
+      if (cached) renderGames(cached.predictions || []);
+    }
+
+    function toggleBetHistory(btn) {
+      betOnlyHistory = !betOnlyHistory;
+      btn.classList.toggle("active", betOnlyHistory);
+      // limpiar active de los filtros de conf si se activa bet
+      if (betOnlyHistory) {
+        document.querySelectorAll("#confFilter .filter-btn:not(#btnBetHistory)").forEach(b => b.classList.remove("active"));
+        currentConf = 0;
+      } else {
+        el("confFilter").querySelector(".filter-btn").classList.add("active");
+      }
+      renderHistory();
+    }
+
     function setConfFilter(conf, btn) {
       currentConf = conf;
-      document.querySelectorAll(".filter-btn").forEach(b => b.classList.remove("active"));
+      betOnlyHistory = false;
+      el("btnBetHistory").classList.remove("active");
+      document.querySelectorAll("#confFilter .filter-btn:not(#btnBetHistory)").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
       renderHistory();
     }
 
     function renderHistory() {
       const tbody = el("historyTbody");
-      const filtered = historyData.filter(p => (parseFloat(p.ml_confidence_pct) || 0) >= currentConf * 100);
+      const filtered = historyData.filter(p =>
+        (betOnlyHistory ? !!p.bet : (parseFloat(p.ml_confidence_pct) || 0) >= currentConf * 100)
+      );
       if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="7" class="empty">Sin historial disponible aún.</td></tr>'; return; }
       const sorted = [...filtered].sort((a, b) => b.game_date.localeCompare(a.game_date)).slice(0, 50);
       tbody.innerHTML = sorted.map(p => {
