@@ -651,7 +651,7 @@
       <button class="filter-btn" onclick="setConfFilter(0.55,this)">+55%</button>
       <button class="filter-btn" onclick="setConfFilter(0.60,this)">+60%</button>
       <button class="filter-btn" onclick="setConfFilter(0.65,this)">+65%</button>
-      <button class="filter-btn" id="btnBetHistory" onclick="toggleBetHistory(this)">💰 Apostados</button>
+      <button class="filter-btn active" id="btnBetHistory" onclick="toggleBetHistory(this)">💰 Apostados</button>
     </div>
     <div
       style="background:linear-gradient(180deg,rgba(255,255,255,.07),rgba(255,255,255,.03));border:1px solid var(--stroke);border-radius:var(--r);overflow:hidden;">
@@ -710,7 +710,7 @@
     let currentConf = 0;
     let historyData = [];
     let betOnlyDay     = true;
-    let betOnlyHistory = false;
+    let betOnlyHistory = true;
 
     function fmtDate(d) {
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
