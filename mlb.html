@@ -580,12 +580,12 @@
       <div class="kpi-card">
         <div class="kpi-label">ML Accuracy</div>
         <div class="kpi-value" id="kpiMlAcc">--%</div>
-        <div class="kpi-sub" id="kpiMlSub">últimos 30 días</div>
+        <div class="kpi-sub" id="kpiMlSub">mes en curso · apostados</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">O/U Accuracy</div>
         <div class="kpi-value" id="kpiOuAcc">--%</div>
-        <div class="kpi-sub">últimos 30 días</div>
+        <div class="kpi-sub">mes en curso · apostados</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Evaluados</div>
@@ -747,7 +747,8 @@
       try {
         let d = cacheGet("stats_30");
         if (!d) {
-          const r = await fetch(`${API}/mlb/stats/accuracy?days=30`);
+          const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+          const r = await fetch(`${API}/mlb/stats/accuracy?month=${currentMonth}&bet_only=true`);
           if (!r.ok) return;
           d = await r.json();
           cacheSet("stats_30", d, TTL);
