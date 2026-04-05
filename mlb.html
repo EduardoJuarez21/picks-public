@@ -928,7 +928,7 @@
         (betOnlyHistory ? !!p.bet : (parseFloat(p.ml_confidence_pct) || 0) >= currentConf * 100)
       );
       if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="8" class="empty">Sin historial disponible aún.</td></tr>'; return; }
-      const sorted = [...filtered].sort((a, b) => b.game_date.localeCompare(a.game_date)).slice(0, 100);
+      const sorted = [...filtered].filter(p => p.ml_correct != null || p.ou_correct != null).sort((a, b) => b.game_date.localeCompare(a.game_date)).slice(0, 100);
       const resBadge = (v) => v === true ? '<span class="res-badge ok">✓</span>' : v === false ? '<span class="res-badge bad">✗</span>' : '<span class="res-badge pend">…</span>';
       const rows = [];
       for (const p of sorted) {
