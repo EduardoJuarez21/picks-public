@@ -598,6 +598,11 @@
         <div class="kpi-sub">ML + O/U</div>
       </div>
       <div class="kpi-card">
+        <div class="kpi-label">Perdidos</div>
+        <div class="kpi-value bad" id="kpiIncorrect">--</div>
+        <div class="kpi-sub">ML + O/U</div>
+      </div>
+      <div class="kpi-card">
         <div class="kpi-label">Pendientes</div>
         <div class="kpi-value accent" id="kpiPending">--</div>
         <div class="kpi-sub">sin resultado</div>
@@ -768,6 +773,7 @@
         el("kpiOuAcc").textContent = d.ou_accuracy_pct != null ? `${d.ou_accuracy_pct}%` : "--%";
         el("kpiOuAcc").className = "kpi-value " + (ouAcc >= 55 ? "ok" : ouAcc < 50 ? "bad" : "accent");
         el("kpiCorrect").textContent = (d.ml_correct != null && d.ou_correct != null) ? (d.ml_correct + d.ou_correct) : (d.ml_correct ?? "--");
+        el("kpiIncorrect").textContent = (d.ml_incorrect != null && d.ou_incorrect != null) ? (d.ml_incorrect + d.ou_incorrect) : "--";
         if (d.from_date && d.to_date) {
           el("kpiMlSub").textContent = `${d.from_date} → ${d.to_date}`;
         }
@@ -816,13 +822,17 @@
 
     function renderGames(preds) {
       const grid = el("gamesGrid");
-      const list = betOnlyDay ? preds.filter(p => !!p.bet) : preds;
+      const list = betOnlyDay ? preds.filter(p => !!p.bet_ml || !!p.bet_ou) : preds;
       if (!list.length) { grid.innerHTML = `<div class="empty">${betOnlyDay ? 'Sin picks apostados para esta fecha.' : 'Sin predicciones para esta fecha.'}</div>`; return; }
       grid.innerHTML = "";
       for (const p of list) {
         const conf = parseFloat(p.ml_confidence_pct) || 0;
         const isHigh = conf >= 60;
-        const isBet = !!p.bet;
+        const mlBet = !!p.bet_ml;
+        const ouBet = !!p.bet_ou;
+        const isBet = mlBet || ouBet;
+        const showMl = betOnlyDay ? mlBet : true;
+        const showOu = betOnlyDay ? ouBet : true;
         const mlTeam = p.ml_pick === "home" ? p.home_team : p.away_team;
         const ouLine = p.ou_line || 8.5;
         const hasResult = p.home_score != null && p.away_score != null;
@@ -849,29 +859,29 @@
           ${p.away_pitcher_name || '?'} vs ${p.home_pitcher_name || '?'}
         </div>` : ""}
         <div class="picks-row">
-          <div class="pick-block">
+          ${showMl ? `<div class="pick-block">
             <div class="pick-label">Moneyline</div>
             <div class="pick-value ${p.ml_pick === 'home' ? 'home-pick' : 'away-pick'}">${mlTeam}</div>
             <div class="pick-conf">${conf}% confianza</div>
-          </div>
-          <div class="pick-block">
+          </div>` : ""}
+          ${showOu ? `<div class="pick-block">
             <div class="pick-label">O/U ${ouLine}</div>
             <div style="display:flex;align-items:baseline;gap:6px;">
               <div class="pick-value ${p.ou_pick}">${p.ou_pick === 'over' ? 'OVER' : 'UNDER'}</div>
               <div style="font-size:12px;font-family:var(--mono);color:var(--muted);">${parseFloat(p.total_runs_pred).toFixed(1)}</div>
             </div>
             <div class="pick-conf">edge: ${(Math.abs(parseFloat(p.total_runs_pred) - ouLine)).toFixed(1)} runs</div>
-          </div>
+          </div>` : ""}
         </div>
         ${hasResult ? `
         <div class="result-row">
           <span class="result-score">${p.away_abbr} ${p.away_score} - ${p.home_score} ${p.home_abbr}</span>
-          <span class="res-badge ${p.ml_correct === true ? 'ok' : p.ml_correct === false ? 'bad' : 'pend'}">
+          ${showMl ? `<span class="res-badge ${p.ml_correct === true ? 'ok' : p.ml_correct === false ? 'bad' : 'pend'}">
             ML ${p.ml_correct === true ? '✓' : p.ml_correct === false ? '✗' : '…'}
-          </span>
-          <span class="res-badge ${p.ou_correct === true ? 'ok' : p.ou_correct === false ? 'bad' : 'pend'}">
+          </span>` : ""}
+          ${showOu ? `<span class="res-badge ${p.ou_correct === true ? 'ok' : p.ou_correct === false ? 'bad' : 'pend'}">
             O/U ${p.ou_correct === true ? '✓' : p.ou_correct === false ? '✗' : '…'}
-          </span>
+          </span>` : ""}
         </div>` : ""}
       `;
         grid.appendChild(card);
