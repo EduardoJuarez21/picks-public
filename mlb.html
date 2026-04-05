@@ -681,6 +681,7 @@
         </tbody>
       </table>
     </div>
+    <div id="historyPager"></div>
 
   </div>
 
@@ -715,6 +716,8 @@
     let historyData = [];
     let betOnlyDay     = true;
     let betOnlyHistory = true;
+    let historyPage    = 0;
+    const HISTORY_PAGE_SIZE = 20;
 
     function fmtDate(d) {
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -906,8 +909,8 @@
 
     function toggleBetHistory(btn) {
       betOnlyHistory = !betOnlyHistory;
+      historyPage = 0;
       btn.classList.toggle("active", betOnlyHistory);
-      // limpiar active de los filtros de conf si se activa bet
       if (betOnlyHistory) {
         document.querySelectorAll("#confFilter .filter-btn:not(#btnBetHistory)").forEach(b => b.classList.remove("active"));
         currentConf = 0;
@@ -920,6 +923,7 @@
     function setConfFilter(conf, btn) {
       currentConf = conf;
       betOnlyHistory = false;
+      historyPage = 0;
       el("btnBetHistory").classList.remove("active");
       document.querySelectorAll("#confFilter .filter-btn:not(#btnBetHistory)").forEach(b => b.classList.remove("active"));
       btn.classList.add("active");
@@ -931,8 +935,8 @@
       const filtered = historyData.filter(p =>
         (betOnlyHistory ? (!!p.bet_ml || !!p.bet_ou) : (parseFloat(p.ml_confidence_pct) || 0) >= currentConf * 100)
       );
-      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty">Sin historial disponible aún.</td></tr>'; return; }
-      const sorted = [...filtered].filter(p => p.ml_correct != null || p.ou_correct != null).sort((a, b) => b.game_date.localeCompare(a.game_date)).slice(0, 100);
+      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty">Sin historial disponible aún.</td></tr>'; renderHistoryPager(0, 0); return; }
+      const sorted = [...filtered].filter(p => p.ml_correct != null || p.ou_correct != null).sort((a, b) => b.game_date.localeCompare(a.game_date));
       const resBadge = (v) => v === true ? '<span class="res-badge ok">✓</span>' : v === false ? '<span class="res-badge bad">✗</span>' : '<span class="res-badge pend">…</span>';
       const fmtOdds = (o) => { if (o == null) return '<span style="color:var(--muted)">–</span>'; const n = parseInt(o); return `<span style="font-family:var(--mono);font-size:12px;color:${n>0?'var(--ok)':'var(--muted)'}">${n>0?'+'+n:n}</span>`; };
       const betBadge = (v) => v ? '<span class="bet-badge">💰</span>' : '';
@@ -981,7 +985,29 @@
           </tr>`);
         }
       }
-      tbody.innerHTML = rows.join("");
+      const totalPages = Math.ceil(rows.length / HISTORY_PAGE_SIZE);
+      if (historyPage >= totalPages) historyPage = Math.max(0, totalPages - 1);
+      const start = historyPage * HISTORY_PAGE_SIZE;
+      tbody.innerHTML = rows.slice(start, start + HISTORY_PAGE_SIZE).join("");
+      renderHistoryPager(historyPage, totalPages);
+    }
+
+    function renderHistoryPager(page, totalPages) {
+      const pager = el("historyPager");
+      if (!pager) return;
+      if (totalPages <= 1) { pager.innerHTML = ""; return; }
+      const btn = (label, pg, disabled) =>
+        `<button onclick="historyPage=${pg};renderHistory();" style="background:${pg===page?'var(--accent)':'rgba(255,255,255,.08)'};color:var(--text);border:1px solid var(--stroke);border-radius:6px;padding:4px 10px;font-size:12px;cursor:${disabled?'default':'pointer'};opacity:${disabled?'.4':'1'};" ${disabled?'disabled':''}>` + label + `</button>`;
+      let html = `<div style="display:flex;gap:6px;align-items:center;justify-content:center;padding:12px 0;flex-wrap:wrap;">`;
+      html += btn("‹ Ant", page - 1, page === 0);
+      const start = Math.max(0, page - 2);
+      const end   = Math.min(totalPages - 1, page + 2);
+      if (start > 0) html += btn("1", 0, false) + (start > 1 ? `<span style="color:var(--muted);font-size:12px;">…</span>` : "");
+      for (let i = start; i <= end; i++) html += btn(i + 1, i, i === page);
+      if (end < totalPages - 1) html += (end < totalPages - 2 ? `<span style="color:var(--muted);font-size:12px;">…</span>` : "") + btn(totalPages, totalPages - 1, false);
+      html += btn("Sig ›", page + 1, page === totalPages - 1);
+      html += `<span style="color:var(--muted);font-size:11px;">Página ${page+1} de ${totalPages}</span></div>`;
+      pager.innerHTML = html;
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────
