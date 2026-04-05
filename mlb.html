@@ -942,40 +942,44 @@
         const scoreCell = p.home_score != null ? `<span style="font-family:var(--mono);font-weight:700">${p.away_score}–${p.home_score}</span>` : `<span style="color:var(--muted);font-style:italic;font-size:11px;">pendiente</span>`;
         // ML row
         const mlBet = !!p.bet_ml;
-        const mlRowStyle = mlBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '';
-        const mlTeam = p.ml_pick === "home" ? p.home_abbr : p.away_abbr;
-        const mlOdds = p.ml_pick === "home" ? p.home_ml_odds : p.away_ml_odds;
-        const conf = parseFloat(p.ml_confidence_pct) || 0;
-        rows.push(`<tr style="${mlRowStyle}">
-          <td><span class="badge">ML</span></td>
-          <td>${matchup}</td>
-          <td style="color:var(--muted);font-family:var(--mono);font-size:11px">${p.game_date}</td>
-          <td><span class="badge">${mlTeam}</span></td>
-          <td style="font-family:var(--mono);color:${conf>=60?'var(--accent)':'var(--muted)'}">${conf}%</td>
-          <td style="font-family:var(--mono);color:var(--muted)">${p.ml_edge != null ? (parseFloat(p.ml_edge)*100).toFixed(0)+'%' : '–'}</td>
-          <td>${fmtOdds(mlOdds)}</td>
-          <td>${resBadge(p.ml_correct)}</td>
-          <td>${scoreCell}</td>
-          <td>${betBadge(mlBet)}</td>
-        </tr>`);
+        if (!betOnlyHistory || mlBet) {
+          const mlRowStyle = mlBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '';
+          const mlTeam = p.ml_pick === "home" ? p.home_abbr : p.away_abbr;
+          const mlOdds = p.ml_pick === "home" ? p.home_ml_odds : p.away_ml_odds;
+          const conf = parseFloat(p.ml_confidence_pct) || 0;
+          rows.push(`<tr style="${mlRowStyle}">
+            <td><span class="badge">ML</span></td>
+            <td>${matchup}</td>
+            <td style="color:var(--muted);font-family:var(--mono);font-size:11px">${p.game_date}</td>
+            <td><span class="badge">${mlTeam}</span></td>
+            <td style="font-family:var(--mono);color:${conf>=60?'var(--accent)':'var(--muted)'}">${conf}%</td>
+            <td style="font-family:var(--mono);color:var(--muted)">${p.ml_edge != null ? (parseFloat(p.ml_edge)*100).toFixed(0)+'%' : '–'}</td>
+            <td>${fmtOdds(mlOdds)}</td>
+            <td>${resBadge(p.ml_correct)}</td>
+            <td>${scoreCell}</td>
+            <td>${betBadge(mlBet)}</td>
+          </tr>`);
+        }
         // O/U row
         const ouBet = !!p.bet_ou;
-        const ouRowStyle = ouBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '';
-        const ouLineVal = p.ou_line || 8.5;
-        const edge = p.total_runs_pred != null ? Math.abs(parseFloat(p.total_runs_pred) - ouLineVal).toFixed(1) : '–';
-        const ouPickLabel = `${p.ou_pick?.toUpperCase()} ${ouLineVal}`;
-        rows.push(`<tr style="${ouRowStyle}">
-          <td><span class="badge" style="color:var(--accent)">O/U</span></td>
-          <td>${matchup}</td>
-          <td style="color:var(--muted);font-family:var(--mono);font-size:11px">${p.game_date}</td>
-          <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span></td>
-          <td style="font-family:var(--mono);color:var(--muted)">–</td>
-          <td style="font-family:var(--mono);color:var(--muted)">${edge !== '–' ? '+'+edge : '–'}</td>
-          <td>${fmtOdds(p.ou_pick === 'over' ? p.over_odds : p.under_odds)}</td>
-          <td>${resBadge(p.ou_correct)}</td>
-          <td>${scoreCell}</td>
-          <td>${betBadge(ouBet)}</td>
-        </tr>`);
+        if (!betOnlyHistory || ouBet) {
+          const ouRowStyle = ouBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '';
+          const ouLineVal = p.ou_line || 8.5;
+          const edge = p.total_runs_pred != null ? Math.abs(parseFloat(p.total_runs_pred) - ouLineVal).toFixed(1) : '–';
+          const ouPickLabel = `${p.ou_pick?.toUpperCase()} ${ouLineVal}`;
+          rows.push(`<tr style="${ouRowStyle}">
+            <td><span class="badge" style="color:var(--accent)">O/U</span></td>
+            <td>${matchup}</td>
+            <td style="color:var(--muted);font-family:var(--mono);font-size:11px">${p.game_date}</td>
+            <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span></td>
+            <td style="font-family:var(--mono);color:var(--muted)">–</td>
+            <td style="font-family:var(--mono);color:var(--muted)">${edge !== '–' ? '+'+edge : '–'}</td>
+            <td>${fmtOdds(p.ou_pick === 'over' ? p.over_odds : p.under_odds)}</td>
+            <td>${resBadge(p.ou_correct)}</td>
+            <td>${scoreCell}</td>
+            <td>${betBadge(ouBet)}</td>
+          </tr>`);
+        }
       }
       tbody.innerHTML = rows.join("");
     }
