@@ -773,12 +773,15 @@
     // ── Predicciones del día ──────────────────────────────────────────────────
 
     async function fetchPredictions(dateStr) {
-      const cached = cacheGet("preds_" + dateStr);
-      if (cached) return cached;
+      const isToday = dateStr === todayStr;
+      if (!isToday) {
+        const cached = cacheGet("preds_" + dateStr);
+        if (cached) return cached;
+      }
       const r = await fetch(`${API}/mlb/predictions?date=${dateStr}`);
       if (!r.ok) throw new Error("http " + r.status);
       const d = await r.json();
-      cacheSet("preds_" + dateStr, d, picksTTL());
+      if (!isToday) cacheSet("preds_" + dateStr, d, picksTTL());
       return d;
     }
 
