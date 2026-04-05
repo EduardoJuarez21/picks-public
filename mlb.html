@@ -595,15 +595,9 @@
         <div class="kpi-sub" id="kpiAciertoSub">resueltos</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Ganancia</div>
+        <div class="kpi-label">Ganancia (100u)</div>
         <div class="kpi-value" id="kpiGanancia">--</div>
-        <div class="kpi-sub" style="display:flex;align-items:center;gap:4px;flex-wrap:nowrap;">
-          <span style="opacity:.6">$</span>
-          <input id="stakeInput" type="number" min="1" value="100"
-            style="width:48px;padding:1px 4px;border-radius:5px;border:1px solid var(--stroke);background:rgba(255,255,255,.07);color:var(--text);font-size:10px;text-align:center;"
-            oninput="updateGanancia()" />
-          <span id="kpiGananciaSub" style="opacity:.6">por pick</span>
-        </div>
+        <div class="kpi-sub">$100 por pick</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Ganados</div>
@@ -772,10 +766,9 @@
 
     function updateGanancia() {
       const g = _ganancia100u;
-      const stake = parseFloat(el("stakeInput").value) || 100;
       const ganEl = el("kpiGanancia");
       if (g == null) { ganEl.textContent = "--"; return; }
-      const valor = Math.round(g / 100 * stake);
+      const valor = Math.round(g);
       const signo = valor >= 0 ? "+" : "";
       ganEl.textContent = `${signo}$${valor.toLocaleString("es-MX")}`;
       ganEl.className = "kpi-value " + (valor > 0 ? "ok" : valor < 0 ? "bad" : "accent");
