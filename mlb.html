@@ -854,7 +854,7 @@
 
     function renderGames(preds) {
       const grid = el("gamesGrid");
-      const base = preds.filter(p => p.home_score != null && p.away_score != null);
+      const base = preds.filter(p => p.status === 'final');
       const list = betOnlyDay ? base.filter(p => !!p.bet_ml || !!p.bet_ou) : base;
       if (!list.length) { grid.innerHTML = `<div class="empty">${betOnlyDay ? 'Sin picks apostados terminados para esta fecha.' : 'Sin resultados para esta fecha.'}</div>`; return; }
       grid.innerHTML = "";
