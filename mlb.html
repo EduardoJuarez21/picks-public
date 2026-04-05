@@ -667,7 +667,7 @@
             <th>Fecha</th>
             <th>Pick</th>
             <th>Conf/Edge</th>
-            <th>Odds</th>
+            <th>Odds / Línea</th>
             <th>Resultado</th>
             <th>Score</th>
             <th></th>
@@ -959,7 +959,7 @@
         </tr>`);
         // O/U row
         const edge = p.total_runs_pred != null ? Math.abs(parseFloat(p.total_runs_pred) - (p.ou_line || 8.5)).toFixed(1) : '–';
-        const ouLine = p.ou_line != null ? `<span style="font-family:var(--mono);font-size:12px;color:var(--muted)">${p.ou_line}</span>` : '<span style="color:var(--muted)">–</span>';
+        const ouLine = p.ou_line != null ? `<span style="font-family:var(--mono);font-size:12px;color:var(--muted)">L: ${p.ou_line}</span>` : '<span style="color:var(--muted)">–</span>';
         rows.push(`<tr style="${rowStyle}">
           <td><span class="badge" style="color:var(--accent)">O/U</span></td>
           <td>${matchup}</td>
