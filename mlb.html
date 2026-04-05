@@ -762,9 +762,7 @@
         el("kpiMlAcc").className = "kpi-value " + (mlAcc >= 55 ? "ok" : mlAcc < 50 ? "bad" : "accent");
         el("kpiOuAcc").textContent = d.ou_accuracy_pct != null ? `${d.ou_accuracy_pct}%` : "--%";
         el("kpiOuAcc").className = "kpi-value " + (ouAcc >= 55 ? "ok" : ouAcc < 50 ? "bad" : "accent");
-        el("kpiTotal").textContent = d.total_evaluated ?? "--";
         el("kpiCorrect").textContent = (d.ml_correct != null && d.ou_correct != null) ? (d.ml_correct + d.ou_correct) : (d.ml_correct ?? "--");
-        el("kpiPending").textContent = d.pending ?? "--";
         if (d.from_date && d.to_date) {
           el("kpiMlSub").textContent = `${d.from_date} → ${d.to_date}`;
         }
