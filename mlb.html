@@ -854,8 +854,9 @@
 
     function renderGames(preds) {
       const grid = el("gamesGrid");
-      const list = betOnlyDay ? preds.filter(p => !!p.bet_ml || !!p.bet_ou) : preds;
-      if (!list.length) { grid.innerHTML = `<div class="empty">${betOnlyDay ? 'Sin picks apostados para esta fecha.' : 'Sin predicciones para esta fecha.'}</div>`; return; }
+      const base = preds.filter(p => p.home_score != null && p.away_score != null);
+      const list = betOnlyDay ? base.filter(p => !!p.bet_ml || !!p.bet_ou) : base;
+      if (!list.length) { grid.innerHTML = `<div class="empty">${betOnlyDay ? 'Sin picks apostados terminados para esta fecha.' : 'Sin resultados para esta fecha.'}</div>`; return; }
       grid.innerHTML = "";
       for (const p of list) {
         const conf = parseFloat(p.ml_confidence_pct) || 0;
