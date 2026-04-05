@@ -576,36 +576,51 @@
   <div class="wrap">
 
     <!-- KPIs -->
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+      <div style="display:flex;gap:8px;">
+        <button id="btnCurMonth" onclick="loadMonthStats()" style="padding:6px 14px;border-radius:999px;border:1px solid var(--stroke);background:rgba(122,167,255,.15);color:var(--accent);font-size:12px;cursor:pointer;">Este mes</button>
+        <button id="btnPrevMonth" onclick="loadPrevMonth()" style="padding:6px 14px;border-radius:999px;border:1px solid var(--stroke);background:rgba(255,255,255,.05);color:var(--text);font-size:12px;cursor:pointer;">&#8592; Mes anterior</button>
+      </div>
+      <input type="month" id="monthPicker" style="background:rgba(255,255,255,.07);border:1px solid var(--stroke);border-radius:8px;padding:4px 10px;color:var(--text);font-size:12px;cursor:pointer;" onchange="loadMonthStats(this.value)" />
+    </div>
     <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-label">ML Accuracy</div>
-        <div class="kpi-value" id="kpiMlAcc">--%</div>
-        <div class="kpi-sub" id="kpiMlSub">mes en curso · apostados</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">O/U Accuracy</div>
-        <div class="kpi-value" id="kpiOuAcc">--%</div>
-        <div class="kpi-sub">mes en curso · apostados</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Evaluados</div>
+        <div class="kpi-label">Picks apostados</div>
         <div class="kpi-value accent" id="kpiTotal">--</div>
-        <div class="kpi-sub">predicciones</div>
+        <div class="kpi-sub" id="kpiTotalSub">del mes</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Correctos</div>
+        <div class="kpi-label">% Acierto</div>
+        <div class="kpi-value" id="kpiAcierto">--%</div>
+        <div class="kpi-sub" id="kpiAciertoSub">resueltos</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label" style="display:flex;align-items:center;justify-content:space-between;gap:6px;">
+          <span>Ganancia</span>
+          <span style="display:flex;align-items:center;gap:3px;font-size:10px;font-weight:400;">
+            $<input id="stakeInput" type="number" min="1" value="100"
+              style="width:52px;padding:1px 4px;border-radius:5px;border:1px solid var(--stroke);background:rgba(255,255,255,.07);color:var(--text);font-size:10px;text-align:right;"
+              oninput="updateGanancia()" />
+            <span style="opacity:.6">/pick</span>
+          </span>
+        </div>
+        <div class="kpi-value" id="kpiGanancia">--</div>
+        <div class="kpi-sub" id="kpiGananciaSub">apostando $100 por pick</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ganados</div>
         <div class="kpi-value ok" id="kpiCorrect">--</div>
-        <div class="kpi-sub">ML + O/U</div>
+        <div class="kpi-sub">picks G</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Perdidos</div>
         <div class="kpi-value bad" id="kpiIncorrect">--</div>
-        <div class="kpi-sub">ML + O/U</div>
+        <div class="kpi-sub">picks P</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Pendientes</div>
-        <div class="kpi-value accent" id="kpiPending">--</div>
-        <div class="kpi-sub">sin resultado</div>
+        <div class="kpi-value" id="kpiPending">--</div>
+        <div class="kpi-sub">por resolver</div>
       </div>
     </div>
 
@@ -754,30 +769,59 @@
 
     // ── KPIs ──────────────────────────────────────────────────────────────────
 
-    async function loadStats() {
+    let _ganancia100u = null;
+    const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+
+    function updateGanancia() {
+      const g = _ganancia100u;
+      const stake = parseFloat(el("stakeInput").value) || 100;
+      const ganEl = el("kpiGanancia");
+      const subEl = el("kpiGananciaSub");
+      if (g == null) { ganEl.textContent = "--"; return; }
+      const valor = Math.round(g / 100 * stake);
+      const signo = valor >= 0 ? "+" : "";
+      ganEl.textContent = `${signo}$${valor.toLocaleString("es-MX")}`;
+      ganEl.className = "kpi-value " + (valor > 0 ? "ok" : valor < 0 ? "bad" : "accent");
+      subEl.textContent = `apostando $${stake} por pick`;
+    }
+
+    async function loadMonthStats(month) {
+      const m = month || currentMonth;
+      el("monthPicker").value = m;
+      el("btnCurMonth").style.background = m === currentMonth ? "rgba(122,167,255,.15)" : "rgba(255,255,255,.05)";
       try {
-        const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
-        const statsCacheKey = `stats_${currentMonth}_bet`;
-        let d = cacheGet(statsCacheKey);
+        const key = `monthly_${m}`;
+        let d = cacheGet(key);
         if (!d) {
-          const r = await fetch(`${API}/mlb/stats/accuracy?month=${currentMonth}&bet_only=true`);
+          const r = await fetch(`${API}/mlb/stats/monthly?month=${m}`);
           if (!r.ok) return;
           d = await r.json();
-          cacheSet(statsCacheKey, d, TTL);
+          cacheSet(key, d, TTL);
         }
-        const mlAcc = parseFloat(d.ml_accuracy_pct) || 0;
-        const ouAcc = parseFloat(d.ou_accuracy_pct) || 0;
-        el("kpiMlAcc").textContent = d.ml_accuracy_pct != null ? `${d.ml_accuracy_pct}%` : "--%";
-        el("kpiMlAcc").className = "kpi-value " + (mlAcc >= 55 ? "ok" : mlAcc < 50 ? "bad" : "accent");
-        el("kpiOuAcc").textContent = d.ou_accuracy_pct != null ? `${d.ou_accuracy_pct}%` : "--%";
-        el("kpiOuAcc").className = "kpi-value " + (ouAcc >= 55 ? "ok" : ouAcc < 50 ? "bad" : "accent");
-        el("kpiCorrect").textContent = (d.ml_correct != null && d.ou_correct != null) ? (d.ml_correct + d.ou_correct) : (d.ml_correct ?? "--");
-        el("kpiIncorrect").textContent = (d.ml_incorrect != null && d.ou_incorrect != null) ? (d.ml_incorrect + d.ou_incorrect) : "--";
-        if (d.from_date && d.to_date) {
-          el("kpiMlSub").textContent = `${d.from_date} → ${d.to_date}`;
-        }
+        const acierto = d.pct_acierto;
+        el("kpiTotal").textContent      = d.picks_apostados ?? "--";
+        el("kpiTotalSub").textContent   = `${d.picks_totales ?? "--"} picks totales`;
+        el("kpiAcierto").textContent    = acierto != null ? `${acierto}%` : "--%";
+        el("kpiAcierto").className      = "kpi-value " + (acierto >= 55 ? "ok" : acierto != null && acierto < 50 ? "bad" : "accent");
+        el("kpiAciertoSub").textContent = `${d.ganados ?? "--"}G / ${d.resueltos ?? "--"} resueltos`;
+        el("kpiCorrect").textContent    = d.ganados   ?? "--";
+        el("kpiIncorrect").textContent  = d.perdidos  ?? "--";
+        el("kpiPending").textContent    = d.pendientes ?? "--";
+        _ganancia100u = d.ganancia_100u;
+        updateGanancia();
       } catch (e) { console.error("stats:", e); }
     }
+
+    function loadPrevMonth() {
+      const [y, mo] = el("monthPicker").value.split("-").map(Number);
+      const prev = new Date(y, mo - 2, 1);
+      const prevStr = `${prev.getFullYear()}-${String(prev.getMonth()+1).padStart(2,'0')}`;
+      el("btnPrevMonth").textContent = `\u2190 ${prev.toLocaleString("es", {month:"long", year:"numeric"})}`;
+      loadMonthStats(prevStr);
+    }
+
+    // alias para compatibilidad
+    async function loadStats() { return loadMonthStats(); }
 
     // ── Predicciones del día ──────────────────────────────────────────────────
 
@@ -1022,7 +1066,8 @@
 
     // ── Init ──────────────────────────────────────────────────────────────────
     el("datePicker").value = todayStr;
-    loadStats();
+    el("monthPicker").value = currentMonth;
+    loadMonthStats(currentMonth);
     loadDate("today");
     loadHistory();
   </script>
