@@ -666,8 +666,9 @@
             <th>Partido</th>
             <th>Fecha</th>
             <th>Pick</th>
-            <th>Conf/Edge</th>
-            <th>Odds / Línea</th>
+            <th>Conf</th>
+            <th>Edge</th>
+            <th>Odds</th>
             <th>Resultado</th>
             <th>Score</th>
             <th></th>
@@ -931,7 +932,7 @@
       const filtered = historyData.filter(p =>
         (betOnlyHistory ? !!p.bet : (parseFloat(p.ml_confidence_pct) || 0) >= currentConf * 100)
       );
-      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="9" class="empty">Sin historial disponible aún.</td></tr>'; return; }
+      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty">Sin historial disponible aún.</td></tr>'; return; }
       const sorted = [...filtered].filter(p => p.ml_correct != null || p.ou_correct != null).sort((a, b) => b.game_date.localeCompare(a.game_date)).slice(0, 100);
       const resBadge = (v) => v === true ? '<span class="res-badge ok">✓</span>' : v === false ? '<span class="res-badge bad">✗</span>' : '<span class="res-badge pend">…</span>';
       const fmtOdds = (o) => { if (o == null) return '<span style="color:var(--muted)">–</span>'; const n = parseInt(o); return `<span style="font-family:var(--mono);font-size:12px;color:${n>0?'var(--ok)':'var(--muted)'}">${n>0?'+'+n:n}</span>`; };
@@ -952,21 +953,23 @@
           <td style="color:var(--muted);font-family:var(--mono);font-size:11px">${p.game_date}</td>
           <td><span class="badge">${mlTeam}</span></td>
           <td style="font-family:var(--mono);color:${conf>=60?'var(--accent)':'var(--muted)'}">${conf}%</td>
+          <td style="font-family:var(--mono);color:var(--muted)">${p.ml_edge != null ? (parseFloat(p.ml_edge)*100).toFixed(0)+'%' : '–'}</td>
           <td>${fmtOdds(mlOdds)}</td>
           <td>${resBadge(p.ml_correct)}</td>
           <td>${scoreCell}</td>
           <td>${betIcon}</td>
         </tr>`);
         // O/U row
-        const edge = p.total_runs_pred != null ? Math.abs(parseFloat(p.total_runs_pred) - (p.ou_line || 8.5)).toFixed(1) : '–';
-        const ouLine = p.ou_line != null ? `<span style="font-family:var(--mono);font-size:12px;color:var(--muted)">L: ${p.ou_line}</span>` : '<span style="color:var(--muted)">–</span>';
+        const ouLineVal = p.ou_line || 8.5;
+        const edge = p.total_runs_pred != null ? Math.abs(parseFloat(p.total_runs_pred) - ouLineVal).toFixed(1) : '–';
+        const ouPickLabel = `${p.ou_pick?.toUpperCase()} ${ouLineVal}`;
         rows.push(`<tr style="${rowStyle}">
           <td><span class="badge" style="color:var(--accent)">O/U</span></td>
           <td>${matchup}</td>
           <td style="color:var(--muted);font-family:var(--mono);font-size:11px">${p.game_date}</td>
-          <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${p.ou_pick?.toUpperCase()}</span></td>
-          <td style="font-family:var(--mono);color:var(--muted)">edge: ${edge}</td>
-          <td>${ouLine}</td>
+          <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span></td>
+          <td style="font-family:var(--mono);color:var(--muted)">${edge !== '–' ? '+'+edge : '–'}</td>
+          <td>${fmtOdds(p.ou_pick === 'over' ? p.over_odds : p.under_odds)}</td>
           <td>${resBadge(p.ou_correct)}</td>
           <td>${scoreCell}</td>
           <td>${betIcon}</td>
