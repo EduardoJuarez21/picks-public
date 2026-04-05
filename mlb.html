@@ -747,13 +747,14 @@
 
     async function loadStats() {
       try {
-        let d = cacheGet("stats_30");
+        const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+        const statsCacheKey = `stats_${currentMonth}_bet`;
+        let d = cacheGet(statsCacheKey);
         if (!d) {
-          const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
           const r = await fetch(`${API}/mlb/stats/accuracy?month=${currentMonth}&bet_only=true`);
           if (!r.ok) return;
           d = await r.json();
-          cacheSet("stats_30", d, TTL);
+          cacheSet(statsCacheKey, d, TTL);
         }
         const mlAcc = parseFloat(d.ml_accuracy_pct) || 0;
         const ouAcc = parseFloat(d.ou_accuracy_pct) || 0;
