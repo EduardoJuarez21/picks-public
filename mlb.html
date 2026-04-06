@@ -196,6 +196,36 @@
       font-size: 13px;
     }
 
+    /* ── Day P&L banner ── */
+    .day-pnl {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: rgba(255,255,255,.05);
+      border: 1px solid var(--stroke);
+      border-radius: 12px;
+      padding: 10px 16px;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+    }
+    .day-pnl-label {
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      color: var(--muted);
+      flex-shrink: 0;
+    }
+    .day-pnl-value {
+      font-size: 20px;
+      font-weight: 700;
+      font-family: var(--mono);
+    }
+    .day-pnl-sub {
+      font-size: 12px;
+      color: var(--muted);
+      margin-left: auto;
+    }
+
     /* ── Game cards ── */
     .games-grid {
       display: grid;
@@ -662,6 +692,7 @@
       <button id="btnToday" onclick="loadDate('today')" class="active">Hoy</button>
       <input type="date" id="datePicker" onchange="loadDate('custom')" />
     </div>
+    <div id="dayPnL"></div>
     <div class="games-grid" id="gamesGrid">
       <div class="empty">Cargando…</div>
     </div>
@@ -858,8 +889,55 @@
       return `${h12}:${m} ${ampm}`;
     }
 
+    function americanToDec(odds) {
+      if (odds == null) return null;
+      return odds >= 0 ? odds / 100 + 1 : 100 / Math.abs(odds) + 1;
+    }
+
+    function renderDayPnL(preds) {
+      const pnlEl = el("dayPnL");
+      const betFinals = preds.filter(p => p.status === 'final' && (p.bet_ml || p.bet_ou));
+      if (!betFinals.length) { pnlEl.innerHTML = ""; return; }
+
+      let pnl = 0, won = 0, lost = 0, pending = 0;
+      for (const p of betFinals) {
+        if (p.bet_ml) {
+          const odds = p.ml_pick === 'home' ? p.home_ml_odds : p.away_ml_odds;
+          const dec = americanToDec(odds);
+          if (p.ml_correct === true)  { pnl += (dec - 1) * 100; won++; }
+          else if (p.ml_correct === false) { pnl -= 100; lost++; }
+          else pending++;
+        }
+        if (p.bet_ou) {
+          const odds = p.ou_pick === 'over' ? p.over_odds : p.under_odds;
+          const dec = americanToDec(odds);
+          if (p.ou_correct === true)  { pnl += (dec - 1) * 100; won++; }
+          else if (p.ou_correct === false) { pnl -= 100; lost++; }
+          else pending++;
+        }
+      }
+
+      const resolved = won + lost;
+      if (!resolved && !pending) { pnlEl.innerHTML = ""; return; }
+
+      const sign = pnl >= 0 ? "+" : "";
+      const color = pnl > 0 ? "var(--ok)" : pnl < 0 ? "var(--bad)" : "var(--muted)";
+      const subParts = [];
+      if (won)     subParts.push(`${won}G`);
+      if (lost)    subParts.push(`${lost}P`);
+      if (pending) subParts.push(`${pending} pendiente${pending > 1 ? 's' : ''}`);
+
+      pnlEl.innerHTML = `
+        <div class="day-pnl">
+          <span class="day-pnl-label">Si apuestas $100/pick hoy</span>
+          <span class="day-pnl-value" style="color:${color}">${sign}$${Math.round(Math.abs(pnl))}</span>
+          <span class="day-pnl-sub">${subParts.join(' · ')}</span>
+        </div>`;
+    }
+
     function renderGames(preds) {
       const grid = el("gamesGrid");
+      renderDayPnL(preds.filter(p => !!p.bet_ml || !!p.bet_ou));
       const base = preds.filter(p => p.status === 'final');
       const list = betOnlyDay ? base.filter(p => !!p.bet_ml || !!p.bet_ou) : base;
       if (!list.length) { grid.innerHTML = `<div class="empty">${betOnlyDay ? 'Sin picks apostados terminados para esta fecha.' : 'Sin resultados para esta fecha.'}</div>`; return; }
