@@ -730,6 +730,7 @@
         </tbody>
       </table>
     </div>
+    <div id="historyDaySummary"></div>
     <div id="historyPager"></div>
 
   </div>
@@ -1063,7 +1064,7 @@
       const filtered = historyData.filter(p =>
         (betOnlyHistory ? (!!p.bet_ml || !!p.bet_ou) : (parseFloat(p.ml_confidence_pct) || 0) >= currentConf * 100)
       ).filter(p => p.ml_correct != null || p.ou_correct != null);
-      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty">Sin historial disponible aún.</td></tr>'; renderHistoryPager([], 0); return; }
+      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="10" class="empty">Sin historial disponible aún.</td></tr>'; const s = el("historyDaySummary"); if (s) s.innerHTML = ""; renderHistoryPager([], 0); return; }
 
       // Días únicos ordenados de más reciente a más antiguo
       const days = [...new Set(filtered.map(p => p.game_date))].sort((a, b) => b.localeCompare(a));
@@ -1074,6 +1075,32 @@
       const resBadge = (v) => v === true ? '<span class="res-badge ok">✓</span>' : v === false ? '<span class="res-badge bad">✗</span>' : '<span class="res-badge pend">…</span>';
       const fmtOdds = (o) => { if (o == null) return '<span style="color:var(--muted)">–</span>'; const n = parseInt(o); return `<span style="font-family:var(--mono);font-size:12px;color:${n>0?'var(--ok)':'var(--muted)'}">${n>0?'+'+n:n}</span>`; };
       const betBadge = (v) => v ? '<span class="bet-badge">💰</span>' : '';
+      // Resumen del día: ML y O/U ganados/perdidos
+      let mlWon = 0, mlLost = 0, mlPend = 0, ouWon = 0, ouLost = 0, ouPend = 0;
+      for (const p of dayPicks) {
+        if (!betOnlyHistory || !!p.bet_ml) {
+          if (p.ml_correct === true) mlWon++;
+          else if (p.ml_correct === false) mlLost++;
+          else if (p.ml_correct == null) mlPend++;
+        }
+        if (!betOnlyHistory || !!p.bet_ou) {
+          if (p.ou_correct === true) ouWon++;
+          else if (p.ou_correct === false) ouLost++;
+          else if (p.ou_correct == null) ouPend++;
+        }
+      }
+      const summaryEl = el("historyDaySummary");
+      if (summaryEl) {
+        const mlPendHtml = mlPend ? ` · <span style="color:var(--muted)">${mlPend}⏳</span>` : '';
+        const ouPendHtml = ouPend ? ` · <span style="color:var(--muted)">${ouPend}⏳</span>` : '';
+        summaryEl.innerHTML = `<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;padding:10px 16px;background:rgba(255,255,255,.04);border:1px solid var(--stroke);border-radius:10px;margin-bottom:10px;font-size:13px;font-family:var(--mono);">
+          <span style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:4px;">Día</span>
+          <span><span style="color:var(--muted);font-size:11px;">ML &nbsp;</span><span style="color:var(--ok);font-weight:700;">${mlWon}G</span> <span style="color:var(--muted);">/</span> <span style="color:var(--bad);font-weight:700;">${mlLost}P</span>${mlPendHtml}</span>
+          <span style="color:var(--stroke)">|</span>
+          <span><span style="color:var(--muted);font-size:11px;">O/U </span><span style="color:var(--ok);font-weight:700;">${ouWon}G</span> <span style="color:var(--muted);">/</span> <span style="color:var(--bad);font-weight:700;">${ouLost}P</span>${ouPendHtml}</span>
+        </div>`;
+      }
+
       const rows = [];
       for (const p of dayPicks) {
         const matchup = `<b>${p.away_abbr}</b> @ <b>${p.home_abbr}</b>`;
