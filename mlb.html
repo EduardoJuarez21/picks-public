@@ -624,6 +624,7 @@
       <button id="btnBetDay" class="filter-btn active" onclick="toggleBetDay(this)">💰 Solo apostados</button>
     </div>
     <div class="date-nav">
+      <button id="btnYesterday" onclick="loadDate('yesterday')">Ayer</button>
       <button id="btnToday" onclick="loadDate('today')" class="active">Hoy</button>
       <input type="date" id="datePicker" onchange="loadDate('custom')" />
     </div>
@@ -689,6 +690,8 @@
 
     const now = new Date();
     const todayStr = fmtDate(now);
+    const yesterday = new Date(now); yesterday.setDate(now.getDate() - 1);
+    const yesterdayStr = fmtDate(yesterday);
     const tomorrow = new Date(now); tomorrow.setDate(now.getDate() + 1);
     const tomorrowStr = fmtDate(tomorrow);
 
@@ -797,8 +800,10 @@
 
     async function loadDate(which) {
       let target;
+      [el("btnYesterday"), el("btnToday")].forEach(b => b.classList.remove("active"));
       if (which === "today") { target = todayStr; el("btnToday").classList.add("active"); }
-      else { target = el("datePicker").value; el("btnToday").classList.remove("active"); }
+      else if (which === "yesterday") { target = yesterdayStr; el("btnYesterday").classList.add("active"); }
+      else { target = el("datePicker").value; }
 
       if (!target) return;
       el("gamesGrid").innerHTML = '<div class="empty">Cargando…</div>';
