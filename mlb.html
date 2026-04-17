@@ -889,17 +889,19 @@
         const card = document.createElement("div");
         card.className = "game-card" + (isHigh ? " high" : "") + (isBet ? " bet" : "");
         card.dataset.predId = p.id;
-        const mlOdds  = p.ml_pick === 'home' ? p.home_ml_odds : p.away_ml_odds;
-        const ouOdds  = p.ou_pick === 'over' ? p.over_odds : p.under_odds;
-        const fmtAm   = (o) => { if (o == null) return ''; const n = parseInt(o); return n > 0 ? `+${n}` : `${n}`; };
+        const mlOddsRaw = p.ml_pick === 'home' ? p.home_ml_odds : p.away_ml_odds;
+        const ouOddsRaw = p.ou_pick === 'over' ? p.over_odds : p.under_odds;
+        const toDec   = (o) => { if (o == null) return null; return o >= 0 ? o / 100 + 1 : 100 / Math.abs(o) + 1; };
+        const fmtDec  = (o) => { const d = toDec(o); return d != null ? d.toFixed(2) : '–'; };
         const ouEdge  = p.total_runs_pred != null ? Math.abs(parseFloat(p.total_runs_pred) - ouLine).toFixed(1) : null;
         const resBadge = (correct, label) => {
           const cls = correct === true ? 'ok' : correct === false ? 'bad' : 'pend';
           const ico = correct === true ? '✓' : correct === false ? '✗' : '…';
           return `<span class="res-badge ${cls}">${label} ${ico}</span>`;
         };
+        const lbl = (t) => `<span style="font-size:9px;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-family:var(--mono);text-align:right;">${t}</span>`;
         card.innerHTML = `
-        <div class="game-header">
+        <div class="game-header" style="margin-bottom:6px;">
           <div class="game-matchup">
             <span class="away">${p.away_abbr}</span>
             <span class="sep">@</span>
@@ -910,23 +912,25 @@
             ${isBet ? '<span style="font-size:15px;">💰</span>' : ''}
           </div>
         </div>
-        ${p.away_pitcher_name || p.home_pitcher_name ? `<div class="pitchers">${p.away_pitcher_name || '?'} vs ${p.home_pitcher_name || '?'}</div>` : ""}
-        <div style="border-top:1px solid var(--stroke);margin:8px 0;"></div>
-        ${showMl ? `<div style="display:grid;grid-template-columns:32px 1fr auto auto;align-items:center;gap:8px;padding:4px 0;">
+        ${p.away_pitcher_name || p.home_pitcher_name ? `<div class="pitchers" style="margin-bottom:2px;">${p.away_pitcher_name || '?'} vs ${p.home_pitcher_name || '?'}</div>` : ""}
+        <div style="border-top:1px solid var(--stroke);margin:6px 0 0;"></div>
+        <div style="display:grid;grid-template-columns:28px 1fr 44px 44px;gap:8px;padding:3px 0 2px;">
+          <span></span><span></span>${lbl('odds')}${lbl(showMl && showOu ? 'conf/e' : showMl ? 'conf' : 'edge')}
+        </div>
+        ${showMl ? `<div style="display:grid;grid-template-columns:28px 1fr 44px 44px;align-items:center;gap:8px;padding:3px 0;">
           <span style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:var(--mono);">ML</span>
-          <span style="font-size:14px;font-weight:700;color:${p.ml_pick==='home'?'var(--accent)':'#f9a825'};">${mlTeam}</span>
-          <span style="font-family:var(--mono);font-size:12px;color:${parseInt(mlOdds)>0?'var(--ok)':'var(--muted)'};">${fmtAm(mlOdds)}</span>
-          <span style="font-size:11px;color:var(--muted);font-family:var(--mono);">${conf}%</span>
+          <span style="font-size:13px;font-weight:700;color:${p.ml_pick==='home'?'var(--accent)':'#f9a825'};">${mlTeam}</span>
+          <span style="font-family:var(--mono);font-size:12px;color:var(--text);text-align:right;">${fmtDec(mlOddsRaw)}</span>
+          <span style="font-size:11px;color:var(--muted);font-family:var(--mono);text-align:right;">${conf}%</span>
         </div>` : ""}
-        ${showOu ? `<div style="display:grid;grid-template-columns:32px 1fr auto auto;align-items:center;gap:8px;padding:4px 0;">
+        ${showOu ? `<div style="display:grid;grid-template-columns:28px 1fr 44px 44px;align-items:center;gap:8px;padding:3px 0;">
           <span style="font-size:9px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);font-family:var(--mono);">O/U</span>
-          <span style="font-size:14px;font-weight:700;color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'};">${p.ou_pick==='over'?'OVER':'UNDER'} <span style="font-size:12px;font-weight:400;">${ouLine}</span></span>
-          <span style="font-family:var(--mono);font-size:12px;color:${parseInt(ouOdds)>0?'var(--ok)':'var(--muted)'};">${fmtAm(ouOdds)}</span>
-          <span style="font-size:11px;color:var(--muted);font-family:var(--mono);">${ouEdge ? `+${ouEdge}` : ''}</span>
+          <span style="font-size:13px;font-weight:700;color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'};">${p.ou_pick==='over'?'OVER':'UNDER'} <span style="font-size:11px;font-weight:400;color:var(--muted);">${ouLine}</span></span>
+          <span style="font-family:var(--mono);font-size:12px;color:var(--text);text-align:right;">${fmtDec(ouOddsRaw)}</span>
+          <span style="font-size:11px;color:var(--muted);font-family:var(--mono);text-align:right;">${ouEdge ? `+${ouEdge}` : '–'}</span>
         </div>` : ""}
         ${hasResult ? `
-        <div style="border-top:1px solid var(--stroke);margin:8px 0;"></div>
-        <div style="display:flex;gap:8px;align-items:center;">
+        <div style="border-top:1px solid var(--stroke);margin:6px 0 0;padding-top:6px;display:flex;gap:8px;align-items:center;">
           <span style="font-family:var(--mono);font-weight:700;font-size:13px;flex:1;">${p.away_abbr} ${p.away_score} – ${p.home_score} ${p.home_abbr}</span>
           ${showMl ? resBadge(p.ml_correct, 'ML') : ""}
           ${showOu ? resBadge(p.ou_correct, 'O/U') : ""}
