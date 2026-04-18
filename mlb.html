@@ -1008,7 +1008,7 @@
         </div>`;
       }
 
-      const fmtDate = (d) => d ? new Date(d).toLocaleDateString("es-MX", { day: "2-digit", month: "short" }) : "--";
+      const fmtDate = (d) => { if (!d) return "--"; const [y, m, day] = d.split("T")[0].split("-"); return new Date(y, m - 1, day).toLocaleDateString("es-MX", { day: "2-digit", month: "short" }); };
       const resCell = (correct, awayScore, homeScore) => {
         const score = awayScore != null ? ` ${awayScore}-${homeScore}` : "";
         if (correct === true)  return `<span class="res g">G${score}</span>`;
