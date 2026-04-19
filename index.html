@@ -656,6 +656,11 @@
         <div class="kpi-sub">picks P</div>
       </div>
       <div class="kpi-card">
+        <div class="kpi-label">Nulos</div>
+        <div class="kpi-value" id="kpiN">--</div>
+        <div class="kpi-sub">picks N</div>
+      </div>
+      <div class="kpi-card">
         <div class="kpi-label">Pendientes</div>
         <div class="kpi-value" id="kpiPend">--</div>
         <div class="kpi-sub">por resolver</div>
@@ -819,7 +824,7 @@
     function buildLeagueSeries(items) {
       const map = new Map();
       for (const it of items) {
-        if ((it.decision ?? "").toUpperCase() !== "BET") continue;
+        if (!["BET", "BET_2"].includes((it.decision ?? "").toUpperCase())) continue;
         const key = String(it.league ?? "sin_liga").toLowerCase();
         if (!map.has(key)) map.set(key, { key, label: leagueLabel(key), total: 0, g: 0, p: 0, n: 0, pending: 0, pnl: 0, markets: new Map() });
         const r = map.get(key);
@@ -853,7 +858,7 @@
     }
 
     function renderKpis(items) {
-      const bet = items.filter(it => (it.decision ?? "").toUpperCase() === "BET");
+      const bet = items.filter(it => ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase()));
       const g = bet.filter(it => (it.result ?? "").toUpperCase() === "G").length;
       const p = bet.filter(it => (it.result ?? "").toUpperCase() === "P").length;
       const n = bet.filter(it => (it.result ?? "").toUpperCase() === "N").length;
@@ -871,12 +876,13 @@
       el("kpiSub").textContent = `${items.length} picks totales`;
       el("kpiWr").textContent = wr !== null ? `${wr}%` : "--%";
       el("kpiWr").className = "kpi-value" + (wr === null ? "" : parseFloat(wr) >= 55 ? " ok" : parseFloat(wr) < 45 ? " bad" : "");
-      el("kpiWrSub").textContent = `${g}G / ${resolved} resueltos`;
+      el("kpiWrSub").textContent = `${g}G · ${p}P · ${n}N / ${resolved} resueltos`;
       const sign = pnl >= 0 ? "+" : "";
       el("kpiPnl").textContent = `${sign}${pnl.toFixed(0)}`;
       el("kpiPnl").className = "kpi-value" + (pnl > 0 ? " ok" : pnl < 0 ? " bad" : "");
       el("kpiG").textContent = g;
       el("kpiP").textContent = p;
+      el("kpiN").textContent = n;
       el("kpiPend").textContent = pend;
       const displayDate = new Date(activeMonth + "-15");
       const monthName = displayDate.toLocaleString("es", { month: "long" });
@@ -965,7 +971,7 @@
         const line = it.line != null && String(it.line).trim() && lineVal !== 0 ? ` ${it.line}` : "";
         const mkt = mktLabel(it.pick_market);
         const odds = parseFloat(it.odds);
-        const dec = (it.decision ?? "").toUpperCase() === "BET";
+        const dec = ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase());
         const tr = document.createElement("tr");
         const rawDate = it.day ?? "";
         const fmtDate = rawDate ? new Date(rawDate).toLocaleDateString("es-MX", { day: "2-digit", month: "short" }) : "--";
@@ -1038,7 +1044,7 @@
     }
 
     function renderPicks(items) {
-      _allBetItems = items.filter(it => (it.decision ?? "").toUpperCase() === "BET" && ["G", "P", "N"].includes((it.result ?? "").toUpperCase()));
+      _allBetItems = items.filter(it => ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase()) && ["G", "P", "N"].includes((it.result ?? "").toUpperCase()));
       _activeLeague = "all";
       _currentPage = 1;
       buildLeagueFilter(_allBetItems);
