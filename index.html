@@ -852,6 +852,8 @@
         epl: "EPL", laliga: "LaLiga", ligamx: "Liga MX", seriea: "Serie A",
         ligue1: "Ligue 1", bundesliga: "Bundesliga", mls: "MLS", nba: "NBA", nfl: "NFL",
         eredivisie: "Eredivisie", primeiraliga: "Primeira Liga",
+        saudiproleague: "Saudi Pro League", argentinaprimera: "Argentina Liga Profesional",
+        colombiaprimeraa: "Colombia Primera A",
         segundadivision: "LaLiga 2", championship: "Championship"
       };
       return map[key] || key.replace(/_/g, " ").replace(/\b\w/g, c => c.toUpperCase());
@@ -971,7 +973,9 @@
         const line = it.line != null && String(it.line).trim() && lineVal !== 0 ? ` ${it.line}` : "";
         const mkt = mktLabel(it.pick_market);
         const odds = parseFloat(it.odds);
-        const dec = ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase());
+        const decisionRaw = String(it.decision ?? "").trim().toUpperCase();
+        const dec = ["BET", "BET_2"].includes(decisionRaw);
+        const decisionLabel = decisionRaw === "WATCH" ? "WATCH" : (dec ? "BET" : "NO BET");
         const tr = document.createElement("tr");
         const rawDate = it.day ?? "";
         const fmtDate = rawDate ? new Date(rawDate).toLocaleDateString("es-MX", { day: "2-digit", month: "short" }) : "--";
@@ -982,7 +986,7 @@
           <td><span class="badge">${mkt}</span></td>
           <td><span class="badge">${pick}${line}</span></td>
           <td>${Number.isFinite(odds) ? odds.toFixed(3) : "--"}</td>
-          <td class="${dec ? "decision-bet" : "decision-no-bet"}">${dec ? "BET" : "NO BET"}</td>
+          <td class="${dec ? "decision-bet" : "decision-no-bet"}">${decisionLabel}</td>
           <td><span class="res ${resClass}">${resLabel}</span></td>`;
         tbody.appendChild(tr);
       }
