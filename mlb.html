@@ -836,22 +836,24 @@
       if (!betPreds.length) { pnlEl.innerHTML = ""; return; }
 
       const calcPnL = (subset) => {
-        let pnl = 0, won = 0, lost = 0, pending = 0;
+        let pnl = 0, won = 0, lost = 0, push = 0, pending = 0;
         for (const p of subset) {
           if (p.bet_ml) {
             const dec = americanToDec(p.ml_pick === 'home' ? p.home_ml_odds : p.away_ml_odds);
             if (p.ml_correct === true)       { if (dec) pnl += (dec - 1) * 100; won++; }
             else if (p.ml_correct === false) { pnl -= 100; lost++; }
+            else if (p.ml_result_status === 'PUSH') push++;
             else pending++;
           }
           if (p.bet_ou) {
             const dec = americanToDec(p.ou_pick === 'over' ? p.over_odds : p.under_odds);
             if (p.ou_correct === true)       { if (dec) pnl += (dec - 1) * 100; won++; }
             else if (p.ou_correct === false) { pnl -= 100; lost++; }
+            else if (p.ou_result_status === 'PUSH') push++;
             else pending++;
           }
         }
-        return { pnl, won, lost, pending };
+        return { pnl, won, lost, push, pending };
       };
 
       const xgbPreds = betPreds.filter(p => !(p.model_version && p.model_version.includes('claude')));
@@ -859,15 +861,15 @@
 
       const modelRow = (subset, label, isIa) => {
         if (!subset.length) return '';
-        const { pnl, won, lost, pending } = calcPnL(subset);
-        if (!won && !lost && !pending) return '';
+        const { pnl, won, lost, push, pending } = calcPnL(subset);
+        if (!won && !lost && !push && !pending) return '';
         const s = pnl >= 0 ? "+" : "-";
         const color = pnl > 0 ? "var(--ok)" : pnl < 0 ? "var(--bad)" : "var(--muted)";
         const bg = isIa ? 'rgba(167,122,255,.15)' : 'rgba(122,167,255,.12)';
         const br = isIa ? 'rgba(167,122,255,.3)'  : 'rgba(122,167,255,.25)';
         const cl = isIa ? '#a77aff'               : 'var(--accent)';
         const parts = [];
-        if (won) parts.push(`${won}G`); if (lost) parts.push(`${lost}P`); if (pending) parts.push(`${pending}⏳`);
+        if (won) parts.push(`${won}G`); if (lost) parts.push(`${lost}P`); if (push) parts.push(`<span style="color:#f9a825;">${push}↩</span>`); if (pending) parts.push(`${pending}⏳`);
         return `<div style="display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;">
           <span style="font-size:9px;padding:1px 5px;border-radius:4px;background:${bg};border:1px solid ${br};color:${cl};font-weight:700;min-width:28px;text-align:center;flex-shrink:0;">${label}</span>
           <span style="font-size:16px;font-weight:700;color:${color};min-width:70px;">${s}$${Math.round(Math.abs(pnl))}</span>
@@ -879,7 +881,7 @@
       const ts = total.pnl >= 0 ? "+" : "-";
       const tc = total.pnl > 0 ? "var(--ok)" : total.pnl < 0 ? "var(--bad)" : "var(--muted)";
       const tparts = [];
-      if (total.won) tparts.push(`${total.won}G`); if (total.lost) tparts.push(`${total.lost}P`); if (total.pending) tparts.push(`${total.pending}⏳`);
+      if (total.won) tparts.push(`${total.won}G`); if (total.lost) tparts.push(`${total.lost}P`); if (total.push) tparts.push(`<span style="color:#f9a825;">${total.push}↩</span>`); if (total.pending) tparts.push(`${total.pending}⏳`);
 
       pnlEl.innerHTML = `
         <div class="day-pnl" style="flex-direction:column;align-items:stretch;gap:6px;">
@@ -924,7 +926,7 @@
         const toDec   = (o) => { if (o == null) return null; return o >= 0 ? o / 100 + 1 : 100 / Math.abs(o) + 1; };
         const fmtDec  = (o) => { const d = toDec(o); return d != null ? d.toFixed(2) : '–'; };
         const ouEdge  = p.total_runs_pred != null ? Math.abs(parseFloat(p.total_runs_pred) - ouLine).toFixed(1) : null;
-        const ouIsPush = hasResult && p.ou_correct == null && p.ou_line != null && (p.home_score + p.away_score) === parseFloat(p.ou_line);
+        const ouIsPush = p.ou_result_status === 'PUSH' || (hasResult && p.ou_correct == null && p.ou_line != null && (p.home_score + p.away_score) === parseFloat(p.ou_line));
         const resBadge = (correct, label, isPush = false) => {
           if (isPush) return `<span class="res-badge" style="background:rgba(255,196,0,.1);border-color:rgba(255,196,0,.3);color:#f9a825;">${label} ↩</span>`;
           const cls = correct === true ? 'ok' : correct === false ? 'bad' : 'pend';
@@ -1055,28 +1057,31 @@
 
       const fmtOdds = (o) => { if (o == null) return '<span style="color:var(--muted)">–</span>'; const d = o >= 0 ? o / 100 + 1 : 100 / Math.abs(o) + 1; return `<span style="font-family:var(--mono);font-size:12px;color:var(--text)">${d.toFixed(2)}</span>`; };
       // Resumen del día: ML y O/U ganados/perdidos por modelo
-      const stats = { xgb: { mlWon:0,mlLost:0,mlPend:0,ouWon:0,ouLost:0,ouPend:0 }, ia: { mlWon:0,mlLost:0,mlPend:0,ouWon:0,ouLost:0,ouPend:0 } };
+      const stats = { xgb: { mlWon:0,mlLost:0,mlPush:0,mlPend:0,ouWon:0,ouLost:0,ouPush:0,ouPend:0 }, ia: { mlWon:0,mlLost:0,mlPush:0,mlPend:0,ouWon:0,ouLost:0,ouPush:0,ouPend:0 } };
       for (const p of dayPicks) {
         const bucket = (p.model_version && p.model_version.includes('claude')) ? stats.ia : stats.xgb;
         if (!betOnlyHistory || !!p.bet_ml) {
           if (p.ml_correct === true) bucket.mlWon++;
           else if (p.ml_correct === false) bucket.mlLost++;
+          else if (p.ml_result_status === 'PUSH') bucket.mlPush++;
           else bucket.mlPend++;
         }
         if (!betOnlyHistory || !!p.bet_ou) {
           if (p.ou_correct === true) bucket.ouWon++;
           else if (p.ou_correct === false) bucket.ouLost++;
+          else if (p.ou_result_status === 'PUSH') bucket.ouPush++;
           else bucket.ouPend++;
         }
       }
       const summaryEl = el("historyDaySummary");
       if (summaryEl) {
         const mktStats = (s, mkt) => {
-          const won = mkt === 'ml' ? s.mlWon : s.ouWon;
+          const won  = mkt === 'ml' ? s.mlWon  : s.ouWon;
           const lost = mkt === 'ml' ? s.mlLost : s.ouLost;
+          const push = mkt === 'ml' ? s.mlPush : s.ouPush;
           const pend = mkt === 'ml' ? s.mlPend : s.ouPend;
-          if (!won && !lost && !pend) return '<span style="color:var(--muted);font-size:11px;">–</span>';
-          return `<span style="color:var(--ok);font-weight:700;">${won}G</span><span style="color:var(--muted);">/</span><span style="color:var(--bad);font-weight:700;">${lost}P</span>${pend ? `<span style="color:var(--muted);font-size:11px;margin-left:2px;">${pend}⏳</span>` : ''}`;
+          if (!won && !lost && !push && !pend) return '<span style="color:var(--muted);font-size:11px;">–</span>';
+          return `<span style="color:var(--ok);font-weight:700;">${won}G</span><span style="color:var(--muted);">/</span><span style="color:var(--bad);font-weight:700;">${lost}P</span>${push ? `<span style="color:#f9a825;font-size:11px;margin-left:2px;">${push}↩</span>` : ''}${pend ? `<span style="color:var(--muted);font-size:11px;margin-left:2px;">${pend}⏳</span>` : ''}`;
         };
         const modelRow = (label, isIa, s) => {
           const bg  = isIa ? 'rgba(167,122,255,.15)' : 'rgba(122,167,255,.12)';
@@ -1102,12 +1107,12 @@
           ? `<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(167,122,255,.15);border:1px solid rgba(167,122,255,.3);color:#a77aff;font-family:var(--mono);font-weight:700;vertical-align:middle;">IA</span>`
           : `<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(122,167,255,.12);border:1px solid rgba(122,167,255,.25);color:var(--accent);font-family:var(--mono);font-weight:700;vertical-align:middle;">XGB</span>`;
       };
-      const resCell = (correct, awayScore, homeScore, ouLine) => {
+      const resCell = (correct, awayScore, homeScore, ouLine, resultStatus) => {
         const score = awayScore != null ? ` ${awayScore}-${homeScore}` : "";
         if (correct === true)  return `<span class="res g">G${score}</span>`;
         if (correct === false) return `<span class="res p">P${score}</span>`;
-        if (correct == null && awayScore != null && ouLine != null && (awayScore + homeScore) === parseFloat(ouLine))
-          return `<span class="res" style="color:#f9a825;">↩</span>`;
+        if (resultStatus === 'PUSH' || (correct == null && awayScore != null && ouLine != null && (awayScore + homeScore) === parseFloat(ouLine)))
+          return `<span class="res" style="color:#f9a825;">↩${score}</span>`;
         return `<span class="res pend">–</span>`;
       };
       const rows = [];
@@ -1122,7 +1127,7 @@
           rows.push(`<tr style="${mlRowStyle}">
             <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
             <td>${matchup}</td>
-            <td><span class="badge">ML ${mlTeam}</span> ${modelBadge(p.model_version)} ${resCell(p.ml_correct, p.away_score, p.home_score)}</td>
+            <td><span class="badge">ML ${mlTeam}</span> ${modelBadge(p.model_version)} ${resCell(p.ml_correct, p.away_score, p.home_score, null, p.ml_result_status)}</td>
             <td>${fmtOdds(mlOdds)}</td>
           </tr>`);
         }
@@ -1136,7 +1141,7 @@
           rows.push(`<tr style="${ouRowStyle}">
             <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
             <td>${matchup}</td>
-            <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span> ${modelBadge(p.model_version)} ${resCell(p.ou_correct, p.away_score, p.home_score, p.ou_line)}</td>
+            <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span> ${modelBadge(p.model_version)} ${resCell(p.ou_correct, p.away_score, p.home_score, p.ou_line, p.ou_result_status)}</td>
             <td>${fmtOdds(ouOdds)}</td>
           </tr>`);
         }
