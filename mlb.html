@@ -697,6 +697,7 @@
     let betOnlyDay     = true;
     let betOnlyHistory = true;
     let modelFilter = 'all'; // 'all' | 'xgb' | 'ia'
+    let currentPreds = [];
     let historyDayIndex = 0; // índice en el array de días únicos (0 = más reciente)
 
     function fmtDate(d) {
@@ -807,7 +808,8 @@
       el("gamesGrid").innerHTML = '<div class="empty">Cargando…</div>';
       try {
         const d = await fetchPredictions(target);
-        renderGames(d.predictions || []);
+        currentPreds = d.predictions || [];
+        renderGames(currentPreds);
       } catch (e) { el("gamesGrid").innerHTML = '<div class="empty">Error de conexión.</div>'; }
     }
 
@@ -1024,16 +1026,14 @@
     function toggleBetDay(btn) {
       betOnlyDay = !betOnlyDay;
       btn.classList.toggle("active", betOnlyDay);
-      const cached = cacheGet("preds_" + (el("datePicker").value || todayStr));
-      if (cached) renderGames(cached.predictions || []);
+      if (currentPreds.length) renderGames(currentPreds);
     }
 
     function setModelFilter(filter, btn) {
       modelFilter = filter;
       [el("btnModelAll"), el("btnModelXgb"), el("btnModelIa")].forEach(b => b && b.classList.remove("active"));
       btn.classList.add("active");
-      const cached = cacheGet("preds_" + (el("datePicker").value || todayStr));
-      if (cached) renderGames(cached.predictions || []);
+      if (currentPreds.length) renderGames(currentPreds);
     }
 
 
