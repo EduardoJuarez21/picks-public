@@ -645,12 +645,11 @@
             <th>Partido</th>
             <th>Pick</th>
             <th>Odds</th>
-            <th>R</th>
           </tr>
         </thead>
         <tbody id="historyTbody">
           <tr>
-            <td colspan="5" class="empty">Cargando…</td>
+            <td colspan="4" class="empty">Cargando…</td>
           </tr>
         </tbody>
       </table>
@@ -825,42 +824,65 @@
 
     function renderDayPnL(preds) {
       const pnlEl = el("dayPnL");
-      const betFinals = preds.filter(p => p.status === 'final' && (p.bet_ml || p.bet_ou));
-      if (!betFinals.length) { pnlEl.innerHTML = ""; return; }
+      const betPreds = preds.filter(p => p.bet_ml || p.bet_ou);
+      if (!betPreds.length) { pnlEl.innerHTML = ""; return; }
 
-      let pnl = 0, won = 0, lost = 0, pending = 0;
-      for (const p of betFinals) {
-        if (p.bet_ml) {
-          const odds = p.ml_pick === 'home' ? p.home_ml_odds : p.away_ml_odds;
-          const dec = americanToDec(odds);
-          if (p.ml_correct === true)  { pnl += (dec - 1) * 100; won++; }
-          else if (p.ml_correct === false) { pnl -= 100; lost++; }
-          else pending++;
+      const calcPnL = (subset) => {
+        let pnl = 0, won = 0, lost = 0, pending = 0;
+        for (const p of subset) {
+          if (p.bet_ml) {
+            const dec = americanToDec(p.ml_pick === 'home' ? p.home_ml_odds : p.away_ml_odds);
+            if (p.ml_correct === true)       { if (dec) pnl += (dec - 1) * 100; won++; }
+            else if (p.ml_correct === false) { pnl -= 100; lost++; }
+            else pending++;
+          }
+          if (p.bet_ou) {
+            const dec = americanToDec(p.ou_pick === 'over' ? p.over_odds : p.under_odds);
+            if (p.ou_correct === true)       { if (dec) pnl += (dec - 1) * 100; won++; }
+            else if (p.ou_correct === false) { pnl -= 100; lost++; }
+            else pending++;
+          }
         }
-        if (p.bet_ou) {
-          const odds = p.ou_pick === 'over' ? p.over_odds : p.under_odds;
-          const dec = americanToDec(odds);
-          if (p.ou_correct === true)  { pnl += (dec - 1) * 100; won++; }
-          else if (p.ou_correct === false) { pnl -= 100; lost++; }
-          else pending++;
-        }
-      }
+        return { pnl, won, lost, pending };
+      };
 
-      const resolved = won + lost;
-      if (!resolved && !pending) { pnlEl.innerHTML = ""; return; }
+      const xgbPreds = betPreds.filter(p => !(p.model_version && p.model_version.includes('claude')));
+      const iaPreds  = betPreds.filter(p =>   p.model_version && p.model_version.includes('claude'));
 
-      const sign = pnl >= 0 ? "+" : "";
-      const color = pnl > 0 ? "var(--ok)" : pnl < 0 ? "var(--bad)" : "var(--muted)";
-      const subParts = [];
-      if (won)     subParts.push(`${won}G`);
-      if (lost)    subParts.push(`${lost}P`);
-      if (pending) subParts.push(`${pending} pendiente${pending > 1 ? 's' : ''}`);
+      const modelRow = (subset, label, isIa) => {
+        if (!subset.length) return '';
+        const { pnl, won, lost, pending } = calcPnL(subset);
+        if (!won && !lost && !pending) return '';
+        const s = pnl >= 0 ? "+" : "-";
+        const color = pnl > 0 ? "var(--ok)" : pnl < 0 ? "var(--bad)" : "var(--muted)";
+        const bg = isIa ? 'rgba(167,122,255,.15)' : 'rgba(122,167,255,.12)';
+        const br = isIa ? 'rgba(167,122,255,.3)'  : 'rgba(122,167,255,.25)';
+        const cl = isIa ? '#a77aff'               : 'var(--accent)';
+        const parts = [];
+        if (won) parts.push(`${won}G`); if (lost) parts.push(`${lost}P`); if (pending) parts.push(`${pending}⏳`);
+        return `<div style="display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;">
+          <span style="font-size:9px;padding:1px 5px;border-radius:4px;background:${bg};border:1px solid ${br};color:${cl};font-weight:700;min-width:28px;text-align:center;flex-shrink:0;">${label}</span>
+          <span style="font-size:16px;font-weight:700;color:${color};min-width:70px;">${s}$${Math.round(Math.abs(pnl))}</span>
+          <span style="font-size:11px;color:var(--muted);">${parts.join(' · ')}</span>
+        </div>`;
+      };
+
+      const total = calcPnL(betPreds);
+      const ts = total.pnl >= 0 ? "+" : "-";
+      const tc = total.pnl > 0 ? "var(--ok)" : total.pnl < 0 ? "var(--bad)" : "var(--muted)";
+      const tparts = [];
+      if (total.won) tparts.push(`${total.won}G`); if (total.lost) tparts.push(`${total.lost}P`); if (total.pending) tparts.push(`${total.pending}⏳`);
 
       pnlEl.innerHTML = `
-        <div class="day-pnl">
+        <div class="day-pnl" style="flex-direction:column;align-items:stretch;gap:6px;">
           <span class="day-pnl-label">Si apuestas $100/pick hoy</span>
-          <span class="day-pnl-value" style="color:${color}">${sign}$${Math.round(Math.abs(pnl))}</span>
-          <span class="day-pnl-sub">${subParts.join(' · ')}</span>
+          ${modelRow(xgbPreds, 'XGB', false)}
+          ${modelRow(iaPreds,  'IA',  true)}
+          <div style="display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;border-top:1px solid var(--stroke);padding-top:6px;margin-top:2px;">
+            <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);min-width:28px;flex-shrink:0;">Total</span>
+            <span style="font-size:18px;font-weight:700;color:${tc};min-width:70px;">${ts}$${Math.round(Math.abs(total.pnl))}</span>
+            <span style="font-size:11px;color:var(--muted);">${tparts.join(' · ')}</span>
+          </div>
         </div>`;
     }
 
@@ -1082,9 +1104,8 @@
           rows.push(`<tr style="${mlRowStyle}">
             <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
             <td>${matchup}</td>
-            <td><span class="badge">ML ${mlTeam}</span> ${modelBadge(p.model_version)}</td>
+            <td><span class="badge">ML ${mlTeam}</span> ${modelBadge(p.model_version)} ${resCell(p.ml_correct, p.away_score, p.home_score)}</td>
             <td>${fmtOdds(mlOdds)}</td>
-            <td>${resCell(p.ml_correct, p.away_score, p.home_score)}</td>
           </tr>`);
         }
         // O/U row
@@ -1097,9 +1118,8 @@
           rows.push(`<tr style="${ouRowStyle}">
             <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
             <td>${matchup}</td>
-            <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span> ${modelBadge(p.model_version)}</td>
+            <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span> ${modelBadge(p.model_version)} ${resCell(p.ou_correct, p.away_score, p.home_score)}</td>
             <td>${fmtOdds(ouOdds)}</td>
-            <td>${resCell(p.ou_correct, p.away_score, p.home_score)}</td>
           </tr>`);
         }
       }
