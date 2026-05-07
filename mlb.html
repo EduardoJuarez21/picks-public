@@ -586,6 +586,7 @@
         <div class="kpi-sub">por resolver</div>
       </div>
     </div>
+    <div id="modelBreakdown" style="margin-bottom:20px;"></div>
 
     <!-- Info modelo -->
     <div
@@ -942,6 +943,35 @@
 
     // ── Historial ─────────────────────────────────────────────────────────────
 
+    function renderModelBreakdown(data) {
+      const el2 = el("modelBreakdown");
+      if (!el2) return;
+      const bets = data.filter(p => p.bet_ml || p.bet_ou);
+      if (!bets.length) { el2.innerHTML = ""; return; }
+      const s = { xgb: { mlW:0,mlL:0,mlP:0,ouW:0,ouL:0,ouP:0 }, ia: { mlW:0,mlL:0,mlP:0,ouW:0,ouL:0,ouP:0 } };
+      for (const p of bets) {
+        const b = (p.model_version && p.model_version.includes('claude')) ? s.ia : s.xgb;
+        if (p.bet_ml) { if (p.ml_correct === true) b.mlW++; else if (p.ml_correct === false) b.mlL++; else b.mlP++; }
+        if (p.bet_ou) { if (p.ou_correct === true) b.ouW++; else if (p.ou_correct === false) b.ouL++; else b.ouP++; }
+      }
+      const stat = (w, l, p) => `<span style="color:var(--ok);font-weight:700;">${w}G</span><span style="color:var(--muted);">/</span><span style="color:var(--bad);font-weight:700;">${l}P</span>${p ? `<span style="color:var(--muted);font-size:10px;margin-left:2px;">${p}⏳</span>` : ''}`;
+      const row = (label, isIa, b) => {
+        const bg = isIa ? 'rgba(167,122,255,.15)' : 'rgba(122,167,255,.12)';
+        const br = isIa ? 'rgba(167,122,255,.3)' : 'rgba(122,167,255,.25)';
+        const cl = isIa ? '#a77aff' : 'var(--accent)';
+        return `<div style="display:flex;align-items:center;gap:10px;font-size:12px;font-family:var(--mono);">
+          <span style="font-size:9px;padding:1px 5px;border-radius:4px;background:${bg};border:1px solid ${br};color:${cl};font-weight:700;min-width:28px;text-align:center;">${label}</span>
+          <span style="color:var(--muted);font-size:11px;min-width:20px;">ML</span>${stat(b.mlW,b.mlL,b.mlP)}
+          <span style="color:var(--stroke);margin:0 6px;">|</span>
+          <span style="color:var(--muted);font-size:11px;min-width:24px;">O/U</span>${stat(b.ouW,b.ouL,b.ouP)}
+        </div>`;
+      };
+      el2.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;padding:10px 16px;background:rgba(255,255,255,.04);border:1px solid var(--stroke);border-radius:10px;font-size:13px;">
+        ${row('XGB', false, s.xgb)}
+        ${row('IA',  true,  s.ia)}
+      </div>`;
+    }
+
     async function loadHistory() {
       try {
         const days = [];
@@ -954,6 +984,7 @@
         );
         historyData = results.flatMap(r => r.predictions || []);
         renderHistory();
+        renderModelBreakdown(historyData);
         const pending  = historyData.reduce((n, p) => n + (p.bet_ml && p.ml_correct == null ? 1 : 0) + (p.bet_ou && p.ou_correct == null ? 1 : 0), 0);
         const evaluated = historyData.reduce((n, p) => n + (p.bet_ml && p.ml_correct != null ? 1 : 0) + (p.bet_ou && p.ou_correct != null ? 1 : 0), 0);
         el("kpiPending").textContent = pending;
@@ -985,29 +1016,44 @@
       const dayPicks = filtered.filter(p => p.game_date === activeDay);
 
       const fmtOdds = (o) => { if (o == null) return '<span style="color:var(--muted)">–</span>'; const d = o >= 0 ? o / 100 + 1 : 100 / Math.abs(o) + 1; return `<span style="font-family:var(--mono);font-size:12px;color:var(--text)">${d.toFixed(2)}</span>`; };
-      // Resumen del día: ML y O/U ganados/perdidos
-      let mlWon = 0, mlLost = 0, mlPend = 0, ouWon = 0, ouLost = 0, ouPend = 0;
+      // Resumen del día: ML y O/U ganados/perdidos por modelo
+      const stats = { xgb: { mlWon:0,mlLost:0,mlPend:0,ouWon:0,ouLost:0,ouPend:0 }, ia: { mlWon:0,mlLost:0,mlPend:0,ouWon:0,ouLost:0,ouPend:0 } };
       for (const p of dayPicks) {
+        const bucket = (p.model_version && p.model_version.includes('claude')) ? stats.ia : stats.xgb;
         if (!betOnlyHistory || !!p.bet_ml) {
-          if (p.ml_correct === true) mlWon++;
-          else if (p.ml_correct === false) mlLost++;
-          else if (p.ml_correct == null) mlPend++;
+          if (p.ml_correct === true) bucket.mlWon++;
+          else if (p.ml_correct === false) bucket.mlLost++;
+          else bucket.mlPend++;
         }
         if (!betOnlyHistory || !!p.bet_ou) {
-          if (p.ou_correct === true) ouWon++;
-          else if (p.ou_correct === false) ouLost++;
-          else if (p.ou_correct == null) ouPend++;
+          if (p.ou_correct === true) bucket.ouWon++;
+          else if (p.ou_correct === false) bucket.ouLost++;
+          else bucket.ouPend++;
         }
       }
       const summaryEl = el("historyDaySummary");
       if (summaryEl) {
-        const mlPendHtml = mlPend ? ` · <span style="color:var(--muted)">${mlPend}⏳</span>` : '';
-        const ouPendHtml = ouPend ? ` · <span style="color:var(--muted)">${ouPend}⏳</span>` : '';
-        summaryEl.innerHTML = `<div style="display:flex;gap:20px;flex-wrap:wrap;align-items:center;padding:10px 16px;background:rgba(255,255,255,.04);border:1px solid var(--stroke);border-radius:10px;margin-bottom:10px;font-size:13px;font-family:var(--mono);">
-          <span style="font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);margin-right:4px;">Día</span>
-          <span><span style="color:var(--muted);font-size:11px;">ML &nbsp;</span><span style="color:var(--ok);font-weight:700;">${mlWon}G</span> <span style="color:var(--muted);">/</span> <span style="color:var(--bad);font-weight:700;">${mlLost}P</span>${mlPendHtml}</span>
-          <span style="color:var(--stroke)">|</span>
-          <span><span style="color:var(--muted);font-size:11px;">O/U </span><span style="color:var(--ok);font-weight:700;">${ouWon}G</span> <span style="color:var(--muted);">/</span> <span style="color:var(--bad);font-weight:700;">${ouLost}P</span>${ouPendHtml}</span>
+        const mktStats = (s, mkt) => {
+          const won = mkt === 'ml' ? s.mlWon : s.ouWon;
+          const lost = mkt === 'ml' ? s.mlLost : s.ouLost;
+          const pend = mkt === 'ml' ? s.mlPend : s.ouPend;
+          if (!won && !lost && !pend) return '<span style="color:var(--muted);font-size:11px;">–</span>';
+          return `<span style="color:var(--ok);font-weight:700;">${won}G</span><span style="color:var(--muted);">/</span><span style="color:var(--bad);font-weight:700;">${lost}P</span>${pend ? `<span style="color:var(--muted);font-size:11px;margin-left:2px;">${pend}⏳</span>` : ''}`;
+        };
+        const modelRow = (label, isIa, s) => {
+          const bg  = isIa ? 'rgba(167,122,255,.15)' : 'rgba(122,167,255,.12)';
+          const brd = isIa ? 'rgba(167,122,255,.3)'  : 'rgba(122,167,255,.25)';
+          const clr = isIa ? '#a77aff'               : 'var(--accent)';
+          return `<div style="display:flex;align-items:center;gap:10px;">
+            <span style="font-size:9px;padding:1px 5px;border-radius:4px;background:${bg};border:1px solid ${brd};color:${clr};font-family:var(--mono);font-weight:700;min-width:28px;text-align:center;">${label}</span>
+            <span style="color:var(--muted);font-size:11px;min-width:20px;">ML</span>${mktStats(s,'ml')}
+            <span style="color:var(--stroke);margin:0 4px;">|</span>
+            <span style="color:var(--muted);font-size:11px;min-width:24px;">O/U</span>${mktStats(s,'ou')}
+          </div>`;
+        };
+        summaryEl.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;padding:10px 16px;background:rgba(255,255,255,.04);border:1px solid var(--stroke);border-radius:10px;margin-bottom:10px;font-size:13px;font-family:var(--mono);">
+          ${modelRow('XGB', false, stats.xgb)}
+          ${modelRow('IA',  true,  stats.ia)}
         </div>`;
       }
 
