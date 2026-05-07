@@ -620,7 +620,14 @@
     <div
       style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
       <div class="section-title" style="margin:0;">Predicciones</div>
-      <button id="btnBetDay" class="filter-btn active" onclick="toggleBetDay(this)">💰 Solo apostados</button>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
+        <div style="display:flex;gap:4px;background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:999px;padding:3px;">
+          <button id="btnModelAll" class="filter-btn active" onclick="setModelFilter('all',this)" style="border-radius:999px;padding:4px 12px;font-size:11px;">Todos</button>
+          <button id="btnModelXgb" class="filter-btn" onclick="setModelFilter('xgb',this)" style="border-radius:999px;padding:4px 10px;font-size:11px;color:var(--accent);">XGB</button>
+          <button id="btnModelIa"  class="filter-btn" onclick="setModelFilter('ia',this)"  style="border-radius:999px;padding:4px 10px;font-size:11px;color:#a77aff;">IA</button>
+        </div>
+        <button id="btnBetDay" class="filter-btn active" onclick="toggleBetDay(this)">💰 Solo apostados</button>
+      </div>
     </div>
     <div class="date-nav">
       <button id="btnYesterday" onclick="loadDate('yesterday')">Ayer</button>
@@ -689,6 +696,7 @@
     let historyData = [];
     let betOnlyDay     = true;
     let betOnlyHistory = true;
+    let modelFilter = 'all'; // 'all' | 'xgb' | 'ia'
     let historyDayIndex = 0; // índice en el array de días únicos (0 = más reciente)
 
     function fmtDate(d) {
@@ -888,7 +896,9 @@
       const grid = el("gamesGrid");
       renderDayPnL(preds.filter(p => !!p.bet_ml || !!p.bet_ou));
       const base = preds.filter(p => p.status === 'final');
-      const list = betOnlyDay ? base.filter(p => !!p.bet_ml || !!p.bet_ou) : base;
+      let list = betOnlyDay ? base.filter(p => !!p.bet_ml || !!p.bet_ou) : base;
+      if (modelFilter === 'xgb') list = list.filter(p => !(p.model_version && p.model_version.includes('claude')));
+      else if (modelFilter === 'ia') list = list.filter(p => p.model_version && p.model_version.includes('claude'));
       if (!list.length) { grid.innerHTML = `<div class="empty">${betOnlyDay ? 'Sin picks apostados terminados para esta fecha.' : 'Sin resultados para esta fecha.'}</div>`; return; }
       grid.innerHTML = "";
       for (const p of list) {
@@ -1014,7 +1024,14 @@
     function toggleBetDay(btn) {
       betOnlyDay = !betOnlyDay;
       btn.classList.toggle("active", betOnlyDay);
-      // re-render con los datos ya cacheados
+      const cached = cacheGet("preds_" + (el("datePicker").value || todayStr));
+      if (cached) renderGames(cached.predictions || []);
+    }
+
+    function setModelFilter(filter, btn) {
+      modelFilter = filter;
+      [el("btnModelAll"), el("btnModelXgb"), el("btnModelIa")].forEach(b => b && b.classList.remove("active"));
+      btn.classList.add("active");
       const cached = cacheGet("preds_" + (el("datePicker").value || todayStr));
       if (cached) renderGames(cached.predictions || []);
     }
