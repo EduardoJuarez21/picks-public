@@ -583,7 +583,7 @@
       <div class="kpi-card">
         <div class="kpi-label">Pendientes</div>
         <div class="kpi-value" id="kpiPending">--</div>
-        <div class="kpi-sub">por resolver</div>
+        <div class="kpi-sub" id="kpiPendingSub">por resolver</div>
       </div>
     </div>
     <!-- Info modelo -->
@@ -766,6 +766,8 @@
         el("kpiCorrect").textContent    = d.ganados   ?? "--";
         el("kpiIncorrect").textContent  = d.perdidos  ?? "--";
         el("kpiPending").textContent    = d.pendientes ?? "--";
+        const kpiPendSub = el("kpiPendingSub");
+        if (kpiPendSub) kpiPendSub.textContent = d.pushes ? `por resolver · ${d.pushes}↩` : "por resolver";
         _ganancia100u = d.ganancia_100u;
         updateGanancia();
       } catch (e) { console.error("stats:", e); }
@@ -1020,9 +1022,12 @@
         );
         historyData = results.flatMap(r => r.predictions || []);
         renderHistory();
-        const pending  = historyData.reduce((n, p) => n + (p.bet_ml && p.ml_correct == null ? 1 : 0) + (p.bet_ou && p.ou_correct == null ? 1 : 0), 0);
-        const evaluated = historyData.reduce((n, p) => n + (p.bet_ml && p.ml_correct != null ? 1 : 0) + (p.bet_ou && p.ou_correct != null ? 1 : 0), 0);
+        const pending  = historyData.reduce((n, p) => n + (p.bet_ml && p.ml_correct == null && p.ml_result_status !== 'PUSH' ? 1 : 0) + (p.bet_ou && p.ou_correct == null && p.ou_result_status !== 'PUSH' ? 1 : 0), 0);
+        const pushes   = historyData.reduce((n, p) => n + (p.bet_ml && p.ml_result_status === 'PUSH' ? 1 : 0) + (p.bet_ou && p.ou_result_status === 'PUSH' ? 1 : 0), 0);
+        const evaluated = historyData.reduce((n, p) => n + (p.bet_ml && (p.ml_correct != null || p.ml_result_status === 'PUSH') ? 1 : 0) + (p.bet_ou && (p.ou_correct != null || p.ou_result_status === 'PUSH') ? 1 : 0), 0);
         el("kpiPending").textContent = pending;
+        const ps = el("kpiPendingSub");
+        if (ps) ps.textContent = pushes ? `por resolver · ${pushes}↩` : "por resolver";
         el("kpiTotal").textContent = evaluated;
       } catch (e) { console.error("history:", e); }
     }
