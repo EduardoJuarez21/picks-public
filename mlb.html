@@ -1113,7 +1113,7 @@
         const mlBet = !!p.bet_ml;
         if (!betOnlyHistory || mlBet) {
           const mlRowStyle = mlBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '';
-          const mlTeam = p.ml_pick === "home" ? p.home_abbr : p.away_abbr;
+          const mlTeam = p.ml_pick === "home" ? p.home_team : p.away_team;
           const mlOdds = p.ml_pick === "home" ? p.home_ml_odds : p.away_ml_odds;
           rows.push(`<tr style="${mlRowStyle}">
             <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
