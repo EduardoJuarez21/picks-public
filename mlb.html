@@ -924,7 +924,9 @@
         const toDec   = (o) => { if (o == null) return null; return o >= 0 ? o / 100 + 1 : 100 / Math.abs(o) + 1; };
         const fmtDec  = (o) => { const d = toDec(o); return d != null ? d.toFixed(2) : '–'; };
         const ouEdge  = p.total_runs_pred != null ? Math.abs(parseFloat(p.total_runs_pred) - ouLine).toFixed(1) : null;
-        const resBadge = (correct, label) => {
+        const ouIsPush = hasResult && p.ou_correct == null && p.ou_line != null && (p.home_score + p.away_score) === parseFloat(p.ou_line);
+        const resBadge = (correct, label, isPush = false) => {
+          if (isPush) return `<span class="res-badge" style="background:rgba(255,196,0,.1);border-color:rgba(255,196,0,.3);color:#f9a825;">${label} ↩</span>`;
           const cls = correct === true ? 'ok' : correct === false ? 'bad' : 'pend';
           const ico = correct === true ? '✓' : correct === false ? '✗' : '…';
           return `<span class="res-badge ${cls}">${label} ${ico}</span>`;
@@ -966,7 +968,7 @@
         <div style="border-top:1px solid var(--stroke);margin:6px 0 0;padding-top:6px;display:flex;gap:8px;align-items:center;">
           <span style="font-family:var(--mono);font-weight:700;font-size:13px;flex:1;">${p.away_abbr} ${p.away_score} – ${p.home_score} ${p.home_abbr}</span>
           ${showMl ? resBadge(p.ml_correct, 'ML') : ""}
-          ${showOu ? resBadge(p.ou_correct, 'O/U') : ""}
+          ${showOu ? resBadge(p.ou_correct, 'O/U', ouIsPush) : ""}
         </div>` : ""}
       `;
         grid.appendChild(card);
@@ -1100,10 +1102,12 @@
           ? `<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(167,122,255,.15);border:1px solid rgba(167,122,255,.3);color:#a77aff;font-family:var(--mono);font-weight:700;vertical-align:middle;">IA</span>`
           : `<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(122,167,255,.12);border:1px solid rgba(122,167,255,.25);color:var(--accent);font-family:var(--mono);font-weight:700;vertical-align:middle;">XGB</span>`;
       };
-      const resCell = (correct, awayScore, homeScore) => {
+      const resCell = (correct, awayScore, homeScore, ouLine) => {
         const score = awayScore != null ? ` ${awayScore}-${homeScore}` : "";
         if (correct === true)  return `<span class="res g">G${score}</span>`;
         if (correct === false) return `<span class="res p">P${score}</span>`;
+        if (correct == null && awayScore != null && ouLine != null && (awayScore + homeScore) === parseFloat(ouLine))
+          return `<span class="res" style="color:#f9a825;">↩</span>`;
         return `<span class="res pend">–</span>`;
       };
       const rows = [];
@@ -1132,7 +1136,7 @@
           rows.push(`<tr style="${ouRowStyle}">
             <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
             <td>${matchup}</td>
-            <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span> ${modelBadge(p.model_version)} ${resCell(p.ou_correct, p.away_score, p.home_score)}</td>
+            <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span> ${modelBadge(p.model_version)} ${resCell(p.ou_correct, p.away_score, p.home_score, p.ou_line)}</td>
             <td>${fmtOdds(ouOdds)}</td>
           </tr>`);
         }
