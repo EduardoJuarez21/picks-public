@@ -586,8 +586,6 @@
         <div class="kpi-sub">por resolver</div>
       </div>
     </div>
-    <div id="modelBreakdown" style="margin-bottom:20px;"></div>
-
     <!-- Info modelo -->
     <div
       style="background:linear-gradient(90deg,rgba(122,167,255,.07),rgba(47,226,143,.05));border:1px solid var(--stroke);border-radius:var(--r);padding:16px 20px;margin:0 0 28px;">
@@ -1006,7 +1004,6 @@
         );
         historyData = results.flatMap(r => r.predictions || []);
         renderHistory();
-        renderModelBreakdown(historyData);
         const pending  = historyData.reduce((n, p) => n + (p.bet_ml && p.ml_correct == null ? 1 : 0) + (p.bet_ou && p.ou_correct == null ? 1 : 0), 0);
         const evaluated = historyData.reduce((n, p) => n + (p.bet_ml && p.ml_correct != null ? 1 : 0) + (p.bet_ou && p.ou_correct != null ? 1 : 0), 0);
         el("kpiPending").textContent = pending;
