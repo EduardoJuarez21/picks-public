@@ -566,8 +566,13 @@
         <div class="kpi-sub" id="kpiAciertoSub">resueltos</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Ganancia (100u)</div>
-        <div class="kpi-value" id="kpiGanancia">--</div>
+        <div class="kpi-label">Ganancia XGB</div>
+        <div class="kpi-value" id="kpiGananciaXgb">--</div>
+        <div class="kpi-sub">$100 por pick</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ganancia IA</div>
+        <div class="kpi-value" id="kpiGananciaIa">--</div>
         <div class="kpi-sub">$100 por pick</div>
       </div>
       <div class="kpi-card">
@@ -731,17 +736,23 @@
 
     // ── KPIs ──────────────────────────────────────────────────────────────────
 
-    let _ganancia100u = null;
+    let _ganancia100u = null, _gananciaXgb100u = null, _gananciaIa100u = null;
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
 
-    function updateGanancia() {
-      const g = _ganancia100u;
-      const ganEl = el("kpiGanancia");
-      if (g == null) { ganEl.textContent = "--"; return; }
-      const valor = Math.round(g);
-      const signo = valor >= 0 ? "+" : "";
-      ganEl.textContent = `${signo}$${valor.toLocaleString("es-MX")}`;
+    const _fmtGanEl = (elId, val, fontSize) => {
+      const ganEl = el(elId);
+      if (!ganEl) return;
+      if (val == null) { ganEl.textContent = "--"; ganEl.className = "kpi-value"; return; }
+      const valor = Math.round(val);
+      ganEl.textContent = `${valor >= 0 ? "+" : ""}$${valor.toLocaleString("es-MX")}`;
       ganEl.className = "kpi-value " + (valor > 0 ? "ok" : valor < 0 ? "bad" : "accent");
+      ganEl.style.fontSize = fontSize || "18px";
+      ganEl.style.margin = "0";
+    };
+
+    function updateGanancia() {
+      _fmtGanEl("kpiGananciaXgb", _gananciaXgb100u);
+      _fmtGanEl("kpiGananciaIa",  _gananciaIa100u);
     }
 
     async function loadMonthStats(month) {
@@ -768,7 +779,9 @@
         el("kpiPending").textContent    = d.pendientes ?? "--";
         const kpiPendSub = el("kpiPendingSub");
         if (kpiPendSub) kpiPendSub.textContent = d.pushes ? `por resolver · ${d.pushes}↩` : "por resolver";
-        _ganancia100u = d.ganancia_100u;
+        _ganancia100u    = d.ganancia_100u     ?? null;
+        _gananciaXgb100u = d.ganancia_xgb_100u ?? null;
+        _gananciaIa100u  = d.ganancia_ia_100u  ?? null;
         updateGanancia();
       } catch (e) { console.error("stats:", e); }
     }
