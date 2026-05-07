@@ -906,6 +906,9 @@
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
             ${gameTime ? `<span style="font-size:12px;font-family:var(--mono);color:var(--accent);font-weight:600;">${gameTime}</span>` : ""}
+            ${(p.model_version && p.model_version.includes('claude'))
+              ? `<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(167,122,255,.15);border:1px solid rgba(167,122,255,.3);color:#a77aff;font-family:var(--mono);font-weight:700;">IA</span>`
+              : `<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(122,167,255,.12);border:1px solid rgba(122,167,255,.25);color:var(--accent);font-family:var(--mono);font-weight:700;">XGB</span>`}
             ${isBet ? '<span style="font-size:15px;">💰</span>' : ''}
           </div>
         </div>
@@ -1009,6 +1012,12 @@
       }
 
       const fmtDate = (d) => { if (!d) return "--"; const [y, m, day] = d.split("T")[0].split("-"); return new Date(y, m - 1, day).toLocaleDateString("es-MX", { day: "2-digit", month: "short" }); };
+      const modelBadge = (mv) => {
+        const isAI = mv && mv.includes('claude');
+        return isAI
+          ? `<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(167,122,255,.15);border:1px solid rgba(167,122,255,.3);color:#a77aff;font-family:var(--mono);font-weight:700;vertical-align:middle;">IA</span>`
+          : `<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(122,167,255,.12);border:1px solid rgba(122,167,255,.25);color:var(--accent);font-family:var(--mono);font-weight:700;vertical-align:middle;">XGB</span>`;
+      };
       const resCell = (correct, awayScore, homeScore) => {
         const score = awayScore != null ? ` ${awayScore}-${homeScore}` : "";
         if (correct === true)  return `<span class="res g">G${score}</span>`;
@@ -1027,7 +1036,7 @@
           rows.push(`<tr style="${mlRowStyle}">
             <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
             <td>${matchup}</td>
-            <td><span class="badge">ML ${mlTeam}</span></td>
+            <td><span class="badge">ML ${mlTeam}</span> ${modelBadge(p.model_version)}</td>
             <td>${fmtOdds(mlOdds)}</td>
             <td>${resCell(p.ml_correct, p.away_score, p.home_score)}</td>
           </tr>`);
@@ -1042,7 +1051,7 @@
           rows.push(`<tr style="${ouRowStyle}">
             <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
             <td>${matchup}</td>
-            <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span></td>
+            <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span> ${modelBadge(p.model_version)}</td>
             <td>${fmtOdds(ouOdds)}</td>
             <td>${resCell(p.ou_correct, p.away_score, p.home_score)}</td>
           </tr>`);
