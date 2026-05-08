@@ -1119,12 +1119,6 @@
       }
 
       const fmtDate = (d) => { if (!d) return "--"; const [y, m, day] = d.split("T")[0].split("-"); return new Date(y, m - 1, day).toLocaleDateString("es-MX", { day: "2-digit", month: "short" }); };
-      const modelBadge = (mv) => {
-        const isAI = mv && mv.includes('claude');
-        return isAI
-          ? `<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(167,122,255,.15);border:1px solid rgba(167,122,255,.3);color:#a77aff;font-family:var(--mono);font-weight:700;vertical-align:middle;">IA</span>`
-          : `<span style="font-size:9px;padding:1px 5px;border-radius:4px;background:rgba(122,167,255,.12);border:1px solid rgba(122,167,255,.25);color:var(--accent);font-family:var(--mono);font-weight:700;vertical-align:middle;">XGB</span>`;
-      };
       const resCell = (correct, awayScore, homeScore, ouLine, resultStatus) => {
         const score = awayScore != null ? ` ${awayScore}-${homeScore}` : "";
         if (correct === true)  return `<span class="res g">G${score}</span>`;
@@ -1133,36 +1127,62 @@
           return `<span class="res" style="color:#f9a825;">↩${score}</span>`;
         return `<span class="res pend">–</span>`;
       };
+
+      const buildPickRows = (picks, isIa) => {
+        const rows = [];
+        const modelBg = isIa ? 'rgba(167,122,255,.04)' : 'rgba(122,167,255,.03)';
+        for (const p of picks) {
+          const matchup = `<b>${p.away_abbr}</b> @ <b>${p.home_abbr}</b>`;
+          const mlBet = !!p.bet_ml;
+          if (!betOnlyHistory || mlBet) {
+            const mlRowStyle = (mlBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '') + `background:${modelBg};`;
+            const mlTeam = p.ml_pick === "home" ? p.home_abbr : p.away_abbr;
+            const mlOdds = p.ml_pick === "home" ? p.home_ml_odds : p.away_ml_odds;
+            rows.push(`<tr style="${mlRowStyle}">
+              <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
+              <td>${matchup}</td>
+              <td><span class="badge">ML ${mlTeam}</span> ${resCell(p.ml_correct, p.away_score, p.home_score, null, p.ml_result_status)}</td>
+              <td>${fmtOdds(mlOdds)}</td>
+            </tr>`);
+          }
+          const ouBet = !!p.bet_ou;
+          if (!betOnlyHistory || ouBet) {
+            const ouRowStyle = (ouBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '') + `background:${modelBg};`;
+            const ouLineVal = p.ou_line || 8.5;
+            const ouPickLabel = `${p.ou_pick?.toUpperCase()} ${ouLineVal}`;
+            const ouOdds = p.ou_pick === 'over' ? p.over_odds : p.under_odds;
+            rows.push(`<tr style="${ouRowStyle}">
+              <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
+              <td>${matchup}</td>
+              <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span> ${resCell(p.ou_correct, p.away_score, p.home_score, p.ou_line, p.ou_result_status)}</td>
+              <td>${fmtOdds(ouOdds)}</td>
+            </tr>`);
+          }
+        }
+        return rows;
+      };
+
+      const sectionHeader = (label, isIa) => {
+        const bg  = isIa ? 'rgba(167,122,255,.12)' : 'rgba(122,167,255,.10)';
+        const brd = isIa ? 'rgba(167,122,255,.3)'  : 'rgba(122,167,255,.25)';
+        const clr = isIa ? '#a77aff'               : 'var(--accent)';
+        return `<tr>
+          <td colspan="4" style="padding:6px 10px;background:${bg};border-top:1px solid ${brd};border-bottom:1px solid ${brd};">
+            <span style="font-size:10px;font-family:var(--mono);font-weight:700;color:${clr};letter-spacing:.06em;">${label}</span>
+          </td>
+        </tr>`;
+      };
+
+      const xgbPicks = dayPicks.filter(p => !(p.model_version && p.model_version.includes('claude')));
+      const iaPicks  = dayPicks.filter(p =>   p.model_version && p.model_version.includes('claude'));
       const rows = [];
-      for (const p of dayPicks) {
-        const matchup = `<b>${p.away_abbr}</b> @ <b>${p.home_abbr}</b>`;
-        // ML row
-        const mlBet = !!p.bet_ml;
-        if (!betOnlyHistory || mlBet) {
-          const mlRowStyle = mlBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '';
-          const mlTeam = p.ml_pick === "home" ? p.home_abbr : p.away_abbr;
-          const mlOdds = p.ml_pick === "home" ? p.home_ml_odds : p.away_ml_odds;
-          rows.push(`<tr style="${mlRowStyle}">
-            <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
-            <td>${matchup}</td>
-            <td><span class="badge">ML ${mlTeam}</span> ${modelBadge(p.model_version)} ${resCell(p.ml_correct, p.away_score, p.home_score, null, p.ml_result_status)}</td>
-            <td>${fmtOdds(mlOdds)}</td>
-          </tr>`);
-        }
-        // O/U row
-        const ouBet = !!p.bet_ou;
-        if (!betOnlyHistory || ouBet) {
-          const ouRowStyle = ouBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '';
-          const ouLineVal = p.ou_line || 8.5;
-          const ouPickLabel = `${p.ou_pick?.toUpperCase()} ${ouLineVal}`;
-          const ouOdds = p.ou_pick === 'over' ? p.over_odds : p.under_odds;
-          rows.push(`<tr style="${ouRowStyle}">
-            <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
-            <td>${matchup}</td>
-            <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span> ${modelBadge(p.model_version)} ${resCell(p.ou_correct, p.away_score, p.home_score, p.ou_line, p.ou_result_status)}</td>
-            <td>${fmtOdds(ouOdds)}</td>
-          </tr>`);
-        }
+      if (xgbPicks.length) {
+        rows.push(sectionHeader('XGB — Modelo estadístico', false));
+        rows.push(...buildPickRows(xgbPicks, false));
+      }
+      if (iaPicks.length) {
+        rows.push(sectionHeader('IA — Claude', true));
+        rows.push(...buildPickRows(iaPicks, true));
       }
       tbody.innerHTML = rows.join("");
       renderHistoryPager(days, historyDayIndex);
