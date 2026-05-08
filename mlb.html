@@ -1141,7 +1141,7 @@
             rows.push(`<tr style="${mlRowStyle}">
               <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
               <td>${matchup}</td>
-              <td><span class="badge">ML ${mlTeam}</span> ${resCell(p.ml_correct, p.away_score, p.home_score, null, p.ml_result_status)}</td>
+              <td><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span class="badge">ML ${mlTeam}</span>${resCell(p.ml_correct, p.away_score, p.home_score, null, p.ml_result_status)}</div></td>
               <td>${fmtOdds(mlOdds)}</td>
             </tr>`);
           }
@@ -1154,7 +1154,7 @@
             rows.push(`<tr style="${ouRowStyle}">
               <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
               <td>${matchup}</td>
-              <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span> ${resCell(p.ou_correct, p.away_score, p.home_score, p.ou_line, p.ou_result_status)}</td>
+              <td><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span>${resCell(p.ou_correct, p.away_score, p.home_score, p.ou_line, p.ou_result_status)}</div></td>
               <td>${fmtOdds(ouOdds)}</td>
             </tr>`);
           }
