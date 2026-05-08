@@ -952,9 +952,9 @@
         card.innerHTML = `
         <div class="game-header" style="margin-bottom:6px;">
           <div class="game-matchup">
-            <span class="away">${p.away_abbr}</span>
+            <span class="away">${p.away_team || p.away_abbr}</span>
             <span class="sep">@</span>
-            <span class="home">${p.home_abbr}</span>
+            <span class="home">${p.home_team || p.home_abbr}</span>
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
             ${gameTime ? `<span style="font-size:12px;font-family:var(--mono);color:var(--accent);font-weight:600;">${gameTime}</span>` : ""}
