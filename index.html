@@ -401,6 +401,27 @@
       font-family: var(--mono);
     }
 
+    .source-badge {
+      display: inline-flex;
+      align-items: center;
+      margin-left: 6px;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid rgba(122, 167, 255, .28);
+      background: rgba(122, 167, 255, .10);
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      vertical-align: middle;
+    }
+    .source-badge.ia {
+      border-color: rgba(167, 122, 255, .35);
+      background: rgba(167, 122, 255, .14);
+      color: #a77aff;
+    }
+
     .res {
       font-weight: 700;
       font-family: var(--mono);
@@ -941,6 +962,18 @@
       return (str || "").replace(/\b\w/g, c => c.toUpperCase());
     }
 
+    function isIaPick(it) {
+      const source = String(it?.source ?? "").trim().toLowerCase();
+      const modelVersion = String(it?.model_version ?? "").trim().toLowerCase();
+      return source === "ia" || modelVersion.includes("claude");
+    }
+
+    function sourceBadge(it) {
+      return isIaPick(it)
+        ? `<span class="source-badge ia">IA</span>`
+        : `<span class="source-badge">MODELO</span>`;
+    }
+
     let _allBetItems = [];
     let _activeLeague = "all";
     let _currentPage = 1;
@@ -982,7 +1015,7 @@
         const matchStr = it.match ? capitalize(it.match) : `${capitalize(it.home)} vs ${capitalize(it.away)}`;
         tr.innerHTML = `
           <td style="white-space:nowrap;color:var(--muted)">${fmtDate}</td>
-          <td>${matchStr}</td>
+          <td>${matchStr}${sourceBadge(it)}</td>
           <td><span class="badge">${mkt}</span></td>
           <td><span class="badge">${pick}${line}</span></td>
           <td>${Number.isFinite(odds) ? odds.toFixed(3) : "--"}</td>
