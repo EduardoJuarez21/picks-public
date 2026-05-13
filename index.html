@@ -662,9 +662,24 @@
         <div class="kpi-sub" id="kpiWrSub">resueltos</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Ganancia (100u)</div>
+        <div class="kpi-label">Ganancia Modelo</div>
         <div class="kpi-value" id="kpiPnl">--</div>
-        <div class="kpi-sub">unidades</div>
+        <div class="kpi-sub">$100 por pick</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ganancia Claude</div>
+        <div class="kpi-value" id="kpiPnlClaude">--</div>
+        <div class="kpi-sub">$100 por pick</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ganancia DeepSeek</div>
+        <div class="kpi-value" id="kpiPnlDeepSeek">--</div>
+        <div class="kpi-sub">$100 por pick</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ganancia ChatGPT</div>
+        <div class="kpi-value" id="kpiPnlChatGPT">--</div>
+        <div class="kpi-sub">$100 por pick</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Ganados</div>
@@ -888,31 +903,46 @@
       const pend = bet.filter(it => !(it.result ?? "")).length;
       const resolved = g + p + n;
       const wr = resolved > 0 ? ((g / resolved) * 100).toFixed(1) : null;
-      let pnl = 0;
+      const pnlBySource = { model: 0, claude: 0, deepseek: 0, openai: 0 };
       for (const it of bet) {
         const res = (it.result ?? "").toUpperCase();
         const odds = parseFloat(it.odds) || 0;
-        if (res === "G") pnl += (odds - 1) * 100;
-        else if (res === "P") pnl -= 100;
+        let delta = 0;
+        if (res === "G") delta = (odds - 1) * 100;
+        else if (res === "P") delta = -100;
+        else continue;
+        const provider = iaProviderKey(it);
+        if (provider) pnlBySource[provider] += delta;
+        else if (!isIaPick(it)) pnlBySource.model += delta;
+      }
+      function setPnlKpi(id, value) {
+        const node = el(id);
+        const sign = value >= 0 ? "+" : "";
+        node.textContent = `${sign}$${value.toFixed(0)}`;
+        node.className = "kpi-value" + (value > 0 ? " ok" : value < 0 ? " bad" : "");
+        node.style.fontSize = "18px";
+        node.style.margin = "0";
       }
       el("kpiTotal").textContent = bet.length;
       el("kpiSub").textContent = `${items.length} picks totales`;
       el("kpiWr").textContent = wr !== null ? `${wr}%` : "--%";
       el("kpiWr").className = "kpi-value" + (wr === null ? "" : parseFloat(wr) >= 55 ? " ok" : parseFloat(wr) < 45 ? " bad" : "");
       el("kpiWrSub").textContent = `${g}G · ${p}P · ${n}N / ${resolved} resueltos`;
-      const sign = pnl >= 0 ? "+" : "";
-      el("kpiPnl").textContent = `${sign}${pnl.toFixed(0)}`;
-      el("kpiPnl").className = "kpi-value" + (pnl > 0 ? " ok" : pnl < 0 ? " bad" : "");
+      setPnlKpi("kpiPnl", pnlBySource.model);
+      setPnlKpi("kpiPnlClaude", pnlBySource.claude);
+      setPnlKpi("kpiPnlDeepSeek", pnlBySource.deepseek);
+      setPnlKpi("kpiPnlChatGPT", pnlBySource.openai);
       el("kpiG").textContent = g;
       el("kpiP").textContent = p;
       el("kpiN").textContent = n;
       el("kpiPend").textContent = pend;
       const displayDate = new Date(activeMonth + "-15");
       const monthName = displayDate.toLocaleString("es", { month: "long" });
-      if (pnl !== 0 || resolved > 0) {
-        const sign = pnl >= 0 ? "+" : "";
+      const totalPnl = pnlBySource.model + pnlBySource.claude + pnlBySource.deepseek + pnlBySource.openai;
+      if (totalPnl !== 0 || resolved > 0) {
+        const sign = totalPnl >= 0 ? "+" : "";
         const wrPart = wr !== null ? ` · ${wr}% acierto` : "";
-        el("heroSub").textContent = `${sign}${pnl.toFixed(0)}u en ${monthName}${wrPart}`;
+        el("heroSub").textContent = `${sign}${totalPnl.toFixed(0)}u en ${monthName}${wrPart}`;
       }
     }
 
@@ -990,6 +1020,14 @@
       if (modelVersion.startsWith("deepseek-")) return "DeepSeek";
       if (modelVersion.startsWith("openai-")) return "ChatGPT";
       return "IA";
+    }
+
+    function iaProviderKey(it) {
+      const modelVersion = String(it?.model_version ?? "").trim().toLowerCase();
+      if (modelVersion.startsWith("claude-")) return "claude";
+      if (modelVersion.startsWith("deepseek-")) return "deepseek";
+      if (modelVersion.startsWith("openai-")) return "openai";
+      return null;
     }
 
     function sourceBadge(it) {
