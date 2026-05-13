@@ -571,8 +571,18 @@
         <div class="kpi-sub">$100 por pick</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Ganancia IA</div>
-        <div class="kpi-value" id="kpiGananciaIa">--</div>
+        <div class="kpi-label">Ganancia Claude</div>
+        <div class="kpi-value" id="kpiGananciaClaude">--</div>
+        <div class="kpi-sub">$100 por pick</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ganancia DeepSeek</div>
+        <div class="kpi-value" id="kpiGananciaDeepSeek">--</div>
+        <div class="kpi-sub">$100 por pick</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Ganancia ChatGPT</div>
+        <div class="kpi-value" id="kpiGananciaChatGPT">--</div>
         <div class="kpi-sub">$100 por pick</div>
       </div>
       <div class="kpi-card">
@@ -736,7 +746,7 @@
 
     // ── KPIs ──────────────────────────────────────────────────────────────────
 
-    let _ganancia100u = null, _gananciaXgb100u = null, _gananciaIa100u = null;
+    let _ganancia100u = null, _gananciaXgb100u = null, _gananciaClaude100u = null, _gananciaDeepSeek100u = null, _gananciaChatGpt100u = null;
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
 
     const _fmtGanEl = (elId, val, fontSize) => {
@@ -751,8 +761,10 @@
     };
 
     function updateGanancia() {
-      _fmtGanEl("kpiGananciaXgb", _gananciaXgb100u);
-      _fmtGanEl("kpiGananciaIa",  _gananciaIa100u);
+      _fmtGanEl("kpiGananciaXgb",      _gananciaXgb100u);
+      _fmtGanEl("kpiGananciaClaude",   _gananciaClaude100u);
+      _fmtGanEl("kpiGananciaDeepSeek", _gananciaDeepSeek100u);
+      _fmtGanEl("kpiGananciaChatGPT",  _gananciaChatGpt100u);
     }
 
     async function loadMonthStats(month) {
@@ -760,7 +772,7 @@
       el("monthPicker").value = m;
       el("btnCurMonth").style.background = m === currentMonth ? "rgba(122,167,255,.15)" : "rgba(255,255,255,.05)";
       try {
-        const key = `monthly_${m}`;
+        const key = `monthly_providers_${m}`;
         let d = cacheGet(key);
         if (!d) {
           const r = await fetch(`${API}/mlb/stats/monthly?month=${m}`);
@@ -779,9 +791,11 @@
         el("kpiPending").textContent    = d.pendientes ?? "--";
         const kpiPendSub = el("kpiPendingSub");
         if (kpiPendSub) kpiPendSub.textContent = d.pushes ? `por resolver · ${d.pushes}↩` : "por resolver";
-        _ganancia100u    = d.ganancia_100u     ?? null;
-        _gananciaXgb100u = d.ganancia_xgb_100u ?? null;
-        _gananciaIa100u  = d.ganancia_ia_100u  ?? null;
+        _ganancia100u        = d.ganancia_100u         ?? null;
+        _gananciaXgb100u     = d.ganancia_xgb_100u     ?? null;
+        _gananciaClaude100u  = d.ganancia_claude_100u  ?? null;
+        _gananciaDeepSeek100u = d.ganancia_deepseek_100u ?? null;
+        _gananciaChatGpt100u = d.ganancia_openai_100u  ?? null;
         updateGanancia();
       } catch (e) { console.error("stats:", e); }
     }
