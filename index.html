@@ -981,12 +981,20 @@
     function isIaPick(it) {
       const source = String(it?.source ?? "").trim().toLowerCase();
       const modelVersion = String(it?.model_version ?? "").trim().toLowerCase();
-      return source === "ia" || modelVersion.includes("claude");
+      return source === "ia" || ["claude-", "deepseek-", "openai-"].some(prefix => modelVersion.startsWith(prefix));
+    }
+
+    function iaPickLabel(it) {
+      const modelVersion = String(it?.model_version ?? "").trim().toLowerCase();
+      if (modelVersion.startsWith("claude-")) return "Claude";
+      if (modelVersion.startsWith("deepseek-")) return "DeepSeek";
+      if (modelVersion.startsWith("openai-")) return "ChatGPT";
+      return "IA";
     }
 
     function sourceBadge(it) {
       return isIaPick(it)
-        ? `<span class="source-badge ia">IA</span>`
+        ? `<span class="source-badge ia">${iaPickLabel(it)}</span>`
         : `<span class="source-badge">MODELO</span>`;
     }
 

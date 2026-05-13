@@ -845,6 +845,49 @@
       return odds >= 0 ? odds / 100 + 1 : 100 / Math.abs(odds) + 1;
     }
 
+    const AI_MODEL_PREFIXES = ["claude-", "deepseek-", "openai-"];
+    const MODEL_ORDER = ["xgb", "claude", "deepseek", "openai", "ia"];
+
+    function modelVersion(p) {
+      return String(p?.model_version || "").trim().toLowerCase();
+    }
+
+    function isAiPick(p) {
+      const version = modelVersion(p);
+      return AI_MODEL_PREFIXES.some(prefix => version.startsWith(prefix));
+    }
+
+    function modelKey(p) {
+      const version = modelVersion(p);
+      if (version.startsWith("claude-")) return "claude";
+      if (version.startsWith("deepseek-")) return "deepseek";
+      if (version.startsWith("openai-")) return "openai";
+      return isAiPick(p) ? "ia" : "xgb";
+    }
+
+    function modelLabel(key) {
+      return { xgb: "XGB", claude: "Claude", deepseek: "DeepSeek", openai: "ChatGPT", ia: "IA" }[key] || "IA";
+    }
+
+    function modelGroups(preds) {
+      const groups = {};
+      for (const p of preds) {
+        const key = modelKey(p);
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(p);
+      }
+      return MODEL_ORDER.filter(key => groups[key]?.length).map(key => ({ key, label: modelLabel(key), picks: groups[key] }));
+    }
+
+    function sourceBadge(p) {
+      const key = modelKey(p);
+      const isIa = key !== "xgb";
+      const bg = isIa ? "rgba(167,122,255,.15)" : "rgba(122,167,255,.12)";
+      const br = isIa ? "rgba(167,122,255,.3)" : "rgba(122,167,255,.25)";
+      const cl = isIa ? "#a77aff" : "var(--accent)";
+      return `<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:${bg};border:1px solid ${br};color:${cl};font-family:var(--mono);font-weight:700;">${modelLabel(key)}</span>`;
+    }
+
     function renderDayPnL(preds) {
       const pnlEl = el("dayPnL");
       const betPreds = preds.filter(p => p.bet_ml || p.bet_ou);
@@ -870,9 +913,6 @@
         }
         return { pnl, won, lost, push, pending };
       };
-
-      const xgbPreds = betPreds.filter(p => !(p.model_version && p.model_version.includes('claude')));
-      const iaPreds  = betPreds.filter(p =>   p.model_version && p.model_version.includes('claude'));
 
       const modelRow = (subset, label, isIa) => {
         if (!subset.length) return '';
@@ -901,8 +941,7 @@
       pnlEl.innerHTML = `
         <div class="day-pnl" style="flex-direction:column;align-items:stretch;gap:6px;">
           <span class="day-pnl-label">Si apuestas $100/pick hoy</span>
-          ${modelRow(xgbPreds, 'XGB', false)}
-          ${modelRow(iaPreds,  'IA',  true)}
+          ${modelGroups(betPreds).map(group => modelRow(group.picks, group.label, group.key !== "xgb")).join("")}
           <div style="display:flex;align-items:center;gap:10px;font-family:var(--mono);font-size:13px;border-top:1px solid var(--stroke);padding-top:6px;margin-top:2px;">
             <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);min-width:28px;flex-shrink:0;">Total</span>
             <span style="font-size:18px;font-weight:700;color:${tc};min-width:70px;">${ts}$${Math.round(Math.abs(total.pnl))}</span>
@@ -916,8 +955,8 @@
       renderDayPnL(preds.filter(p => !!p.bet_ml || !!p.bet_ou));
       const base = preds.filter(p => p.status === 'final');
       let list = betOnlyDay ? base.filter(p => !!p.bet_ml || !!p.bet_ou) : base;
-      if (modelFilter === 'xgb') list = list.filter(p => !(p.model_version && p.model_version.includes('claude')));
-      else if (modelFilter === 'ia') list = list.filter(p => p.model_version && p.model_version.includes('claude'));
+      if (modelFilter === 'xgb') list = list.filter(p => !isAiPick(p));
+      else if (modelFilter === 'ia') list = list.filter(p => isAiPick(p));
       if (!list.length) { grid.innerHTML = `<div class="empty">${betOnlyDay ? 'Sin picks apostados terminados para esta fecha.' : 'Sin resultados para esta fecha.'}</div>`; return; }
       grid.innerHTML = "";
       for (const p of list) {
@@ -958,9 +997,7 @@
           </div>
           <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
             ${gameTime ? `<span style="font-size:12px;font-family:var(--mono);color:var(--accent);font-weight:600;">${gameTime}</span>` : ""}
-            ${(p.model_version && p.model_version.includes('claude'))
-              ? `<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(167,122,255,.15);border:1px solid rgba(167,122,255,.3);color:#a77aff;font-family:var(--mono);font-weight:700;">IA</span>`
-              : `<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:rgba(122,167,255,.12);border:1px solid rgba(122,167,255,.25);color:var(--accent);font-family:var(--mono);font-weight:700;">XGB</span>`}
+            ${sourceBadge(p)}
             ${isBet ? '<span style="font-size:15px;">💰</span>' : ''}
           </div>
         </div>
@@ -999,9 +1036,10 @@
       if (!el2) return;
       const bets = data.filter(p => p.bet_ml || p.bet_ou);
       if (!bets.length) { el2.innerHTML = ""; return; }
-      const s = { xgb: { mlW:0,mlL:0,mlP:0,ouW:0,ouL:0,ouP:0 }, ia: { mlW:0,mlL:0,mlP:0,ouW:0,ouL:0,ouP:0 } };
+      const s = {};
       for (const p of bets) {
-        const b = (p.model_version && p.model_version.includes('claude')) ? s.ia : s.xgb;
+        const key = modelKey(p);
+        const b = s[key] || (s[key] = { mlW:0,mlL:0,mlP:0,ouW:0,ouL:0,ouP:0 });
         if (p.bet_ml) { if (p.ml_correct === true) b.mlW++; else if (p.ml_correct === false) b.mlL++; else b.mlP++; }
         if (p.bet_ou) { if (p.ou_correct === true) b.ouW++; else if (p.ou_correct === false) b.ouL++; else b.ouP++; }
       }
@@ -1018,8 +1056,7 @@
         </div>`;
       };
       el2.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;padding:10px 16px;background:rgba(255,255,255,.04);border:1px solid var(--stroke);border-radius:10px;font-size:13px;">
-        ${row('XGB', false, s.xgb)}
-        ${row('IA',  true,  s.ia)}
+        ${MODEL_ORDER.filter(key => s[key]).map(key => row(modelLabel(key), key !== "xgb", s[key])).join("")}
       </div>`;
     }
 
@@ -1075,9 +1112,10 @@
 
       const fmtOdds = (o) => { if (o == null) return '<span style="color:var(--muted)">–</span>'; const d = o >= 0 ? o / 100 + 1 : 100 / Math.abs(o) + 1; return `<span style="font-family:var(--mono);font-size:12px;color:var(--text)">${d.toFixed(2)}</span>`; };
       // Resumen del día: ML y O/U ganados/perdidos por modelo
-      const stats = { xgb: { mlWon:0,mlLost:0,mlPush:0,mlPend:0,ouWon:0,ouLost:0,ouPush:0,ouPend:0 }, ia: { mlWon:0,mlLost:0,mlPush:0,mlPend:0,ouWon:0,ouLost:0,ouPush:0,ouPend:0 } };
+      const stats = {};
       for (const p of dayPicks) {
-        const bucket = (p.model_version && p.model_version.includes('claude')) ? stats.ia : stats.xgb;
+        const key = modelKey(p);
+        const bucket = stats[key] || (stats[key] = { mlWon:0,mlLost:0,mlPush:0,mlPend:0,ouWon:0,ouLost:0,ouPush:0,ouPend:0 });
         if (!betOnlyHistory || !!p.bet_ml) {
           if (p.ml_correct === true) bucket.mlWon++;
           else if (p.ml_correct === false) bucket.mlLost++;
@@ -1113,8 +1151,7 @@
           </div>`;
         };
         summaryEl.innerHTML = `<div style="display:flex;flex-direction:column;gap:6px;padding:10px 16px;background:rgba(255,255,255,.04);border:1px solid var(--stroke);border-radius:10px;margin-bottom:10px;font-size:13px;font-family:var(--mono);">
-          ${modelRow('XGB', false, stats.xgb)}
-          ${modelRow('IA',  true,  stats.ia)}
+          ${MODEL_ORDER.filter(key => stats[key]).map(key => modelRow(modelLabel(key), key !== "xgb", stats[key])).join("")}
         </div>`;
       }
 
@@ -1173,16 +1210,10 @@
         </tr>`;
       };
 
-      const xgbPicks = dayPicks.filter(p => !(p.model_version && p.model_version.includes('claude')));
-      const iaPicks  = dayPicks.filter(p =>   p.model_version && p.model_version.includes('claude'));
       const rows = [];
-      if (xgbPicks.length) {
-        rows.push(sectionHeader('XGB — Modelo estadístico', false));
-        rows.push(...buildPickRows(xgbPicks, false));
-      }
-      if (iaPicks.length) {
-        rows.push(sectionHeader('IA — Claude', true));
-        rows.push(...buildPickRows(iaPicks, true));
+      for (const group of modelGroups(dayPicks)) {
+        rows.push(sectionHeader(group.key === "xgb" ? 'XGB — Modelo estadístico' : `IA — ${group.label}`, group.key !== "xgb"));
+        rows.push(...buildPickRows(group.picks, group.key !== "xgb"));
       }
       tbody.innerHTML = rows.join("");
       renderHistoryPager(days, historyDayIndex);
