@@ -1129,6 +1129,42 @@
         : date.toLocaleDateString("es-MX", { day: "2-digit", month: "short" });
     }
 
+    function historyDateKey(rawDate) {
+      const value = String(rawDate || "").trim();
+      const iso = value.match(/^(\d{4})-(\d{2})-(\d{2})/);
+      if (iso) return `${iso[1]}-${iso[2]}-${iso[3]}`;
+      const dmy = value.match(/^(\d{1,2})[/-](\d{1,2})[/-](\d{4})$/);
+      if (dmy) return `${dmy[3]}-${String(dmy[2]).padStart(2, "0")}-${String(dmy[1]).padStart(2, "0")}`;
+      const parsed = new Date(value);
+      if (!Number.isNaN(parsed.getTime())) {
+        return `${parsed.getUTCFullYear()}-${String(parsed.getUTCMonth() + 1).padStart(2, "0")}-${String(parsed.getUTCDate()).padStart(2, "0")}`;
+      }
+      return value.toLowerCase();
+    }
+
+    function historyKeyText(value) {
+      return String(value || "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .toLowerCase()
+        .replace(/&/g, " and ")
+        .replace(/[^a-z0-9]+/g, " ")
+        .trim()
+        .replace(/\s+/g, " ");
+    }
+
+    function historyMatchKeys(it, matchStr) {
+      const keys = [];
+      const fixtureId = String(it?.fixture_id ?? it?.match_id ?? it?.game_id ?? it?.event_id ?? "").trim();
+      if (fixtureId) keys.push(`id:${fixtureId}`);
+      const home = historyKeyText(it?.home ?? it?.home_team);
+      const away = historyKeyText(it?.away ?? it?.away_team);
+      if (home && away) keys.push(`teams:${home}|${away}`);
+      const matchKey = historyKeyText(matchStr).replace(/\bvs\b/g, " ").replace(/\s+/g, " ").trim();
+      if (matchKey) keys.push(`match:${matchKey}`);
+      return [...new Set(keys)];
+    }
+
     function isCornersMarket(raw) {
       return String(raw ?? "").trim().toUpperCase() === "CORNERS";
     }
@@ -1239,13 +1275,15 @@
       for (const it of filtered) {
         const rawDate = it.day ?? "";
         const matchStr = it.match ? capitalize(it.match) : `${capitalize(it.home)} vs ${capitalize(it.away)}`;
-        const key = `${rawDate}|${matchStr}`;
-        if (!byMatch.has(key)) {
-          const group = { rawDate, matchStr, items: [] };
-          byMatch.set(key, group);
+        const dateKey = historyDateKey(rawDate);
+        const keys = historyMatchKeys(it, matchStr).map(key => `${dateKey}|${key}`);
+        let group = keys.map(key => byMatch.get(key)).find(Boolean);
+        if (!group) {
+          group = { rawDate, matchStr, items: [] };
           groups.push(group);
         }
-        byMatch.get(key).items.push(it);
+        for (const key of keys) byMatch.set(key, group);
+        group.items.push(it);
       }
 
       const totalPages = Math.ceil(groups.length / PAGE_SIZE);
