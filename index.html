@@ -1045,37 +1045,65 @@
         pager.innerHTML = "";
         return;
       }
-      const totalPages = Math.ceil(filtered.length / PAGE_SIZE);
+
+      const groups = [];
+      const byMatch = new Map();
+      for (const it of filtered) {
+        const rawDate = it.day ?? "";
+        const matchStr = it.match ? capitalize(it.match) : `${capitalize(it.home)} vs ${capitalize(it.away)}`;
+        const key = `${rawDate}|${matchStr}`;
+        if (!byMatch.has(key)) {
+          const group = { rawDate, matchStr, items: [] };
+          byMatch.set(key, group);
+          groups.push(group);
+        }
+        byMatch.get(key).items.push(it);
+      }
+
+      const totalPages = Math.ceil(groups.length / PAGE_SIZE);
       if (_currentPage > totalPages) _currentPage = totalPages;
       const start = (_currentPage - 1) * PAGE_SIZE;
-      const page = filtered.slice(start, start + PAGE_SIZE);
-      tbody.innerHTML = "";
-      for (const it of page) {
+      const page = groups.slice(start, start + PAGE_SIZE);
+      const renderPickLine = (it) => {
         const res = (it.result ?? "").toUpperCase();
         const resClass = res === "G" ? "g" : res === "P" ? "p" : res === "N" ? "n" : "pend";
         const score = (it.score_home != null && it.score_away != null && String(it.score_home).trim() !== "" && String(it.score_away).trim() !== "")
           ? ` ${it.score_home}-${it.score_away}` : "";
-        const resLabel = (res || "Pend") + score;
         const pick = (it.pick ?? "").toUpperCase();
         const lineVal = parseFloat(it.line);
         const line = it.line != null && String(it.line).trim() && lineVal !== 0 ? ` ${it.line}` : "";
-        const mkt = mktLabel(it.pick_market);
-        const odds = parseFloat(it.odds);
-        const decisionRaw = String(it.decision ?? "").trim().toUpperCase();
-        const dec = ["BET", "BET_2"].includes(decisionRaw);
-        const decisionLabel = decisionRaw === "WATCH" ? "WATCH" : (dec ? "BET" : "NO BET");
+        return `<div style="display:grid;grid-template-columns:minmax(74px,.7fr) 52px minmax(82px,1fr) 58px;gap:8px;align-items:center;padding:7px 0;border-top:1px solid rgba(255,255,255,.07);font-size:12px;">
+          <div>${sourceBadge(it)}</div>
+          <div><span class="badge">${mktLabel(it.pick_market)}</span></div>
+          <div><span class="badge">${pick}${line ? `<br>${line.trim()}` : ""}</span></div>
+          <div style="text-align:right;"><span class="res ${resClass}">${res || "Pend"}${score}</span></div>
+        </div>`;
+      };
+
+      tbody.innerHTML = "";
+      for (const group of page) {
+        const counts = group.items.reduce((acc, it) => {
+          const r = (it.result ?? "").toUpperCase();
+          if (r === "G") acc.g++;
+          else if (r === "P") acc.p++;
+          else if (r === "N") acc.n++;
+          return acc;
+        }, { g: 0, p: 0, n: 0 });
+        const first = group.items[0] || {};
+        const score = (first.score_home != null && first.score_away != null && String(first.score_home).trim() !== "" && String(first.score_away).trim() !== "")
+          ? `${first.score_home}-${first.score_away}` : "";
         const tr = document.createElement("tr");
-        const rawDate = it.day ?? "";
-        const fmtDate = rawDate ? formatDayLabel(rawDate) : "--";
-        const matchStr = it.match ? capitalize(it.match) : `${capitalize(it.home)} vs ${capitalize(it.away)}`;
         tr.innerHTML = `
-          <td style="white-space:nowrap;color:var(--muted)">${fmtDate}</td>
-          <td>${matchStr}${sourceBadge(it)}</td>
-          <td><span class="badge">${mkt}</span></td>
-          <td><span class="badge">${pick}${line}</span></td>
-          <td>${Number.isFinite(odds) ? odds.toFixed(3) : "--"}</td>
-          <td class="${dec ? "decision-bet" : "decision-no-bet"}">${decisionLabel}</td>
-          <td><span class="res ${resClass}">${resLabel}</span></td>`;
+          <td colspan="7" style="padding:0;">
+            <details style="padding:12px 14px;">
+              <summary style="cursor:pointer;list-style:none;display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;">
+                <span style="color:var(--muted);white-space:nowrap;">${group.rawDate ? formatDayLabel(group.rawDate) : "--"}</span>
+                <span style="font-weight:700;line-height:1.25;">${group.matchStr}${score ? `<span style="display:block;color:var(--muted);font-family:var(--mono);font-size:11px;margin-top:3px;">${score}</span>` : ""}</span>
+                <span style="font-family:var(--mono);font-size:12px;white-space:nowrap;"><span class="res g">${counts.g}G</span> · <span class="res p">${counts.p}P</span>${counts.n ? ` · <span class="res n">${counts.n}N</span>` : ""}</span>
+              </summary>
+              <div style="margin-top:10px;">${group.items.map(renderPickLine).join("")}</div>
+            </details>
+          </td>`;
         tbody.appendChild(tr);
       }
 
@@ -1109,7 +1137,7 @@
       pager.appendChild(mkBtn("→", _currentPage + 1, _currentPage === totalPages, false));
       const info = document.createElement("span");
       info.className = "pager-info";
-      info.textContent = `${start + 1}–${Math.min(start + PAGE_SIZE, filtered.length)} de ${filtered.length}`;
+      info.textContent = `${start + 1}–${Math.min(start + PAGE_SIZE, groups.length)} de ${groups.length}`;
       pager.appendChild(info);
     }
 
