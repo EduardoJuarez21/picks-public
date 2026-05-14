@@ -652,54 +652,39 @@
     <!-- KPIs -->
     <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-label">Picks apostados</div>
+        <div class="kpi-label">Apuestas</div>
         <div class="kpi-value accent" id="kpiTotal">--</div>
         <div class="kpi-sub" id="kpiSub">del mes</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">% Acierto</div>
+        <div class="kpi-label">Win rate general</div>
         <div class="kpi-value" id="kpiWr">--%</div>
         <div class="kpi-sub" id="kpiWrSub">resueltos</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Ganancia Modelo</div>
-        <div class="kpi-value" id="kpiPnl">--</div>
-        <div class="kpi-sub">$100 por pick</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Ganancia Claude</div>
-        <div class="kpi-value" id="kpiPnlClaude">--</div>
-        <div class="kpi-sub">$100 por pick</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Ganancia DeepSeek</div>
-        <div class="kpi-value" id="kpiPnlDeepSeek">--</div>
-        <div class="kpi-sub">$100 por pick</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Ganancia ChatGPT</div>
-        <div class="kpi-value" id="kpiPnlChatGPT">--</div>
-        <div class="kpi-sub">$100 por pick</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Ganados</div>
-        <div class="kpi-value ok" id="kpiG">--</div>
-        <div class="kpi-sub">picks G</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Perdidos</div>
-        <div class="kpi-value bad" id="kpiP">--</div>
-        <div class="kpi-sub">picks P</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Nulos</div>
-        <div class="kpi-value" id="kpiN">--</div>
-        <div class="kpi-sub">picks N</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Pendientes</div>
         <div class="kpi-value" id="kpiPend">--</div>
         <div class="kpi-sub">por resolver</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Modelo</div>
+        <div class="kpi-value" id="kpiPnl">--</div>
+        <div class="kpi-sub" id="kpiPnlSub">G 0 · P 0 · N 0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">ChatGPT</div>
+        <div class="kpi-value" id="kpiPnlChatGPT">--</div>
+        <div class="kpi-sub" id="kpiPnlChatGPTSub">G 0 · P 0 · N 0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Claude</div>
+        <div class="kpi-value" id="kpiPnlClaude">--</div>
+        <div class="kpi-sub" id="kpiPnlClaudeSub">G 0 · P 0 · N 0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">DeepSeek</div>
+        <div class="kpi-value" id="kpiPnlDeepSeek">--</div>
+        <div class="kpi-sub" id="kpiPnlDeepSeekSub">G 0 · P 0 · N 0</div>
       </div>
     </div>
 
@@ -903,42 +888,50 @@
       const pend = bet.filter(it => !(it.result ?? "")).length;
       const resolved = g + p + n;
       const wr = resolved > 0 ? ((g / resolved) * 100).toFixed(1) : null;
-      const pnlBySource = { model: 0, claude: 0, deepseek: 0, openai: 0 };
+      const sourceStats = {
+        model: { pnl: 0, g: 0, p: 0, n: 0 },
+        openai: { pnl: 0, g: 0, p: 0, n: 0 },
+        claude: { pnl: 0, g: 0, p: 0, n: 0 },
+        deepseek: { pnl: 0, g: 0, p: 0, n: 0 },
+      };
       for (const it of bet) {
         const res = (it.result ?? "").toUpperCase();
         const odds = parseFloat(it.odds) || 0;
+        const provider = iaProviderKey(it) || (!isIaPick(it) ? "model" : null);
+        if (!provider || !sourceStats[provider]) continue;
+        if (res === "G") sourceStats[provider].g += 1;
+        else if (res === "P") sourceStats[provider].p += 1;
+        else if (res === "N") sourceStats[provider].n += 1;
         let delta = 0;
         if (res === "G") delta = (odds - 1) * 100;
         else if (res === "P") delta = -100;
         else continue;
-        const provider = iaProviderKey(it);
-        if (provider) pnlBySource[provider] += delta;
-        else if (!isIaPick(it)) pnlBySource.model += delta;
+        sourceStats[provider].pnl += delta;
       }
-      function setPnlKpi(id, value) {
+      function setPnlKpi(id, subId, stats) {
         const node = el(id);
+        const value = stats.pnl;
         const sign = value >= 0 ? "+" : "";
         node.textContent = `${sign}$${value.toFixed(0)}`;
         node.className = "kpi-value" + (value > 0 ? " ok" : value < 0 ? " bad" : "");
         node.style.fontSize = "18px";
         node.style.margin = "0";
+        const sub = el(subId);
+        if (sub) sub.textContent = `G ${stats.g} · P ${stats.p} · N ${stats.n}`;
       }
       el("kpiTotal").textContent = bet.length;
       el("kpiSub").textContent = `${items.length} picks totales`;
       el("kpiWr").textContent = wr !== null ? `${wr}%` : "--%";
       el("kpiWr").className = "kpi-value" + (wr === null ? "" : parseFloat(wr) >= 55 ? " ok" : parseFloat(wr) < 45 ? " bad" : "");
       el("kpiWrSub").textContent = `${g}G · ${p}P · ${n}N / ${resolved} resueltos`;
-      setPnlKpi("kpiPnl", pnlBySource.model);
-      setPnlKpi("kpiPnlClaude", pnlBySource.claude);
-      setPnlKpi("kpiPnlDeepSeek", pnlBySource.deepseek);
-      setPnlKpi("kpiPnlChatGPT", pnlBySource.openai);
-      el("kpiG").textContent = g;
-      el("kpiP").textContent = p;
-      el("kpiN").textContent = n;
+      setPnlKpi("kpiPnl", "kpiPnlSub", sourceStats.model);
+      setPnlKpi("kpiPnlChatGPT", "kpiPnlChatGPTSub", sourceStats.openai);
+      setPnlKpi("kpiPnlClaude", "kpiPnlClaudeSub", sourceStats.claude);
+      setPnlKpi("kpiPnlDeepSeek", "kpiPnlDeepSeekSub", sourceStats.deepseek);
       el("kpiPend").textContent = pend;
       const displayDate = new Date(activeMonth + "-15");
       const monthName = displayDate.toLocaleString("es", { month: "long" });
-      const totalPnl = pnlBySource.model + pnlBySource.claude + pnlBySource.deepseek + pnlBySource.openai;
+      const totalPnl = sourceStats.model.pnl + sourceStats.claude.pnl + sourceStats.deepseek.pnl + sourceStats.openai.pnl;
       if (totalPnl !== 0 || resolved > 0) {
         const sign = totalPnl >= 0 ? "+" : "";
         const wrPart = wr !== null ? ` · ${wr}% acierto` : "";
