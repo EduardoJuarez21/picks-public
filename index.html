@@ -405,7 +405,7 @@
       cursor: pointer;
       list-style: none;
       display: grid;
-      grid-template-columns: 64px minmax(0, 1fr) auto;
+      grid-template-columns: 64px minmax(0, 1fr) auto auto;
       gap: 10px;
       align-items: center;
     }
@@ -439,6 +439,14 @@
       gap: 8px;
       font-family: var(--mono);
       font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .history-group-toggle {
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 11px;
+      font-weight: 700;
       white-space: nowrap;
     }
 
@@ -702,6 +710,10 @@
       .history-group-count {
         justify-content: flex-start;
         gap: 10px;
+        margin-top: 2px;
+      }
+
+      .history-group-toggle {
         margin-top: 2px;
       }
 
@@ -1117,6 +1129,66 @@
         : date.toLocaleDateString("es-MX", { day: "2-digit", month: "short" });
     }
 
+    function isCornersMarket(raw) {
+      return String(raw ?? "").trim().toUpperCase() === "CORNERS";
+    }
+
+    function parseScoreValue(raw) {
+      const text = String(raw ?? "").trim();
+      if (text === "") return NaN;
+      const n = Number(text);
+      return Number.isFinite(n) ? n : NaN;
+    }
+
+    function readPairFromString(raw) {
+      const m = String(raw ?? "").match(/(\d+)\s*[-:]\s*(\d+)/);
+      if (!m) return { hs: NaN, as: NaN, hasScore: false };
+      const hs = Number(m[1]);
+      const as = Number(m[2]);
+      return { hs, as, hasScore: Number.isFinite(hs) && Number.isFinite(as) };
+    }
+
+    function readScorePair(it) {
+      let hs = parseScoreValue(it?.score_home ?? it?.home_score);
+      let as = parseScoreValue(it?.score_away ?? it?.away_score);
+      if ((!Number.isFinite(hs) || !Number.isFinite(as)) && typeof it?.score === "string") {
+        const pair = readPairFromString(it.score);
+        if (!Number.isFinite(hs)) hs = pair.hs;
+        if (!Number.isFinite(as)) as = pair.as;
+      }
+      return { hs, as, hasScore: Number.isFinite(hs) && Number.isFinite(as) };
+    }
+
+    function readCornerPair(it) {
+      let hs = parseScoreValue(it?.corners_home ?? it?.home_corners);
+      let as = parseScoreValue(it?.corners_away ?? it?.away_corners);
+      if ((!Number.isFinite(hs) || !Number.isFinite(as)) && typeof it?.corners === "string") {
+        const pair = readPairFromString(it.corners);
+        if (!Number.isFinite(hs)) hs = pair.hs;
+        if (!Number.isFinite(as)) as = pair.as;
+      }
+      if ((!Number.isFinite(hs) || !Number.isFinite(as)) && it?.corners && typeof it.corners === "object") {
+        if (!Number.isFinite(hs)) hs = parseScoreValue(it.corners.home ?? it.corners.local ?? it.corners.h);
+        if (!Number.isFinite(as)) as = parseScoreValue(it.corners.away ?? it.corners.visitor ?? it.corners.a);
+      }
+      return { hs, as, hasScore: Number.isFinite(hs) && Number.isFinite(as) };
+    }
+
+    function resultScoreLabel(it, { prefix = false } = {}) {
+      const isCorners = isCornersMarket(it?.pick_market);
+      const pair = isCorners ? readCornerPair(it) : readScorePair(it);
+      if (!pair.hasScore) return "";
+      const label = `${pair.hs}-${pair.as}`;
+      return prefix && isCorners ? `Corners ${label}` : label;
+    }
+
+    function groupScoreLabel(items) {
+      const cornerItem = items.find(it => isCornersMarket(it?.pick_market) && readCornerPair(it).hasScore);
+      if (cornerItem) return resultScoreLabel(cornerItem, { prefix: true });
+      const scoreItem = items.find(it => readScorePair(it).hasScore);
+      return scoreItem ? resultScoreLabel(scoreItem) : "";
+    }
+
     function isIaPick(it) {
       const source = String(it?.source ?? "").trim().toLowerCase();
       const modelVersion = String(it?.model_version ?? "").trim().toLowerCase();
@@ -1183,8 +1255,7 @@
       const renderPickLine = (it) => {
         const res = (it.result ?? "").toUpperCase();
         const resClass = res === "G" ? "g" : res === "P" ? "p" : res === "N" ? "n" : "pend";
-        const score = (it.score_home != null && it.score_away != null && String(it.score_home).trim() !== "" && String(it.score_away).trim() !== "")
-          ? ` ${it.score_home}-${it.score_away}` : "";
+        const score = resultScoreLabel(it, { prefix: isCornersMarket(it.pick_market) });
         const pick = (it.pick ?? "").toUpperCase();
         const lineVal = parseFloat(it.line);
         const line = it.line != null && String(it.line).trim() && lineVal !== 0 ? ` ${it.line}` : "";
@@ -1192,7 +1263,7 @@
           <div class="history-pick-source">${sourceBadge(it)}</div>
           <div class="history-pick-market"><span class="badge">${mktLabel(it.pick_market)}</span></div>
           <div class="history-pick-choice"><span class="badge">${pick}${line ? `<br>${line.trim()}` : ""}</span></div>
-          <div class="history-pick-result"><span class="res ${resClass}">${res || "Pend"}${score}</span></div>
+          <div class="history-pick-result"><span class="res ${resClass}">${res || "Pend"}${score ? ` ${score}` : ""}</span></div>
         </div>`;
       };
 
@@ -1205,9 +1276,7 @@
           else if (r === "N") acc.n++;
           return acc;
         }, { g: 0, p: 0, n: 0 });
-        const first = group.items[0] || {};
-        const score = (first.score_home != null && first.score_away != null && String(first.score_home).trim() !== "" && String(first.score_away).trim() !== "")
-          ? `${first.score_home}-${first.score_away}` : "";
+        const score = groupScoreLabel(group.items);
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td colspan="7" class="history-group-cell">
@@ -1216,6 +1285,7 @@
                 <span class="history-group-date">${group.rawDate ? formatDayLabel(group.rawDate) : "--"}</span>
                 <span class="history-group-match">${group.matchStr}${score ? `<span class="history-group-score">${score}</span>` : ""}</span>
                 <span class="history-group-count"><span class="res g">${counts.g}G</span><span class="res p">${counts.p}P</span>${counts.n ? `<span class="res n">${counts.n}N</span>` : ""}</span>
+                <span class="history-group-toggle">Ver detalle ▾</span>
               </summary>
               <div class="history-pick-list">${group.items.map(renderPickLine).join("")}</div>
             </details>
