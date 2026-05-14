@@ -556,49 +556,39 @@
     </div>
     <div class="kpi-grid">
       <div class="kpi-card">
-        <div class="kpi-label">Picks apostados</div>
+        <div class="kpi-label">Apuestas</div>
         <div class="kpi-value accent" id="kpiTotal">--</div>
         <div class="kpi-sub" id="kpiTotalSub">del mes</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">% Acierto</div>
+        <div class="kpi-label">Win rate general</div>
         <div class="kpi-value" id="kpiAcierto">--%</div>
         <div class="kpi-sub" id="kpiAciertoSub">resueltos</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Ganancia XGB</div>
-        <div class="kpi-value" id="kpiGananciaXgb">--</div>
-        <div class="kpi-sub">$100 por pick</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Ganancia Claude</div>
-        <div class="kpi-value" id="kpiGananciaClaude">--</div>
-        <div class="kpi-sub">$100 por pick</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Ganancia DeepSeek</div>
-        <div class="kpi-value" id="kpiGananciaDeepSeek">--</div>
-        <div class="kpi-sub">$100 por pick</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Ganancia ChatGPT</div>
-        <div class="kpi-value" id="kpiGananciaChatGPT">--</div>
-        <div class="kpi-sub">$100 por pick</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Ganados</div>
-        <div class="kpi-value ok" id="kpiCorrect">--</div>
-        <div class="kpi-sub">picks G</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">Perdidos</div>
-        <div class="kpi-value bad" id="kpiIncorrect">--</div>
-        <div class="kpi-sub">picks P</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Pendientes</div>
         <div class="kpi-value" id="kpiPending">--</div>
         <div class="kpi-sub" id="kpiPendingSub">por resolver</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">XGB</div>
+        <div class="kpi-value" id="kpiGananciaXgb">--</div>
+        <div class="kpi-sub" id="kpiGananciaXgbSub">G 0 · P 0 · N 0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">ChatGPT</div>
+        <div class="kpi-value" id="kpiGananciaChatGPT">--</div>
+        <div class="kpi-sub" id="kpiGananciaChatGPTSub">G 0 · P 0 · N 0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Claude</div>
+        <div class="kpi-value" id="kpiGananciaClaude">--</div>
+        <div class="kpi-sub" id="kpiGananciaClaudeSub">G 0 · P 0 · N 0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">DeepSeek</div>
+        <div class="kpi-value" id="kpiGananciaDeepSeek">--</div>
+        <div class="kpi-sub" id="kpiGananciaDeepSeekSub">G 0 · P 0 · N 0</div>
       </div>
     </div>
     <!-- Info modelo -->
@@ -786,10 +776,18 @@
         el("kpiAcierto").textContent    = acierto != null ? `${acierto}%` : "--%";
         el("kpiAcierto").className      = "kpi-value " + (acierto >= 55 ? "ok" : acierto != null && acierto < 50 ? "bad" : "accent");
         el("kpiAciertoSub").textContent = `${d.ganados ?? "--"}G / ${d.resueltos ?? "--"} resueltos`;
-        el("kpiCorrect").textContent    = d.ganados   ?? "--";
-        el("kpiIncorrect").textContent  = d.perdidos  ?? "--";
         el("kpiPending").textContent    = d.pendientes ?? "--";
         const kpiPendSub = el("kpiPendingSub");
+        const providerStats = d.provider_stats || {};
+        const setProviderSub = (id, stats) => {
+          const node = el(id);
+          if (!node) return;
+          node.textContent = `G ${stats?.ganados ?? 0} · P ${stats?.perdidos ?? 0} · N ${stats?.pushes ?? 0}`;
+        };
+        setProviderSub("kpiGananciaXgbSub", providerStats.xgb);
+        setProviderSub("kpiGananciaChatGPTSub", providerStats.openai);
+        setProviderSub("kpiGananciaClaudeSub", providerStats.claude);
+        setProviderSub("kpiGananciaDeepSeekSub", providerStats.deepseek);
         if (kpiPendSub) kpiPendSub.textContent = d.pushes ? `por resolver · ${d.pushes}↩` : "por resolver";
         _ganancia100u        = d.ganancia_100u         ?? null;
         _gananciaXgb100u     = d.ganancia_xgb_100u     ?? null;
