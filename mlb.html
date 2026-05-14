@@ -1058,7 +1058,6 @@
         const gameTime = fmtGameTime(first.game_time_utc);
         const hasResult = first.home_score != null && first.away_score != null;
         const isBetGame = gamePreds.some(p => p.bet_ml || p.bet_ou);
-        const official = gamePreds.find(p => !isAiPick(p) && (p.bet_ml || p.bet_ou)) || gamePreds.find(p => !isAiPick(p));
         const aiPicks = gamePreds.filter(p => isAiPick(p) && (p.bet_ml || p.bet_ou));
         const iaBySide = aiPicks.reduce((acc, p) => {
           if (p.bet_ml) acc.ml++;
@@ -1086,7 +1085,6 @@
             <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">${gameTime ? `<span style="font-size:12px;font-family:var(--mono);color:var(--accent);font-weight:700;">${gameTime}</span>` : ""}${isBetGame ? '<span style="font-size:15px;">💰</span>' : ""}</div>
           </div>
           ${hasResult ? `<div style="font-family:var(--mono);font-weight:800;font-size:13px;margin:7px 0 8px;">${first.away_abbr} ${first.away_score} - ${first.home_score} ${first.home_abbr}</div>` : ""}
-          ${official ? `<div style="padding:8px 10px;border:1px solid rgba(122,167,255,.2);border-radius:10px;background:rgba(122,167,255,.06);"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px;">${sourceBadge(official)}<span style="font-size:10px;color:var(--muted);font-family:var(--mono);">oficial</span></div>${pickRows(official, true)}</div>` : ""}
           <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:8px;">IA: ${aiPicks.length} picks · ML ${iaBySide.ml} · Over ${iaBySide.over} · Under ${iaBySide.under}</div>
           <details style="margin-top:8px;">
             <summary style="cursor:pointer;color:var(--accent);font-size:12px;font-weight:700;">Ver modelos</summary>
