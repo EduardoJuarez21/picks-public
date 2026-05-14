@@ -405,7 +405,7 @@
       cursor: pointer;
       list-style: none;
       display: grid;
-      grid-template-columns: 64px minmax(0, 1fr) auto auto;
+      grid-template-columns: 64px minmax(0, 1fr) auto auto auto;
       gap: 10px;
       align-items: center;
     }
@@ -423,14 +423,16 @@
       min-width: 0;
       font-weight: 700;
       line-height: 1.25;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     .history-group-score {
-      display: block;
       color: var(--muted);
       font-family: var(--mono);
       font-size: 11px;
-      margin-top: 3px;
+      white-space: nowrap;
     }
 
     .history-group-count {
@@ -448,6 +450,16 @@
       font-size: 11px;
       font-weight: 700;
       white-space: nowrap;
+    }
+
+    .history-group-toggle .toggle-icon {
+      display: inline-block;
+      margin-left: 4px;
+      transition: transform .12s ease;
+    }
+
+    .history-group-details[open] .toggle-icon {
+      transform: rotate(180deg);
     }
 
     .history-pick-list {
@@ -690,31 +702,44 @@
       }
 
       .history-group-details {
-        padding: 12px 14px;
+        padding: 10px 12px;
       }
 
       .history-group-summary {
-        grid-template-columns: 1fr;
-        gap: 5px;
+        grid-template-columns: 44px minmax(0, 1fr) auto auto 14px;
+        gap: 6px;
         text-align: left;
       }
 
       .history-group-date {
-        font-size: 12px;
+        font-size: 11px;
       }
 
       .history-group-match {
-        font-size: 14px;
+        font-size: 13px;
+      }
+
+      .history-group-score {
+        font-size: 11px;
       }
 
       .history-group-count {
-        justify-content: flex-start;
-        gap: 10px;
-        margin-top: 2px;
+        justify-content: flex-end;
+        gap: 5px;
+        font-size: 11px;
       }
 
       .history-group-toggle {
-        margin-top: 2px;
+        font-size: 12px;
+        text-align: right;
+      }
+
+      .history-group-toggle .toggle-label {
+        display: none;
+      }
+
+      .history-group-toggle .toggle-icon {
+        margin-left: 0;
       }
 
       .history-pick-line {
@@ -1321,9 +1346,10 @@
             <details class="history-group-details">
               <summary class="history-group-summary">
                 <span class="history-group-date">${group.rawDate ? formatDayLabel(group.rawDate) : "--"}</span>
-                <span class="history-group-match">${group.matchStr}${score ? `<span class="history-group-score">${score}</span>` : ""}</span>
+                <span class="history-group-match">${group.matchStr}</span>
+                <span class="history-group-score">${score || "--"}</span>
                 <span class="history-group-count"><span class="res g">${counts.g}G</span><span class="res p">${counts.p}P</span>${counts.n ? `<span class="res n">${counts.n}N</span>` : ""}</span>
-                <span class="history-group-toggle">Ver detalle ▾</span>
+                <span class="history-group-toggle"><span class="toggle-label">Ver detalle</span><span class="toggle-icon">▾</span></span>
               </summary>
               <div class="history-pick-list">${group.items.map(renderPickLine).join("")}</div>
             </details>
