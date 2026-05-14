@@ -1086,11 +1086,9 @@
         renderHistory();
         const pending  = historyData.reduce((n, p) => n + (p.bet_ml && p.ml_correct == null && p.ml_result_status !== 'PUSH' ? 1 : 0) + (p.bet_ou && p.ou_correct == null && p.ou_result_status !== 'PUSH' ? 1 : 0), 0);
         const pushes   = historyData.reduce((n, p) => n + (p.bet_ml && p.ml_result_status === 'PUSH' ? 1 : 0) + (p.bet_ou && p.ou_result_status === 'PUSH' ? 1 : 0), 0);
-        const evaluated = historyData.reduce((n, p) => n + (p.bet_ml && (p.ml_correct != null || p.ml_result_status === 'PUSH') ? 1 : 0) + (p.bet_ou && (p.ou_correct != null || p.ou_result_status === 'PUSH') ? 1 : 0), 0);
         el("kpiPending").textContent = pending;
         const ps = el("kpiPendingSub");
         if (ps) ps.textContent = pushes ? `por resolver · ${pushes}↩` : "por resolver";
-        el("kpiTotal").textContent = evaluated;
       } catch (e) { console.error("history:", e); }
     }
 
