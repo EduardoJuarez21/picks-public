@@ -389,6 +389,77 @@
       background: rgba(255, 255, 255, .03);
     }
 
+    .picks-table thead {
+      display: none;
+    }
+
+    .history-group-cell {
+      padding: 0 !important;
+    }
+
+    .history-group-details {
+      padding: 12px 14px;
+    }
+
+    .history-group-summary {
+      cursor: pointer;
+      list-style: none;
+      display: grid;
+      grid-template-columns: 64px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+    }
+
+    .history-group-summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .history-group-date {
+      color: var(--muted);
+      white-space: nowrap;
+    }
+
+    .history-group-match {
+      min-width: 0;
+      font-weight: 700;
+      line-height: 1.25;
+    }
+
+    .history-group-score {
+      display: block;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      margin-top: 3px;
+    }
+
+    .history-group-count {
+      display: inline-flex;
+      justify-content: flex-end;
+      gap: 8px;
+      font-family: var(--mono);
+      font-size: 12px;
+      white-space: nowrap;
+    }
+
+    .history-pick-list {
+      margin-top: 10px;
+    }
+
+    .history-pick-line {
+      display: grid;
+      grid-template-columns: minmax(74px, .7fr) 52px minmax(82px, 1fr) 58px;
+      gap: 8px;
+      align-items: center;
+      padding: 7px 0;
+      border-top: 1px solid rgba(255, 255, 255, .07);
+      font-size: 12px;
+    }
+
+    .history-pick-result {
+      text-align: right;
+    }
+
     .badge {
       display: inline-flex;
       align-items: center;
@@ -608,6 +679,51 @@
       .picks-table th:nth-child(6),
       .picks-table td:nth-child(6) {
         display: none;
+      }
+
+      .history-group-details {
+        padding: 12px 14px;
+      }
+
+      .history-group-summary {
+        grid-template-columns: 1fr;
+        gap: 5px;
+        text-align: left;
+      }
+
+      .history-group-date {
+        font-size: 12px;
+      }
+
+      .history-group-match {
+        font-size: 14px;
+      }
+
+      .history-group-count {
+        justify-content: flex-start;
+        gap: 10px;
+        margin-top: 2px;
+      }
+
+      .history-pick-line {
+        grid-template-columns: minmax(0, 1fr) auto;
+        gap: 7px 10px;
+      }
+
+      .history-pick-source {
+        grid-column: 1 / -1;
+      }
+
+      .history-pick-source .source-badge {
+        margin-left: 0;
+      }
+
+      .history-pick-market {
+        justify-self: start;
+      }
+
+      .history-pick-result {
+        justify-self: end;
       }
     }
   </style>
@@ -1072,11 +1188,11 @@
         const pick = (it.pick ?? "").toUpperCase();
         const lineVal = parseFloat(it.line);
         const line = it.line != null && String(it.line).trim() && lineVal !== 0 ? ` ${it.line}` : "";
-        return `<div style="display:grid;grid-template-columns:minmax(74px,.7fr) 52px minmax(82px,1fr) 58px;gap:8px;align-items:center;padding:7px 0;border-top:1px solid rgba(255,255,255,.07);font-size:12px;">
-          <div>${sourceBadge(it)}</div>
-          <div><span class="badge">${mktLabel(it.pick_market)}</span></div>
-          <div><span class="badge">${pick}${line ? `<br>${line.trim()}` : ""}</span></div>
-          <div style="text-align:right;"><span class="res ${resClass}">${res || "Pend"}${score}</span></div>
+        return `<div class="history-pick-line">
+          <div class="history-pick-source">${sourceBadge(it)}</div>
+          <div class="history-pick-market"><span class="badge">${mktLabel(it.pick_market)}</span></div>
+          <div class="history-pick-choice"><span class="badge">${pick}${line ? `<br>${line.trim()}` : ""}</span></div>
+          <div class="history-pick-result"><span class="res ${resClass}">${res || "Pend"}${score}</span></div>
         </div>`;
       };
 
@@ -1094,14 +1210,14 @@
           ? `${first.score_home}-${first.score_away}` : "";
         const tr = document.createElement("tr");
         tr.innerHTML = `
-          <td colspan="7" style="padding:0;">
-            <details style="padding:12px 14px;">
-              <summary style="cursor:pointer;list-style:none;display:grid;grid-template-columns:64px 1fr auto;gap:10px;align-items:center;">
-                <span style="color:var(--muted);white-space:nowrap;">${group.rawDate ? formatDayLabel(group.rawDate) : "--"}</span>
-                <span style="font-weight:700;line-height:1.25;">${group.matchStr}${score ? `<span style="display:block;color:var(--muted);font-family:var(--mono);font-size:11px;margin-top:3px;">${score}</span>` : ""}</span>
-                <span style="font-family:var(--mono);font-size:12px;white-space:nowrap;"><span class="res g">${counts.g}G</span> · <span class="res p">${counts.p}P</span>${counts.n ? ` · <span class="res n">${counts.n}N</span>` : ""}</span>
+          <td colspan="7" class="history-group-cell">
+            <details class="history-group-details">
+              <summary class="history-group-summary">
+                <span class="history-group-date">${group.rawDate ? formatDayLabel(group.rawDate) : "--"}</span>
+                <span class="history-group-match">${group.matchStr}${score ? `<span class="history-group-score">${score}</span>` : ""}</span>
+                <span class="history-group-count"><span class="res g">${counts.g}G</span><span class="res p">${counts.p}P</span>${counts.n ? `<span class="res n">${counts.n}N</span>` : ""}</span>
               </summary>
-              <div style="margin-top:10px;">${group.items.map(renderPickLine).join("")}</div>
+              <div class="history-pick-list">${group.items.map(renderPickLine).join("")}</div>
             </details>
           </td>`;
         tbody.appendChild(tr);
