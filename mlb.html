@@ -1027,6 +1027,74 @@
       else if (modelFilter === 'ia') list = list.filter(p => isAiPick(p));
       if (!list.length) { grid.innerHTML = `<div class="empty">${betOnlyDay ? 'Sin picks apostados terminados para esta fecha.' : 'Sin resultados para esta fecha.'}</div>`; return; }
       grid.innerHTML = "";
+      const toDec = (o) => { if (o == null) return null; return o >= 0 ? o / 100 + 1 : 100 / Math.abs(o) + 1; };
+      const fmtDec = (o) => { const d = toDec(o); return d != null ? d.toFixed(2) : "-"; };
+      const pickRows = (p, compact = false) => {
+        const rows = [];
+        const add = (market, pick, line, odds, correct, isPush) => {
+          const side = String(pick || "").toUpperCase();
+          const result = isPush ? "N" : correct === true ? "G" : correct === false ? "P" : "...";
+          const color = result === "G" ? "var(--ok)" : result === "P" ? "var(--bad)" : "var(--muted)";
+          rows.push(`
+            <div style="display:grid;grid-template-columns:${compact ? "42px 1fr 42px 34px" : "52px 1fr 52px 42px"};gap:8px;align-items:center;font-family:var(--mono);font-size:${compact ? "11px" : "12px"};padding:5px 0;border-top:1px solid rgba(255,255,255,.08);">
+              <span style="color:var(--muted);font-size:10px;">${market}</span>
+              <span style="font-weight:700;color:${market === "ML" ? "var(--accent)" : side === "OVER" ? "var(--ok)" : "#7aa7ff"};">${side}${line ? ` ${line}` : ""}</span>
+              <span style="text-align:right;color:var(--text);">${fmtDec(odds)}</span>
+              <span style="text-align:right;color:${color};font-weight:800;">${result}</span>
+            </div>`);
+        };
+        if (!betOnlyDay || p.bet_ml) add("ML", p.ml_pick === "home" ? (p.home_abbr || p.home_team) : (p.away_abbr || p.away_team), "", p.ml_pick === "home" ? p.home_ml_odds : p.away_ml_odds, p.ml_correct, p.ml_result_status === "PUSH");
+        if (!betOnlyDay || p.bet_ou) add("O/U", p.ou_pick === "over" ? "OVER" : "UNDER", p.ou_line || 8.5, p.ou_pick === "over" ? p.over_odds : p.under_odds, p.ou_correct, p.ou_result_status === "PUSH");
+        return rows.join("");
+      };
+      const groups = new Map();
+      for (const p of list) {
+        const key = p.game_pk || `${p.away_team || p.away_abbr}|${p.home_team || p.home_abbr}|${p.game_time_utc || ""}`;
+        if (!groups.has(key)) groups.set(key, []);
+        groups.get(key).push(p);
+      }
+      for (const gamePreds of groups.values()) {
+        const first = gamePreds[0];
+        const gameTime = fmtGameTime(first.game_time_utc);
+        const hasResult = first.home_score != null && first.away_score != null;
+        const isBetGame = gamePreds.some(p => p.bet_ml || p.bet_ou);
+        const official = gamePreds.find(p => !isAiPick(p) && (p.bet_ml || p.bet_ou)) || gamePreds.find(p => !isAiPick(p));
+        const aiPicks = gamePreds.filter(p => isAiPick(p) && (p.bet_ml || p.bet_ou));
+        const iaBySide = aiPicks.reduce((acc, p) => {
+          if (p.bet_ml) acc.ml++;
+          if (p.bet_ou) {
+            if (p.ou_pick === "over") acc.over++;
+            else if (p.ou_pick === "under") acc.under++;
+          }
+          return acc;
+        }, { ml: 0, over: 0, under: 0 });
+        const card = document.createElement("div");
+        card.className = "game-card" + (isBetGame ? " bet" : "");
+        card.style.cssText = isBetGame ? "border-color:rgba(255,196,0,.45);background:linear-gradient(180deg,rgba(255,196,0,.07),rgba(255,196,0,.02));" : "";
+        const modelDetails = gamePreds
+          .sort((a, b) => MODEL_ORDER.indexOf(modelKey(a)) - MODEL_ORDER.indexOf(modelKey(b)))
+          .map(p => `<div style="padding:9px 0;border-top:1px solid var(--stroke);">
+            <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:4px;">${sourceBadge(p)}${(p.bet_ml || p.bet_ou) ? '<span style="font-size:13px;">💰</span>' : '<span style="font-size:10px;color:var(--muted);font-family:var(--mono);">opinion</span>'}</div>
+            ${pickRows(p)}
+          </div>`).join("");
+        card.innerHTML = `
+          <div class="game-header" style="margin-bottom:6px;">
+            <div>
+              <div class="game-matchup"><span class="away">${first.away_team || first.away_abbr}</span><span class="sep">@</span><span class="home">${first.home_team || first.home_abbr}</span></div>
+              ${first.away_pitcher_name || first.home_pitcher_name ? `<div class="pitchers" style="margin-top:3px;">${first.away_pitcher_name || "?"} vs ${first.home_pitcher_name || "?"}</div>` : ""}
+            </div>
+            <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">${gameTime ? `<span style="font-size:12px;font-family:var(--mono);color:var(--accent);font-weight:700;">${gameTime}</span>` : ""}${isBetGame ? '<span style="font-size:15px;">💰</span>' : ""}</div>
+          </div>
+          ${hasResult ? `<div style="font-family:var(--mono);font-weight:800;font-size:13px;margin:7px 0 8px;">${first.away_abbr} ${first.away_score} - ${first.home_score} ${first.home_abbr}</div>` : ""}
+          ${official ? `<div style="padding:8px 10px;border:1px solid rgba(122,167,255,.2);border-radius:10px;background:rgba(122,167,255,.06);"><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;margin-bottom:2px;">${sourceBadge(official)}<span style="font-size:10px;color:var(--muted);font-family:var(--mono);">oficial</span></div>${pickRows(official, true)}</div>` : ""}
+          <div style="font-size:11px;color:var(--muted);font-family:var(--mono);margin-top:8px;">IA: ${aiPicks.length} picks · ML ${iaBySide.ml} · Over ${iaBySide.over} · Under ${iaBySide.under}</div>
+          <details style="margin-top:8px;">
+            <summary style="cursor:pointer;color:var(--accent);font-size:12px;font-weight:700;">Ver modelos</summary>
+            <div style="margin-top:8px;">${modelDetails}</div>
+          </details>`;
+        grid.appendChild(card);
+      }
+      return;
       for (const p of list) {
         const conf = parseFloat(p.ml_confidence_pct) || 0;
         const isHigh = conf >= 60;
