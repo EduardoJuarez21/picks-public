@@ -114,6 +114,73 @@
       border-radius: var(--r);
       padding: 18px 16px;
       text-align: center;
+      position: relative;
+    }
+
+    .kpi-card.kpi-clickable {
+      cursor: pointer;
+      transition: transform .12s ease, border-color .12s ease, background .12s ease;
+    }
+
+    .kpi-card.kpi-clickable:hover,
+    .kpi-card.kpi-clickable.active {
+      transform: translateY(-1px);
+      border-color: rgba(122, 167, 255, .42);
+      background: linear-gradient(160deg, rgba(122, 167, 255, .13), rgba(255, 255, 255, .04));
+    }
+
+    .kpi-card.kpi-clickable.active::after {
+      content: "viendo grafica";
+      position: absolute;
+      right: 12px;
+      top: 10px;
+      color: var(--accent);
+      font-family: var(--mono);
+      font-size: 9px;
+      font-weight: 700;
+      letter-spacing: .06em;
+      text-transform: uppercase;
+    }
+
+    .mlb-summary-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-bottom: 16px;
+    }
+
+    .mlb-model-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 12px;
+    }
+
+    .mlb-section-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 14px 0 8px;
+      flex-wrap: wrap;
+    }
+
+    .mlb-section-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      color: var(--muted);
+    }
+
+    .mlb-section-note {
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .mlb-primary-model {
+      border-color: rgba(47, 226, 143, .28);
+      background: linear-gradient(160deg, rgba(47, 226, 143, .11), rgba(122, 167, 255, .06));
+    }
+
+    .mlb-primary-model .kpi-label {
+      color: rgba(47, 226, 143, .9);
     }
 
     .kpi-label {
@@ -144,6 +211,107 @@
     .kpi-sub {
       font-size: 11px;
       color: var(--muted);
+    }
+
+    .mlb-model-chart {
+      margin: 12px 0 24px;
+      background: rgba(255, 255, 255, .035);
+      border: 1px solid var(--stroke);
+      border-radius: 14px;
+      padding: 14px 16px;
+      display: grid;
+      gap: 12px;
+    }
+
+    .mlb-model-chart-head {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    .mlb-model-chart-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      color: var(--muted);
+    }
+
+    .mlb-model-chart-meta {
+      font-family: var(--mono);
+      font-size: 12px;
+      color: var(--muted);
+    }
+
+    .mlb-chart-model-tabs {
+      display: flex;
+      gap: 6px;
+      flex-wrap: wrap;
+    }
+
+    .mlb-chart-tab {
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, .05);
+      color: var(--muted);
+      border-radius: 999px;
+      padding: 5px 10px;
+      font-size: 11px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .mlb-chart-tab.active {
+      border-color: rgba(122, 167, 255, .45);
+      background: rgba(122, 167, 255, .16);
+      color: var(--accent);
+    }
+
+    .mlb-chart-metrics {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+      gap: 8px;
+    }
+
+    .mlb-chart-metric {
+      border: 1px solid rgba(255, 255, 255, .09);
+      border-radius: 10px;
+      background: rgba(255, 255, 255, .035);
+      padding: 9px 10px;
+    }
+
+    .mlb-chart-metric-label {
+      color: var(--muted);
+      font-size: 9px;
+      text-transform: uppercase;
+      letter-spacing: .08em;
+      margin-bottom: 4px;
+    }
+
+    .mlb-chart-metric-value {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 800;
+      color: var(--text);
+    }
+
+    .mlb-model-chart-svg {
+      width: 100%;
+      height: auto;
+      min-height: 190px;
+      display: block;
+      overflow: visible;
+    }
+
+    .mlb-model-chart-empty {
+      color: var(--muted);
+      font-size: 13px;
+      padding: 10px 0 4px;
+    }
+
+    .hidden {
+      display: none !important;
     }
 
     /* ── Section title ── */
@@ -508,6 +676,10 @@
     @media(max-width:600px) {
       .hero h1 { font-size: 24px; }
       .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+      .mlb-summary-grid,
+      .mlb-model-grid { grid-template-columns: repeat(2, 1fr); }
+      .kpi-card.kpi-clickable.active::after { display: none; }
+      .mlb-chart-tab { padding: 5px 8px; font-size: 10px; }
       /* Ocultar columna Odds en móvil */
       .picks-table th:nth-child(4),
       .picks-table td:nth-child(4) { display: none; }
@@ -529,7 +701,7 @@
       <img src="/icono-p.png" alt="Pickster" width="90" height="90" style="border-radius:12px;">
     </div>
     <h1>Pickster MLB</h1>
-    <p>Predicciones de béisbol generadas por modelo XGBoost · Moneyline + Over/Under</p>
+    <p>Predicciones de beisbol generadas por Pickster AI + modelos comparativos</p>
     <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:28px;">
       <a class="tg-cta" style="margin-top:0;" href="https://t.me/PicksterV_bot" target="_blank" rel="noopener">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
@@ -554,7 +726,11 @@
       </div>
       <input type="month" id="monthPicker" style="background:rgba(255,255,255,.07);border:1px solid var(--stroke);border-radius:8px;padding:4px 10px;color:var(--text);font-size:12px;cursor:pointer;" onchange="loadMonthStats(this.value)" />
     </div>
-    <div class="kpi-grid">
+    <div class="mlb-section-head">
+      <span class="mlb-section-title">Resumen del mes</span>
+      <span class="mlb-section-note">Volumen, acierto y picks por resolver</span>
+    </div>
+    <div class="kpi-grid mlb-summary-grid">
       <div class="kpi-card">
         <div class="kpi-label">Apuestas</div>
         <div class="kpi-value accent" id="kpiTotal">--</div>
@@ -570,27 +746,34 @@
         <div class="kpi-value" id="kpiPending">--</div>
         <div class="kpi-sub" id="kpiPendingSub">por resolver</div>
       </div>
-      <div class="kpi-card">
-        <div class="kpi-label">XGB</div>
+    </div>
+    <div class="mlb-section-head">
+      <span class="mlb-section-title">Rendimiento por modelo</span>
+      <span class="mlb-section-note">Toca un modelo para ver su evolucion diaria</span>
+    </div>
+    <div class="kpi-grid mlb-model-grid">
+      <div class="kpi-card kpi-clickable mlb-primary-model" data-mlb-model-card="xgb" role="button" tabindex="0" onclick="showModelChart('xgb')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('xgb');}">
+        <div class="kpi-label">Pickster AI</div>
         <div class="kpi-value" id="kpiGananciaXgb">--</div>
         <div class="kpi-sub" id="kpiGananciaXgbSub">G 0 · P 0 · N 0</div>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card kpi-clickable" data-mlb-model-card="openai" role="button" tabindex="0" onclick="showModelChart('openai')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('openai');}">
         <div class="kpi-label">ChatGPT</div>
         <div class="kpi-value" id="kpiGananciaChatGPT">--</div>
         <div class="kpi-sub" id="kpiGananciaChatGPTSub">G 0 · P 0 · N 0</div>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card kpi-clickable" data-mlb-model-card="claude" role="button" tabindex="0" onclick="showModelChart('claude')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('claude');}">
         <div class="kpi-label">Claude</div>
         <div class="kpi-value" id="kpiGananciaClaude">--</div>
         <div class="kpi-sub" id="kpiGananciaClaudeSub">G 0 · P 0 · N 0</div>
       </div>
-      <div class="kpi-card">
+      <div class="kpi-card kpi-clickable" data-mlb-model-card="deepseek" role="button" tabindex="0" onclick="showModelChart('deepseek')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('deepseek');}">
         <div class="kpi-label">DeepSeek</div>
         <div class="kpi-value" id="kpiGananciaDeepSeek">--</div>
         <div class="kpi-sub" id="kpiGananciaDeepSeekSub">G 0 · P 0 · N 0</div>
       </div>
     </div>
+    <div class="mlb-model-chart hidden" id="modelChartWrap"></div>
     <!-- Info modelo -->
     <div
       style="background:linear-gradient(90deg,rgba(122,167,255,.07),rgba(47,226,143,.05));border:1px solid var(--stroke);border-radius:var(--r);padding:16px 20px;margin:0 0 28px;">
@@ -599,8 +782,7 @@
           <div
             style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">
             Modelo</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">XGBoost · Entrenado con 7,400+ juegos
-            MLB</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">Pickster AI · Modelo estadistico MLB</div>
         </div>
         <div style="width:1px;background:var(--stroke);"></div>
         <div style="text-align:center;">
@@ -628,8 +810,8 @@
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <div style="display:flex;gap:4px;background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:999px;padding:3px;">
           <button id="btnModelAll" class="filter-btn active" onclick="setModelFilter('all',this)" style="border-radius:999px;padding:4px 12px;font-size:11px;">Todos</button>
-          <button id="btnModelXgb" class="filter-btn" onclick="setModelFilter('xgb',this)" style="border-radius:999px;padding:4px 10px;font-size:11px;color:var(--accent);">XGB</button>
-          <button id="btnModelIa"  class="filter-btn" onclick="setModelFilter('ia',this)"  style="border-radius:999px;padding:4px 10px;font-size:11px;color:#a77aff;">IA</button>
+          <button id="btnModelXgb" class="filter-btn" onclick="setModelFilter('xgb',this)" style="border-radius:999px;padding:4px 10px;font-size:11px;color:var(--accent);">Pickster AI</button>
+          <button id="btnModelIa"  class="filter-btn" onclick="setModelFilter('ia',this)"  style="border-radius:999px;padding:4px 10px;font-size:11px;color:#a77aff;">Otros modelos</button>
         </div>
         <button id="btnBetDay" class="filter-btn active" onclick="toggleBetDay(this)">💰 Solo apostados</button>
       </div>
@@ -699,6 +881,8 @@
     const tomorrowStr = fmtDate(tomorrow);
 
     let historyData = [];
+    let historyMonth = "";
+    let selectedChartModel = null;
     let betOnlyDay     = true;
     let betOnlyHistory = true;
     let modelFilter = 'all'; // 'all' | 'xgb' | 'ia'
@@ -762,7 +946,7 @@
       el("monthPicker").value = m;
       el("btnCurMonth").style.background = m === currentMonth ? "rgba(122,167,255,.15)" : "rgba(255,255,255,.05)";
       try {
-        const key = `monthly_providers_${m}`;
+        const key = `monthly_providers_v2_${m}`;
         let d = cacheGet(key);
         if (!d) {
           const r = await fetch(`${API}/mlb/stats/monthly?month=${m}`);
@@ -796,6 +980,7 @@
         _gananciaChatGpt100u = d.ganancia_openai_100u  ?? null;
         updateGanancia();
       } catch (e) { console.error("stats:", e); }
+      loadHistory(false, m);
     }
 
     function loadPrevMonth() {
@@ -813,14 +998,15 @@
 
     async function fetchPredictions(dateStr) {
       const isToday = dateStr === todayStr;
+      const cacheKey = "preds_v2_" + dateStr;
       if (!isToday) {
-        const cached = cacheGet("preds_" + dateStr);
+        const cached = cacheGet(cacheKey);
         if (cached) return cached;
       }
       const r = await fetch(`${API}/mlb/predictions?date=${dateStr}`);
       if (!r.ok) throw new Error("http " + r.status);
       const d = await r.json();
-      if (!isToday) cacheSet("preds_" + dateStr, d, picksTTL());
+      if (!isToday) cacheSet(cacheKey, d, picksTTL());
       return d;
     }
 
@@ -857,6 +1043,14 @@
       return odds >= 0 ? odds / 100 + 1 : 100 / Math.abs(odds) + 1;
     }
 
+    function isPushStatus(status) {
+      return String(status || "").toUpperCase() === "PUSH";
+    }
+
+    function isPostponedStatus(status) {
+      return String(status || "").toUpperCase() === "POSTPONED";
+    }
+
     const AI_MODEL_PREFIXES = ["claude-", "deepseek-", "openai-"];
     const MODEL_ORDER = ["xgb", "claude", "deepseek", "openai", "ia"];
 
@@ -878,7 +1072,7 @@
     }
 
     function modelLabel(key) {
-      return { xgb: "XGB", claude: "Claude", deepseek: "DeepSeek", openai: "ChatGPT", ia: "IA" }[key] || "IA";
+      return { xgb: "Pickster AI", claude: "Claude", deepseek: "DeepSeek", openai: "ChatGPT", ia: "IA" }[key] || "IA";
     }
 
     function modelGroups(preds) {
@@ -900,6 +1094,150 @@
       return `<span style="font-size:9px;padding:2px 6px;border-radius:4px;background:${bg};border:1px solid ${br};color:${cl};font-family:var(--mono);font-weight:700;">${modelLabel(key)}</span>`;
     }
 
+    function monthDays(month) {
+      const targetMonth = month || currentMonth;
+      const [year, monthNum] = String(targetMonth).split("-").map(Number);
+      if (!year || !monthNum) return [];
+      const last = new Date(year, monthNum, 0).getDate();
+      const isCurrent = targetMonth === currentMonth;
+      const endDay = isCurrent ? Math.min(now.getDate(), last) : last;
+      const days = [];
+      for (let day = 1; day <= endDay; day++) {
+        days.push(`${year}-${String(monthNum).padStart(2, "0")}-${String(day).padStart(2, "0")}`);
+      }
+      return days;
+    }
+
+    function pickDate(p) {
+      return String(p?.game_date || p?.date || "").split("T")[0];
+    }
+
+    function betDelta(correct, resultStatus, odds, amount) {
+      const dec = americanToDec(odds);
+      if (correct === true) return { pnl: dec ? (dec - 1) * amount : 0, won: 1, lost: 0, push: 0, pending: 0 };
+      if (correct === false) return { pnl: -amount, won: 0, lost: 1, push: 0, pending: 0 };
+      if (isPushStatus(resultStatus)) return { pnl: 0, won: 0, lost: 0, push: 1, pending: 0 };
+      if (isPostponedStatus(resultStatus)) return { pnl: 0, won: 0, lost: 0, push: 0, pending: 0 };
+      return { pnl: 0, won: 0, lost: 0, push: 0, pending: 1 };
+    }
+
+    function buildModelDailySeries(modelKeyValue, amount = 100) {
+      const month = el("monthPicker").value || currentMonth;
+      const days = monthDays(month);
+      const byDay = Object.fromEntries(days.map(day => [day, { day, pnl: 0, won: 0, lost: 0, push: 0, pending: 0 }]));
+      for (const p of historyData) {
+        if (modelKey(p) !== modelKeyValue) continue;
+        const day = pickDate(p);
+        if (!byDay[day]) continue;
+        if (p.bet_ml) {
+          const odds = p.ml_pick === "home" ? p.home_ml_odds : p.away_ml_odds;
+          const delta = betDelta(p.ml_correct, p.ml_result_status, odds, amount);
+          byDay[day].pnl += delta.pnl; byDay[day].won += delta.won; byDay[day].lost += delta.lost; byDay[day].push += delta.push; byDay[day].pending += delta.pending;
+        }
+        if (p.bet_ou) {
+          const odds = p.ou_pick === "over" ? p.over_odds : p.under_odds;
+          const delta = betDelta(p.ou_correct, p.ou_result_status, odds, amount);
+          byDay[day].pnl += delta.pnl; byDay[day].won += delta.won; byDay[day].lost += delta.lost; byDay[day].push += delta.push; byDay[day].pending += delta.pending;
+        }
+      }
+      let cumulative = 0;
+      return days.map(day => {
+        const row = byDay[day];
+        cumulative += row.pnl;
+        return { ...row, cumulative };
+      });
+    }
+
+    function renderModelChart(modelKeyValue) {
+      const wrap = el("modelChartWrap");
+      if (!wrap || !modelKeyValue) return;
+      const month = el("monthPicker").value || currentMonth;
+      const label = modelLabel(modelKeyValue);
+      const chartTabs = () => ["xgb", "claude", "deepseek", "openai"].map(key => (
+        `<button class="mlb-chart-tab${key === modelKeyValue ? " active" : ""}" onclick="showModelChart('${key}')">${modelLabel(key)}</button>`
+      )).join("");
+      document.querySelectorAll("[data-mlb-model-card]").forEach(card => card.classList.toggle("active", card.dataset.mlbModelCard === modelKeyValue));
+      wrap.classList.remove("hidden");
+      const head = (meta, value = "") => `<div class="mlb-model-chart-head"><div><div class="mlb-model-chart-title">Rendimiento diario · ${label}</div><div class="mlb-model-chart-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end;">${value}<div class="mlb-chart-model-tabs">${chartTabs()}</div></div></div>`;
+      if (historyMonth !== month) {
+        wrap.innerHTML = `${head(`${month} · $100 por pick · PnL acumulado`)}<div class="mlb-model-chart-empty">Cargando historial del mes...</div>`;
+        return;
+      }
+      const series = buildModelDailySeries(modelKeyValue, 100);
+      const totals = series.reduce((acc, d) => {
+        acc.pnl += d.pnl; acc.won += d.won; acc.lost += d.lost; acc.push += d.push; acc.pending += d.pending;
+        return acc;
+      }, { pnl: 0, won: 0, lost: 0, push: 0, pending: 0 });
+      const hasBets = totals.won + totals.lost + totals.push + totals.pending > 0;
+      if (!hasBets) {
+        wrap.innerHTML = `${head(`${month} · $100 por pick · PnL acumulado`)}<div class="mlb-model-chart-empty">Sin picks apostados para este modelo en el mes seleccionado.</div>`;
+        return;
+      }
+      const width = 760, height = 220, left = 44, right = 14, top = 18, bottom = 42;
+      const innerW = width - left - right, innerH = height - top - bottom;
+      const values = series.map(d => d.cumulative);
+      const minVal = Math.min(0, ...values);
+      const maxVal = Math.max(0, ...values);
+      const range = Math.max(1, maxVal - minVal);
+      const xFor = (idx) => left + (series.length <= 1 ? innerW : (idx / (series.length - 1)) * innerW);
+      const yFor = (val) => top + (maxVal - val) / range * innerH;
+      const points = series.map((d, i) => `${xFor(i).toFixed(1)},${yFor(d.cumulative).toFixed(1)}`).join(" ");
+      const zeroY = yFor(0).toFixed(1);
+      const areaPoints = `${left},${zeroY} ${points} ${left + innerW},${zeroY}`;
+      const last = series[series.length - 1];
+      const lastX = xFor(series.length - 1).toFixed(1);
+      const lastY = yFor(last.cumulative).toFixed(1);
+      const sign = totals.pnl >= 0 ? "+" : "";
+      const pnlColor = totals.pnl > 0 ? "var(--ok)" : totals.pnl < 0 ? "var(--bad)" : "var(--muted)";
+      const resolved = totals.won + totals.lost;
+      const totalActions = resolved + totals.push + totals.pending;
+      const roi = resolved ? (totals.pnl / (resolved * 100)) * 100 : null;
+      const actionDays = series.filter(d => d.won + d.lost + d.push + d.pending > 0);
+      const bestDay = actionDays.reduce((best, d) => !best || d.pnl > best.pnl ? d : best, null);
+      const worstDay = actionDays.reduce((worst, d) => !worst || d.pnl < worst.pnl ? d : worst, null);
+      const fmtSignedMoney = (value) => `${value >= 0 ? "+" : "-"}$${Math.round(Math.abs(value)).toLocaleString("es-MX")}`;
+      const fmtDayMetric = (d) => d ? `${String(Number(d.day.slice(-2)))} · ${fmtSignedMoney(d.pnl)}` : "--";
+      const metric = (name, value, color = "var(--text)") => `<div class="mlb-chart-metric"><div class="mlb-chart-metric-label">${name}</div><div class="mlb-chart-metric-value" style="color:${color};">${value}</div></div>`;
+      const metrics = `<div class="mlb-chart-metrics">${metric("ROI", roi == null ? "--" : `${roi >= 0 ? "+" : ""}${roi.toFixed(1)}%`, roi > 0 ? "var(--ok)" : roi < 0 ? "var(--bad)" : "var(--text)")}${metric("Picks", `${totalActions} total · ${resolved} resueltos`)}${metric("Mejor dia", fmtDayMetric(bestDay), bestDay?.pnl > 0 ? "var(--ok)" : "var(--text)")}${metric("Peor dia", fmtDayMetric(worstDay), worstDay?.pnl < 0 ? "var(--bad)" : "var(--text)")}</div>`;
+      const dailyBars = series.map((d, i) => {
+        if (!d.won && !d.lost && !d.push && !d.pending) return "";
+        const x = xFor(i) - 3;
+        const h = Math.max(4, Math.min(28, Math.abs(d.pnl) / Math.max(100, Math.abs(maxVal), Math.abs(minVal)) * 42));
+        const y = d.pnl >= 0 ? Number(zeroY) - h : Number(zeroY);
+        const fill = d.pnl > 0 ? "rgba(47,226,143,.55)" : d.pnl < 0 ? "rgba(255,91,110,.55)" : "rgba(255,255,255,.22)";
+        return `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="6" height="${h.toFixed(1)}" rx="2" fill="${fill}"><title>${d.day}: ${d.pnl >= 0 ? "+" : ""}$${Math.round(d.pnl)}</title></rect>`;
+      }).join("");
+      const ticks = series.map((d, idx) => {
+        const x = xFor(idx).toFixed(1);
+        return `<g><line x1="${x}" y1="${Number(zeroY) + 4}" x2="${x}" y2="${height - 28}" stroke="rgba(255,255,255,.08)" stroke-width="1"/><text x="${x}" y="${height - 10}" text-anchor="middle" fill="rgba(255,255,255,.48)" font-size="9" font-family="monospace">${String(Number(d.day.slice(-2)))}</text></g>`;
+      }).join("");
+      wrap.innerHTML = `
+        ${head(`${month} · $100 por pick · PnL acumulado`, `<div class="mlb-model-chart-meta" style="color:${pnlColor};font-weight:800;">${sign}$${Math.round(totals.pnl).toLocaleString("es-MX")}</div>`)}
+        ${metrics}
+        <svg class="mlb-model-chart-svg" viewBox="0 0 ${width} ${height}" role="img" aria-label="Grafica diaria de ${label}">
+          <line x1="${left}" y1="${zeroY}" x2="${left + innerW}" y2="${zeroY}" stroke="rgba(255,255,255,.18)" stroke-width="1"/>
+          <line x1="${left}" y1="${top}" x2="${left}" y2="${top + innerH}" stroke="rgba(255,255,255,.12)" stroke-width="1"/>
+          <text x="8" y="${yFor(maxVal).toFixed(1)}" fill="rgba(255,255,255,.45)" font-size="10" font-family="monospace">$${Math.round(maxVal)}</text>
+          <text x="8" y="${yFor(minVal).toFixed(1)}" fill="rgba(255,255,255,.45)" font-size="10" font-family="monospace">$${Math.round(minVal)}</text>
+          ${dailyBars}
+          <polygon points="${areaPoints}" fill="rgba(122,167,255,.10)"/>
+          <polyline points="${points}" fill="none" stroke="rgba(122,167,255,.95)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>
+          <circle cx="${lastX}" cy="${lastY}" r="4" fill="var(--accent)" stroke="rgba(255,255,255,.75)" stroke-width="1.5"/>
+          ${ticks}
+        </svg>
+        <div class="mlb-model-chart-meta">Ganadas ${totals.won} · Perdidas ${totals.lost} · Nulas ${totals.push}${totals.pending ? ` · Pendientes ${totals.pending}` : ""}</div>
+      `;
+    }
+
+    function showModelChart(modelKeyValue) {
+      selectedChartModel = modelKeyValue;
+      const month = el("monthPicker").value || currentMonth;
+      renderModelChart(modelKeyValue);
+      if (historyMonth !== month) loadHistory(false, month);
+      const wrap = el("modelChartWrap");
+      if (wrap) wrap.scrollIntoView({ block: "nearest", behavior: "smooth" });
+    }
+
     function renderDayPnL(preds) {
       const pnlEl = el("dayPnL");
       const betPreds = preds.filter(p => p.bet_ml || p.bet_ou);
@@ -912,14 +1250,16 @@
             const dec = americanToDec(p.ml_pick === 'home' ? p.home_ml_odds : p.away_ml_odds);
             if (p.ml_correct === true)       { if (dec) pnl += (dec - 1) * 100; won++; }
             else if (p.ml_correct === false) { pnl -= 100; lost++; }
-            else if (p.ml_result_status === 'PUSH') push++;
+            else if (isPushStatus(p.ml_result_status)) push++;
+            else if (isPostponedStatus(p.ml_result_status)) {}
             else pending++;
           }
           if (p.bet_ou) {
             const dec = americanToDec(p.ou_pick === 'over' ? p.over_odds : p.under_odds);
             if (p.ou_correct === true)       { if (dec) pnl += (dec - 1) * 100; won++; }
             else if (p.ou_correct === false) { pnl -= 100; lost++; }
-            else if (p.ou_result_status === 'PUSH') push++;
+            else if (isPushStatus(p.ou_result_status)) push++;
+            else if (isPostponedStatus(p.ou_result_status)) {}
             else pending++;
           }
         }
@@ -1043,8 +1383,8 @@
               <span style="text-align:right;color:${color};font-weight:800;">${result}</span>
             </div>`);
         };
-        if (!betOnlyDay || p.bet_ml) add("ML", p.ml_pick === "home" ? (p.home_abbr || p.home_team) : (p.away_abbr || p.away_team), "", p.ml_pick === "home" ? p.home_ml_odds : p.away_ml_odds, p.ml_correct, p.ml_result_status === "PUSH");
-        if (!betOnlyDay || p.bet_ou) add("O/U", p.ou_pick === "over" ? "OVER" : "UNDER", p.ou_line || 8.5, p.ou_pick === "over" ? p.over_odds : p.under_odds, p.ou_correct, p.ou_result_status === "PUSH");
+        if (!betOnlyDay || p.bet_ml) add("ML", p.ml_pick === "home" ? (p.home_abbr || p.home_team) : (p.away_abbr || p.away_team), "", p.ml_pick === "home" ? p.home_ml_odds : p.away_ml_odds, p.ml_correct, isPushStatus(p.ml_result_status));
+        if (!betOnlyDay || p.bet_ou) add("O/U", p.ou_pick === "over" ? "OVER" : "UNDER", p.ou_line || 8.5, p.ou_pick === "over" ? p.over_odds : p.under_odds, p.ou_correct, isPushStatus(p.ou_result_status));
         return rows.join("");
       };
       const groups = new Map();
@@ -1114,7 +1454,7 @@
         const toDec   = (o) => { if (o == null) return null; return o >= 0 ? o / 100 + 1 : 100 / Math.abs(o) + 1; };
         const fmtDec  = (o) => { const d = toDec(o); return d != null ? d.toFixed(2) : '–'; };
         const ouEdge  = p.total_runs_pred != null ? Math.abs(parseFloat(p.total_runs_pred) - ouLine).toFixed(1) : null;
-        const ouIsPush = p.ou_result_status === 'PUSH' || (hasResult && p.ou_correct == null && p.ou_line != null && (p.home_score + p.away_score) === parseFloat(p.ou_line));
+        const ouIsPush = isPushStatus(p.ou_result_status) || (hasResult && p.ou_correct == null && p.ou_line != null && (p.home_score + p.away_score) === parseFloat(p.ou_line));
         const resBadge = (correct, label, isPush = false) => {
           if (isPush) return `<span class="res-badge" style="background:rgba(255,196,0,.1);border-color:rgba(255,196,0,.3);color:#f9a825;">${label} ↩</span>`;
           const cls = correct === true ? 'ok' : correct === false ? 'bad' : 'pend';
@@ -1194,20 +1534,24 @@
       </div>`;
     }
 
-    async function loadHistory() {
+    async function loadHistory(forceRefresh = false, month) {
       try {
-        const days = [];
-        const firstOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
-        for (let d = new Date(firstOfMonth); d <= now; d.setDate(d.getDate() + 1)) {
-          days.push(fmtDate(new Date(d)));
+        const targetMonth = month || el("monthPicker").value || currentMonth;
+        if (!forceRefresh && historyMonth === targetMonth && historyData.length) {
+          renderHistory();
+          if (selectedChartModel) renderModelChart(selectedChartModel);
+          return;
         }
+        const days = monthDays(targetMonth);
         const results = await Promise.all(
           days.map(d => fetchPredictions(d).catch(() => ({ predictions: [] })))
         );
         historyData = results.flatMap(r => r.predictions || []);
+        historyMonth = targetMonth;
         renderHistory();
-        const pending  = historyData.reduce((n, p) => n + (p.bet_ml && p.ml_correct == null && p.ml_result_status !== 'PUSH' ? 1 : 0) + (p.bet_ou && p.ou_correct == null && p.ou_result_status !== 'PUSH' ? 1 : 0), 0);
-        const pushes   = historyData.reduce((n, p) => n + (p.bet_ml && p.ml_result_status === 'PUSH' ? 1 : 0) + (p.bet_ou && p.ou_result_status === 'PUSH' ? 1 : 0), 0);
+        if (selectedChartModel) renderModelChart(selectedChartModel);
+        const pending  = historyData.reduce((n, p) => n + (p.bet_ml && p.ml_correct == null && !isPushStatus(p.ml_result_status) && !isPostponedStatus(p.ml_result_status) ? 1 : 0) + (p.bet_ou && p.ou_correct == null && !isPushStatus(p.ou_result_status) && !isPostponedStatus(p.ou_result_status) ? 1 : 0), 0);
+        const pushes   = historyData.reduce((n, p) => n + (p.bet_ml && isPushStatus(p.ml_result_status) ? 1 : 0) + (p.bet_ou && isPushStatus(p.ou_result_status) ? 1 : 0), 0);
         el("kpiPending").textContent = pending;
         const ps = el("kpiPendingSub");
         if (ps) ps.textContent = pushes ? `por resolver · ${pushes}↩` : "por resolver";
@@ -1233,7 +1577,7 @@
       const tbody = el("historyTbody");
       const filtered = historyData.filter(p =>
         (betOnlyHistory ? (!!p.bet_ml || !!p.bet_ou) : true)
-      ).filter(p => p.ml_correct != null || p.ou_correct != null);
+      ).filter(p => p.ml_correct != null || p.ou_correct != null || isPostponedStatus(p.ml_result_status) || isPostponedStatus(p.ou_result_status));
       if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Sin historial disponible aún.</td></tr>'; const s = el("historyDaySummary"); if (s) s.innerHTML = ""; renderHistoryPager([], 0); return; }
 
       // Días únicos ordenados de más reciente a más antiguo
@@ -1251,13 +1595,15 @@
         if (!betOnlyHistory || !!p.bet_ml) {
           if (p.ml_correct === true) bucket.mlWon++;
           else if (p.ml_correct === false) bucket.mlLost++;
-          else if (p.ml_result_status === 'PUSH') bucket.mlPush++;
+          else if (isPushStatus(p.ml_result_status)) bucket.mlPush++;
+          else if (isPostponedStatus(p.ml_result_status)) {}
           else bucket.mlPend++;
         }
         if (!betOnlyHistory || !!p.bet_ou) {
           if (p.ou_correct === true) bucket.ouWon++;
           else if (p.ou_correct === false) bucket.ouLost++;
-          else if (p.ou_result_status === 'PUSH') bucket.ouPush++;
+          else if (isPushStatus(p.ou_result_status)) bucket.ouPush++;
+          else if (isPostponedStatus(p.ou_result_status)) {}
           else bucket.ouPend++;
         }
       }
@@ -1292,8 +1638,10 @@
         const score = awayScore != null ? ` ${awayScore}-${homeScore}` : "";
         if (correct === true)  return `<span class="res g">G${score}</span>`;
         if (correct === false) return `<span class="res p">P${score}</span>`;
-        if (resultStatus === 'PUSH' || (correct == null && awayScore != null && ouLine != null && (awayScore + homeScore) === parseFloat(ouLine)))
+        if (isPushStatus(resultStatus) || (correct == null && awayScore != null && ouLine != null && (awayScore + homeScore) === parseFloat(ouLine)))
           return `<span class="res" style="color:#f9a825;">↩${score}</span>`;
+        if (isPostponedStatus(resultStatus))
+          return `<span class="res pend">POSP</span>`;
         return `<span class="res pend">–</span>`;
       };
 
@@ -1344,7 +1692,7 @@
 
       const rows = [];
       for (const group of modelGroups(dayPicks)) {
-        rows.push(sectionHeader(group.key === "xgb" ? 'XGB — Modelo estadístico' : `IA — ${group.label}`, group.key !== "xgb"));
+        rows.push(sectionHeader(group.key === "xgb" ? 'Pickster AI — Modelo estadístico' : `IA — ${group.label}`, group.key !== "xgb"));
         rows.push(...buildPickRows(group.picks, group.key !== "xgb"));
       }
       tbody.innerHTML = rows.join("");
@@ -1371,7 +1719,6 @@
     el("monthPicker").value = currentMonth;
     loadMonthStats(currentMonth);
     loadDate("today");
-    loadHistory();
   </script>
 </body>
 
