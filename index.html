@@ -877,14 +877,6 @@
   <!-- Contenido -->
   <div class="wrap">
 
-    <!-- PNL del día -->
-    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
-      <button id="dayBtnYesterday" class="month-btn" onclick="loadDate('yesterday')">Ayer</button>
-      <button id="dayBtnToday" class="month-btn active" onclick="loadDate('today')">Hoy</button>
-      <input type="date" id="dayPicker" style="background:rgba(255,255,255,.06);border:1px solid var(--stroke);color:var(--text);border-radius:10px;padding:7px 12px;font-size:13px;" onchange="loadDate('custom')" />
-    </div>
-    <div id="dayPnlPanel" style="margin-bottom:20px;"></div>
-
     <!-- Selector de mes -->
     <div class="month-switcher">
       <button class="month-btn active" id="btnThisMonth">Este mes</button>
@@ -938,6 +930,14 @@
         <div class="kpi-sub" id="kpiPnlChatGPTSub">G 0 · P 0 · N 0</div>
       </div>
     </div>
+
+    <!-- PNL del día -->
+    <div style="display:flex;align-items:center;gap:10px;margin:16px 0 14px;flex-wrap:wrap;">
+      <button id="dayBtnYesterday" class="month-btn" onclick="loadDate('yesterday')">Ayer</button>
+      <button id="dayBtnToday" class="month-btn active" onclick="loadDate('today')">Hoy</button>
+      <input type="date" id="dayPicker" style="background:rgba(255,255,255,.06);border:1px solid var(--stroke);color:var(--text);border-radius:10px;padding:7px 12px;font-size:13px;" onchange="loadDate('custom')" />
+    </div>
+    <div id="dayPnlPanel" style="margin-bottom:20px;"></div>
 
     <!-- Banda de metodología -->
     <div style="background:linear-gradient(90deg,rgba(122,167,255,.07),rgba(47,226,143,.05));border:1px solid var(--stroke);border-radius:var(--r);padding:16px 20px;margin:20px 0;" >
