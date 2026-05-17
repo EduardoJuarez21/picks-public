@@ -906,28 +906,28 @@
     </div>
     <div class="mlb-section-head">
       <span class="mlb-section-title">Rendimiento por modelo</span>
-      <span class="mlb-section-note">Win rate del mes por modelo · PNL con $100 por pick</span>
+      <span class="mlb-section-note">Ganancia y win rate del mes por modelo · $100 por pick</span>
     </div>
     <div class="kpi-grid mlb-model-grid">
       <div class="kpi-card mlb-primary-model">
         <div class="kpi-label">Modelo</div>
-        <div class="kpi-value" id="kpiPnl">--%</div>
-        <div class="kpi-sub" id="kpiPnlSub">PNL -- · G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiPnl">--</div>
+        <div class="kpi-sub" id="kpiPnlSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Claude</div>
-        <div class="kpi-value" id="kpiPnlClaude">--%</div>
-        <div class="kpi-sub" id="kpiPnlClaudeSub">PNL -- · G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiPnlClaude">--</div>
+        <div class="kpi-sub" id="kpiPnlClaudeSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">DeepSeek</div>
-        <div class="kpi-value" id="kpiPnlDeepSeek">--%</div>
-        <div class="kpi-sub" id="kpiPnlDeepSeekSub">PNL -- · G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiPnlDeepSeek">--</div>
+        <div class="kpi-sub" id="kpiPnlDeepSeekSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">ChatGPT</div>
-        <div class="kpi-value" id="kpiPnlChatGPT">--%</div>
-        <div class="kpi-sub" id="kpiPnlChatGPTSub">PNL -- · G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiPnlChatGPT">--</div>
+        <div class="kpi-sub" id="kpiPnlChatGPTSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
     </div>
 
@@ -1189,12 +1189,12 @@
         const sign = value >= 0 ? "+" : "";
         const resolvedModel = stats.g + stats.p + stats.n;
         const wrModel = resolvedModel > 0 ? (stats.g / resolvedModel) * 100 : null;
-        node.textContent = wrModel !== null ? `${wrModel.toFixed(1)}%` : "--%";
-        node.className = "kpi-value" + (wrModel === null ? "" : wrModel >= 55 ? " ok" : wrModel < 45 ? " bad" : "");
-        node.style.fontSize = "";
+        node.textContent = `${sign}$${value.toFixed(0)}`;
+        node.className = "kpi-value" + (value > 0 ? " ok" : value < 0 ? " bad" : "");
+        node.style.fontSize = "18px";
         node.style.margin = "0";
         const sub = el(subId);
-        if (sub) sub.textContent = `PNL ${sign}$${value.toFixed(0)} · G ${stats.g} · P ${stats.p} · N ${stats.n}`;
+        if (sub) sub.textContent = `WR ${wrModel !== null ? `${wrModel.toFixed(1)}%` : "--"} · G ${stats.g} · P ${stats.p} · N ${stats.n}`;
       }
       el("kpiTotal").textContent = bet.length;
       el("kpiSub").textContent = `${items.length} filas`;

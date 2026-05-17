@@ -749,28 +749,28 @@
     </div>
     <div class="mlb-section-head">
       <span class="mlb-section-title">Rendimiento por modelo</span>
-      <span class="mlb-section-note">Win rate del mes por modelo · PNL con $100 por pick</span>
+      <span class="mlb-section-note">Ganancia y win rate del mes por modelo · $100 por pick</span>
     </div>
     <div class="kpi-grid mlb-model-grid">
       <div class="kpi-card kpi-clickable mlb-primary-model" data-mlb-model-card="xgb" role="button" tabindex="0" onclick="showModelChart('xgb')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('xgb');}">
         <div class="kpi-label">Pickster AI</div>
-        <div class="kpi-value" id="kpiGananciaXgb">--%</div>
-        <div class="kpi-sub" id="kpiGananciaXgbSub">PNL -- · G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiGananciaXgb">--</div>
+        <div class="kpi-sub" id="kpiGananciaXgbSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card kpi-clickable" data-mlb-model-card="openai" role="button" tabindex="0" onclick="showModelChart('openai')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('openai');}">
         <div class="kpi-label">ChatGPT</div>
-        <div class="kpi-value" id="kpiGananciaChatGPT">--%</div>
-        <div class="kpi-sub" id="kpiGananciaChatGPTSub">PNL -- · G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiGananciaChatGPT">--</div>
+        <div class="kpi-sub" id="kpiGananciaChatGPTSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card kpi-clickable" data-mlb-model-card="claude" role="button" tabindex="0" onclick="showModelChart('claude')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('claude');}">
         <div class="kpi-label">Claude</div>
-        <div class="kpi-value" id="kpiGananciaClaude">--%</div>
-        <div class="kpi-sub" id="kpiGananciaClaudeSub">PNL -- · G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiGananciaClaude">--</div>
+        <div class="kpi-sub" id="kpiGananciaClaudeSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card kpi-clickable" data-mlb-model-card="deepseek" role="button" tabindex="0" onclick="showModelChart('deepseek')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('deepseek');}">
         <div class="kpi-label">DeepSeek</div>
-        <div class="kpi-value" id="kpiGananciaDeepSeek">--%</div>
-        <div class="kpi-sub" id="kpiGananciaDeepSeekSub">PNL -- · G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiGananciaDeepSeek">--</div>
+        <div class="kpi-sub" id="kpiGananciaDeepSeekSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
     </div>
     <div class="mlb-model-chart hidden" id="modelChartWrap"></div>
@@ -971,14 +971,14 @@
           const resolved = g + p + n;
           const wr = resolved > 0 ? (g / resolved) * 100 : null;
           if (valueNode) {
-            valueNode.textContent = wr !== null ? `${wr.toFixed(1)}%` : "--%";
-            valueNode.className = "kpi-value " + (wr === null ? "" : wr >= 55 ? "ok" : wr < 45 ? "bad" : "accent");
-            valueNode.style.fontSize = "";
+            const value = pnl ?? 0;
+            valueNode.textContent = `${value >= 0 ? "+" : ""}$${Math.round(value).toLocaleString("es-MX")}`;
+            valueNode.className = "kpi-value " + (value > 0 ? "ok" : value < 0 ? "bad" : "accent");
+            valueNode.style.fontSize = "18px";
             valueNode.style.margin = "0";
           }
           if (subNode) {
-            const value = pnl ?? 0;
-            subNode.textContent = `PNL ${value >= 0 ? "+" : ""}$${Math.round(value).toLocaleString("es-MX")} · G ${g} · P ${p} · N ${n}`;
+            subNode.textContent = `WR ${wr !== null ? `${wr.toFixed(1)}%` : "--"} · G ${g} · P ${p} · N ${n}`;
           }
         };
         if (kpiPendSub) kpiPendSub.textContent = d.pushes ? `por resolver · ${d.pushes}↩` : "por resolver";
