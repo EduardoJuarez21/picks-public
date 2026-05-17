@@ -300,6 +300,41 @@
       color: var(--bad);
     }
 
+    .state-badge {
+      border: 1px solid var(--stroke);
+      border-radius: 999px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 10px;
+      font-weight: 800;
+      padding: 2px 7px;
+      white-space: nowrap;
+    }
+
+    .state-badge.active {
+      background: rgba(47, 226, 143, .10);
+      border-color: rgba(47, 226, 143, .38);
+      color: var(--ok);
+    }
+
+    .state-badge.watch {
+      background: rgba(122, 167, 255, .10);
+      border-color: rgba(122, 167, 255, .35);
+      color: var(--accent);
+    }
+
+    .state-badge.reduce {
+      background: rgba(255, 190, 92, .10);
+      border-color: rgba(255, 190, 92, .35);
+      color: #f6c356;
+    }
+
+    .state-badge.pause {
+      background: rgba(255, 91, 110, .10);
+      border-color: rgba(255, 91, 110, .38);
+      color: var(--bad);
+    }
+
     .league-meta {
       font-size: 11px;
       color: var(--muted);
@@ -1075,6 +1110,17 @@
       return activeSource === "compare" ? Boolean(key) : key === activeSource;
     }
 
+    function leagueOperationalState(row) {
+      const resolved = Number(row.g || 0) + Number(row.p || 0) + Number(row.n || 0);
+      const pnl = Number(row.pnl || 0);
+      if (resolved < 2) return { label: "SIN MUESTRA", cls: "watch" };
+      if (pnl > 0 && resolved >= 5) return { label: "ACTIVA", cls: "active" };
+      if (pnl > 0) return { label: "OBSERVAR", cls: "watch" };
+      if (pnl < 0 && resolved >= 5) return { label: "REDUCIR", cls: "reduce" };
+      if (pnl < 0) return { label: "PAUSAR", cls: "pause" };
+      return { label: "OBSERVAR", cls: "watch" };
+    }
+
     function buildLeagueSeries(items) {
       const map = new Map();
       for (const it of items) {
@@ -1201,6 +1247,7 @@
         const wrClass = wr === null ? "" : parseFloat(wr) >= 55 ? "good" : parseFloat(wr) < 45 ? "bad" : "";
         const pnlSign = row.pnl >= 0 ? "+" : "";
         const pnlClass = row.pnl > 0 ? "pos" : row.pnl < 0 ? "neg" : "";
+        const state = leagueOperationalState(row);
         const div = document.createElement("div");
         div.className = "league-row";
         const mktTags = [...row.markets.entries()]
@@ -1219,11 +1266,12 @@
           <div class="league-top">
             <span class="league-name">${row.label}</span>
             <span class="league-right">
+              <span class="state-badge ${state.cls}">${state.label}</span>
               ${wr !== null ? `<span class="wr-badge ${wrClass}">${wr}% WR</span>` : ""}
               <span class="pnl-inline ${pnlClass}">${pnlSign}${row.pnl.toFixed(0)}</span>
             </span>
           </div>
-          <div class="league-meta">${row.total} picks · G:${row.g} · P:${row.p} · N:${row.n}${row.pending > 0 ? ` · Pend:${row.pending}` : ""}</div>
+          <div class="league-meta">${row.total} picks · ${resolved} resueltos · G:${row.g} · P:${row.p} · N:${row.n}${row.pending > 0 ? ` · Pend:${row.pending}` : ""}</div>
           ${sourceRows ? `<div class="source-breakdown">${sourceRows}</div>` : ""}
           ${mktTags ? `<div class="mkt-tags">${mktTags}</div>` : ""}
           <div class="bar-track">
