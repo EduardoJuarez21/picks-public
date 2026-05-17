@@ -239,9 +239,7 @@
       background: linear-gradient(180deg, rgba(255, 255, 255, .07), rgba(255, 255, 255, .03));
       border: 1px solid var(--stroke);
       border-radius: 12px;
-      padding: 12px 14px;
-      display: grid;
-      gap: 8px;
+      overflow: hidden;
     }
 
     .league-top {
@@ -249,6 +247,26 @@
       align-items: center;
       justify-content: space-between;
       gap: 8px;
+      padding: 12px 14px;
+      cursor: pointer;
+      list-style: none;
+      user-select: none;
+    }
+    .league-top::-webkit-details-marker { display: none; }
+
+    .league-chevron {
+      font-size: 11px;
+      color: var(--muted);
+      transition: transform .15s ease;
+      flex-shrink: 0;
+    }
+    details[open] .league-chevron { transform: rotate(180deg); }
+
+    .league-detail {
+      display: grid;
+      gap: 8px;
+      padding: 0 14px 12px;
+      border-top: 1px solid rgba(255, 255, 255, .07);
     }
 
     .league-name {
@@ -1218,7 +1236,7 @@
         const wrClass = wr === null ? "" : parseFloat(wr) >= 55 ? "good" : parseFloat(wr) < 45 ? "bad" : "";
         const pnlSign = row.pnl >= 0 ? "+" : "";
         const pnlClass = row.pnl > 0 ? "pos" : row.pnl < 0 ? "neg" : "";
-        const div = document.createElement("div");
+        const div = document.createElement("details");
         div.className = "league-row";
         const mktTags = [...row.markets.entries()]
           .filter(([, m]) => m.g + m.p > 0)
@@ -1231,21 +1249,24 @@
           return `<div class="source-breakdown-row"><span>${sourceLabel(src)}</span><span>${s.total} · ${s.g}G-${s.p}P-${s.n}N${s.pending ? ` · ${s.pending} pend` : ""} · ${wrSrc} · ${signSrc}${s.pnl.toFixed(0)}</span></div>`;
         }).join("");
         div.innerHTML = `
-          <div class="league-top">
+          <summary class="league-top">
             <span class="league-name">${row.label}</span>
             <span class="league-right">
               ${wr !== null ? `<span class="wr-badge ${wrClass}">${wr}% WR</span>` : ""}
               <span class="pnl-inline ${pnlClass}">${pnlSign}${row.pnl.toFixed(0)}</span>
+              <span class="league-chevron">▾</span>
             </span>
-          </div>
-          <div class="league-meta">${row.total} picks · ${resolved} resueltos · G:${row.g} · P:${row.p} · N:${row.n}${row.pending > 0 ? ` · Pend:${row.pending}` : ""}</div>
-          ${sourceRows ? `<div class="source-breakdown">${sourceRows}</div>` : ""}
-          ${mktTags ? `<div class="mkt-tags">${mktTags}</div>` : ""}
-          <div class="bar-track">
-            <span class="bar-seg win"     style="width:${gPct}%"></span>
-            <span class="bar-seg lose"    style="width:${pPct}%"></span>
-            <span class="bar-seg push"    style="width:${nPct}%"></span>
-            <span class="bar-seg pending" style="width:${pendPct}%"></span>
+          </summary>
+          <div class="league-detail">
+            <div class="league-meta">${row.total} picks · ${resolved} resueltos · G:${row.g} · P:${row.p} · N:${row.n}${row.pending > 0 ? ` · Pend:${row.pending}` : ""}</div>
+            ${sourceRows ? `<div class="source-breakdown">${sourceRows}</div>` : ""}
+            ${mktTags ? `<div class="mkt-tags">${mktTags}</div>` : ""}
+            <div class="bar-track">
+              <span class="bar-seg win"     style="width:${gPct}%"></span>
+              <span class="bar-seg lose"    style="width:${pPct}%"></span>
+              <span class="bar-seg push"    style="width:${nPct}%"></span>
+              <span class="bar-seg pending" style="width:${pendPct}%"></span>
+            </div>
           </div>`;
         list.appendChild(div);
       }
