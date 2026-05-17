@@ -894,8 +894,8 @@
         <div class="kpi-sub" id="kpiSub">del mes</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Win rate general</div>
-        <div class="kpi-value" id="kpiWr">--%</div>
+        <div class="kpi-label">Resueltos</div>
+        <div class="kpi-value" id="kpiWr">--</div>
         <div class="kpi-sub" id="kpiWrSub">resueltos</div>
       </div>
       <div class="kpi-card">
@@ -906,28 +906,28 @@
     </div>
     <div class="mlb-section-head">
       <span class="mlb-section-title">Rendimiento por modelo</span>
-      <span class="mlb-section-note">PNL acumulado del mes · $100 por pick</span>
+      <span class="mlb-section-note">Win rate del mes por modelo · PNL con $100 por pick</span>
     </div>
     <div class="kpi-grid mlb-model-grid">
       <div class="kpi-card mlb-primary-model">
         <div class="kpi-label">Modelo</div>
-        <div class="kpi-value" id="kpiPnl">--</div>
-        <div class="kpi-sub" id="kpiPnlSub">G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiPnl">--%</div>
+        <div class="kpi-sub" id="kpiPnlSub">PNL -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Claude</div>
-        <div class="kpi-value" id="kpiPnlClaude">--</div>
-        <div class="kpi-sub" id="kpiPnlClaudeSub">G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiPnlClaude">--%</div>
+        <div class="kpi-sub" id="kpiPnlClaudeSub">PNL -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">DeepSeek</div>
-        <div class="kpi-value" id="kpiPnlDeepSeek">--</div>
-        <div class="kpi-sub" id="kpiPnlDeepSeekSub">G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiPnlDeepSeek">--%</div>
+        <div class="kpi-sub" id="kpiPnlDeepSeekSub">PNL -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">ChatGPT</div>
-        <div class="kpi-value" id="kpiPnlChatGPT">--</div>
-        <div class="kpi-sub" id="kpiPnlChatGPTSub">G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiPnlChatGPT">--%</div>
+        <div class="kpi-sub" id="kpiPnlChatGPTSub">PNL -- · G 0 · P 0 · N 0</div>
       </div>
     </div>
 
@@ -1183,26 +1183,28 @@
         else continue;
         sourceStats[provider].pnl += delta;
       }
-      function setPnlKpi(id, subId, stats) {
+      function setModelKpi(id, subId, stats) {
         const node = el(id);
         const value = stats.pnl;
         const sign = value >= 0 ? "+" : "";
-        node.textContent = `${sign}$${value.toFixed(0)}`;
-        node.className = "kpi-value" + (value > 0 ? " ok" : value < 0 ? " bad" : "");
-        node.style.fontSize = "18px";
+        const resolvedModel = stats.g + stats.p + stats.n;
+        const wrModel = resolvedModel > 0 ? (stats.g / resolvedModel) * 100 : null;
+        node.textContent = wrModel !== null ? `${wrModel.toFixed(1)}%` : "--%";
+        node.className = "kpi-value" + (wrModel === null ? "" : wrModel >= 55 ? " ok" : wrModel < 45 ? " bad" : "");
+        node.style.fontSize = "";
         node.style.margin = "0";
         const sub = el(subId);
-        if (sub) sub.textContent = `G ${stats.g} · P ${stats.p} · N ${stats.n}`;
+        if (sub) sub.textContent = `PNL ${sign}$${value.toFixed(0)} · G ${stats.g} · P ${stats.p} · N ${stats.n}`;
       }
       el("kpiTotal").textContent = bet.length;
       el("kpiSub").textContent = `${items.length} filas`;
-      el("kpiWr").textContent = wr !== null ? `${wr}%` : "--%";
-      el("kpiWr").className = "kpi-value" + (wr === null ? "" : parseFloat(wr) >= 55 ? " ok" : parseFloat(wr) < 45 ? " bad" : "");
-      el("kpiWrSub").textContent = `${g}G · ${p}P · ${n}N / ${resolved} resueltos`;
-      setPnlKpi("kpiPnl", "kpiPnlSub", sourceStats.model);
-      setPnlKpi("kpiPnlChatGPT", "kpiPnlChatGPTSub", sourceStats.openai);
-      setPnlKpi("kpiPnlClaude", "kpiPnlClaudeSub", sourceStats.claude);
-      setPnlKpi("kpiPnlDeepSeek", "kpiPnlDeepSeekSub", sourceStats.deepseek);
+      el("kpiWr").textContent = resolved;
+      el("kpiWr").className = "kpi-value";
+      el("kpiWrSub").textContent = `${g}G · ${p}P · ${n}N`;
+      setModelKpi("kpiPnl", "kpiPnlSub", sourceStats.model);
+      setModelKpi("kpiPnlChatGPT", "kpiPnlChatGPTSub", sourceStats.openai);
+      setModelKpi("kpiPnlClaude", "kpiPnlClaudeSub", sourceStats.claude);
+      setModelKpi("kpiPnlDeepSeek", "kpiPnlDeepSeekSub", sourceStats.deepseek);
       el("kpiPend").textContent = pend;
       const displayDate = new Date(activeMonth + "-15");
       const monthName = displayDate.toLocaleString("es", { month: "long" });

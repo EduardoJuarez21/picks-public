@@ -737,8 +737,8 @@
         <div class="kpi-sub" id="kpiTotalSub">del mes</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Win rate general</div>
-        <div class="kpi-value" id="kpiAcierto">--%</div>
+        <div class="kpi-label">Resueltos</div>
+        <div class="kpi-value" id="kpiAcierto">--</div>
         <div class="kpi-sub" id="kpiAciertoSub">resueltos</div>
       </div>
       <div class="kpi-card">
@@ -749,28 +749,28 @@
     </div>
     <div class="mlb-section-head">
       <span class="mlb-section-title">Rendimiento por modelo</span>
-      <span class="mlb-section-note">Toca un modelo para ver su evolucion diaria</span>
+      <span class="mlb-section-note">Win rate del mes por modelo · PNL con $100 por pick</span>
     </div>
     <div class="kpi-grid mlb-model-grid">
       <div class="kpi-card kpi-clickable mlb-primary-model" data-mlb-model-card="xgb" role="button" tabindex="0" onclick="showModelChart('xgb')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('xgb');}">
         <div class="kpi-label">Pickster AI</div>
-        <div class="kpi-value" id="kpiGananciaXgb">--</div>
-        <div class="kpi-sub" id="kpiGananciaXgbSub">G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiGananciaXgb">--%</div>
+        <div class="kpi-sub" id="kpiGananciaXgbSub">PNL -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card kpi-clickable" data-mlb-model-card="openai" role="button" tabindex="0" onclick="showModelChart('openai')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('openai');}">
         <div class="kpi-label">ChatGPT</div>
-        <div class="kpi-value" id="kpiGananciaChatGPT">--</div>
-        <div class="kpi-sub" id="kpiGananciaChatGPTSub">G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiGananciaChatGPT">--%</div>
+        <div class="kpi-sub" id="kpiGananciaChatGPTSub">PNL -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card kpi-clickable" data-mlb-model-card="claude" role="button" tabindex="0" onclick="showModelChart('claude')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('claude');}">
         <div class="kpi-label">Claude</div>
-        <div class="kpi-value" id="kpiGananciaClaude">--</div>
-        <div class="kpi-sub" id="kpiGananciaClaudeSub">G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiGananciaClaude">--%</div>
+        <div class="kpi-sub" id="kpiGananciaClaudeSub">PNL -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card kpi-clickable" data-mlb-model-card="deepseek" role="button" tabindex="0" onclick="showModelChart('deepseek')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('deepseek');}">
         <div class="kpi-label">DeepSeek</div>
-        <div class="kpi-value" id="kpiGananciaDeepSeek">--</div>
-        <div class="kpi-sub" id="kpiGananciaDeepSeekSub">G 0 · P 0 · N 0</div>
+        <div class="kpi-value" id="kpiGananciaDeepSeek">--%</div>
+        <div class="kpi-sub" id="kpiGananciaDeepSeekSub">PNL -- · G 0 · P 0 · N 0</div>
       </div>
     </div>
     <div class="mlb-model-chart hidden" id="modelChartWrap"></div>
@@ -954,31 +954,43 @@
           d = await r.json();
           cacheSet(key, d, TTL);
         }
-        const acierto = d.pct_acierto;
         el("kpiTotal").textContent      = d.picks_apostados ?? "--";
         el("kpiTotalSub").textContent   = `${d.picks_totales ?? "--"} picks totales`;
-        el("kpiAcierto").textContent    = acierto != null ? `${acierto}%` : "--%";
-        el("kpiAcierto").className      = "kpi-value " + (acierto >= 55 ? "ok" : acierto != null && acierto < 50 ? "bad" : "accent");
-        el("kpiAciertoSub").textContent = `${d.ganados ?? "--"}G / ${d.resueltos ?? "--"} resueltos`;
+        el("kpiAcierto").textContent    = d.resueltos ?? "--";
+        el("kpiAcierto").className      = "kpi-value";
+        el("kpiAciertoSub").textContent = `${d.ganados ?? 0}G · ${d.perdidos ?? 0}P · ${d.pushes ?? 0}N`;
         el("kpiPending").textContent    = d.pendientes ?? "--";
         const kpiPendSub = el("kpiPendingSub");
         const providerStats = d.provider_stats || {};
-        const setProviderSub = (id, stats) => {
-          const node = el(id);
-          if (!node) return;
-          node.textContent = `G ${stats?.ganados ?? 0} · P ${stats?.perdidos ?? 0} · N ${stats?.pushes ?? 0}`;
+        const setProviderKpi = (valueId, subId, stats, pnl) => {
+          const valueNode = el(valueId);
+          const subNode = el(subId);
+          const g = stats?.ganados ?? 0;
+          const p = stats?.perdidos ?? 0;
+          const n = stats?.pushes ?? 0;
+          const resolved = g + p + n;
+          const wr = resolved > 0 ? (g / resolved) * 100 : null;
+          if (valueNode) {
+            valueNode.textContent = wr !== null ? `${wr.toFixed(1)}%` : "--%";
+            valueNode.className = "kpi-value " + (wr === null ? "" : wr >= 55 ? "ok" : wr < 45 ? "bad" : "accent");
+            valueNode.style.fontSize = "";
+            valueNode.style.margin = "0";
+          }
+          if (subNode) {
+            const value = pnl ?? 0;
+            subNode.textContent = `PNL ${value >= 0 ? "+" : ""}$${Math.round(value).toLocaleString("es-MX")} · G ${g} · P ${p} · N ${n}`;
+          }
         };
-        setProviderSub("kpiGananciaXgbSub", providerStats.xgb);
-        setProviderSub("kpiGananciaChatGPTSub", providerStats.openai);
-        setProviderSub("kpiGananciaClaudeSub", providerStats.claude);
-        setProviderSub("kpiGananciaDeepSeekSub", providerStats.deepseek);
         if (kpiPendSub) kpiPendSub.textContent = d.pushes ? `por resolver · ${d.pushes}↩` : "por resolver";
         _ganancia100u        = d.ganancia_100u         ?? null;
         _gananciaXgb100u     = d.ganancia_xgb_100u     ?? null;
         _gananciaClaude100u  = d.ganancia_claude_100u  ?? null;
         _gananciaDeepSeek100u = d.ganancia_deepseek_100u ?? null;
         _gananciaChatGpt100u = d.ganancia_openai_100u  ?? null;
-        updateGanancia();
+        setProviderKpi("kpiGananciaXgb", "kpiGananciaXgbSub", providerStats.xgb, _gananciaXgb100u);
+        setProviderKpi("kpiGananciaChatGPT", "kpiGananciaChatGPTSub", providerStats.openai, _gananciaChatGpt100u);
+        setProviderKpi("kpiGananciaClaude", "kpiGananciaClaudeSub", providerStats.claude, _gananciaClaude100u);
+        setProviderKpi("kpiGananciaDeepSeek", "kpiGananciaDeepSeekSub", providerStats.deepseek, _gananciaDeepSeek100u);
       } catch (e) { console.error("stats:", e); }
       loadHistory(false, m);
     }
