@@ -657,6 +657,49 @@
       color: var(--accent);
     }
 
+    .source-switcher {
+      display: flex;
+      gap: 8px;
+      justify-content: center;
+      flex-wrap: wrap;
+      margin: 0 0 22px;
+    }
+
+    .source-btn {
+      padding: 7px 14px;
+      border-radius: 999px;
+      border: 1px solid var(--stroke);
+      background: rgba(255, 255, 255, .05);
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+      cursor: pointer;
+    }
+
+    .source-btn.active {
+      background: linear-gradient(135deg, rgba(47, 226, 143, .18), rgba(122, 167, 255, .12));
+      border-color: rgba(47, 226, 143, .35);
+      color: var(--text);
+    }
+
+    .source-breakdown {
+      display: grid;
+      gap: 6px;
+      margin-top: 4px;
+    }
+
+    .source-breakdown-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 8px;
+      border: 1px solid var(--stroke);
+      border-radius: 8px;
+      color: var(--muted);
+      font-family: var(--mono);
+      font-size: 11px;
+      padding: 5px 8px;
+    }
+
     /* ── Empty / loading ── */
     .empty {
       text-align: center;
@@ -805,6 +848,13 @@
     <div class="month-switcher">
       <button class="month-btn active" id="btnThisMonth">Este mes</button>
       <button class="month-btn" id="btnLastMonth">← Mes anterior</button>
+    </div>
+    <div class="source-switcher" id="sourceSwitcher">
+      <button class="source-btn active" data-source="model">Modelo</button>
+      <button class="source-btn" data-source="openai">ChatGPT</button>
+      <button class="source-btn" data-source="claude">Claude</button>
+      <button class="source-btn" data-source="deepseek">DeepSeek</button>
+      <button class="source-btn" data-source="compare">Comparativo</button>
     </div>
 
     <!-- KPIs -->
@@ -994,26 +1044,56 @@
     const lastMonthLabel = lastMonthDate.toLocaleString("es", { month: "long", year: "numeric" });
 
     let activeMonth = currentMonth;
+    let activeSource = "model";
+    let currentItems = [];
 
     function el(id) { return document.getElementById(id); }
 
     const MKT_ABBR = { CORNERS: "COR", OVER: "O/U", UNDER: "O/U", MONEYLINE: "ML", "1X2": "1X2", BTTS: "BTTS" };
     function mktLabel(raw) { return MKT_ABBR[(raw ?? "").toUpperCase()] ?? (raw ?? "").toUpperCase(); }
 
+    function sourceKey(it) {
+      const source = String(it?.source ?? "").trim().toLowerCase();
+      const modelVersion = String(it?.model_version ?? "").trim().toLowerCase();
+      if (source === "ia" || modelVersion.startsWith("openai-")) {
+        if (modelVersion.startsWith("claude-")) return "claude";
+        if (modelVersion.startsWith("deepseek-")) return "deepseek";
+        if (modelVersion.startsWith("openai-")) return "openai";
+        return null;
+      }
+      if (modelVersion.startsWith("claude-")) return "claude";
+      if (modelVersion.startsWith("deepseek-")) return "deepseek";
+      return "model";
+    }
+
+    function sourceLabel(key) {
+      return { model: "Modelo", openai: "ChatGPT", claude: "Claude", deepseek: "DeepSeek", compare: "Comparativo" }[key] || key;
+    }
+
+    function sourceMatches(it) {
+      const key = sourceKey(it);
+      return activeSource === "compare" ? Boolean(key) : key === activeSource;
+    }
+
     function buildLeagueSeries(items) {
       const map = new Map();
       for (const it of items) {
+        if (!sourceMatches(it)) continue;
         if (!["BET", "BET_2"].includes((it.decision ?? "").toUpperCase())) continue;
+        const src = sourceKey(it);
         const key = String(it.league ?? "sin_liga").toLowerCase();
-        if (!map.has(key)) map.set(key, { key, label: leagueLabel(key), total: 0, g: 0, p: 0, n: 0, pending: 0, pnl: 0, markets: new Map() });
+        if (!map.has(key)) map.set(key, { key, label: leagueLabel(key), total: 0, g: 0, p: 0, n: 0, pending: 0, pnl: 0, markets: new Map(), sources: new Map() });
         const r = map.get(key);
+        if (!r.sources.has(src)) r.sources.set(src, { total: 0, g: 0, p: 0, n: 0, pending: 0, pnl: 0 });
+        const s = r.sources.get(src);
         r.total++;
+        s.total++;
         const res = (it.result ?? "").toUpperCase();
         const odds = parseFloat(it.odds) || 0;
-        if (res === "G") { r.g++; r.pnl += (odds - 1) * 100; }
-        else if (res === "P") { r.p++; r.pnl -= 100; }
-        else if (res === "N") r.n++;
-        else r.pending++;
+        if (res === "G") { r.g++; s.g++; r.pnl += (odds - 1) * 100; s.pnl += (odds - 1) * 100; }
+        else if (res === "P") { r.p++; s.p++; r.pnl -= 100; s.pnl -= 100; }
+        else if (res === "N") { r.n++; s.n++; }
+        else { r.pending++; s.pending++; }
         // track per-market G/P
         const mkt = mktLabel(it.pick_market);
         if (mkt) {
@@ -1039,7 +1119,9 @@
     }
 
     function renderKpis(items) {
-      const bet = items.filter(it => ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase()));
+      const sourceItems = items.filter(sourceMatches);
+      const bet = items.filter(it => sourceMatches(it) && ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase()));
+      const allBet = items.filter(it => ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase()));
       const g = bet.filter(it => (it.result ?? "").toUpperCase() === "G").length;
       const p = bet.filter(it => (it.result ?? "").toUpperCase() === "P").length;
       const n = bet.filter(it => (it.result ?? "").toUpperCase() === "N").length;
@@ -1052,7 +1134,7 @@
         claude: { pnl: 0, g: 0, p: 0, n: 0 },
         deepseek: { pnl: 0, g: 0, p: 0, n: 0 },
       };
-      for (const it of bet) {
+      for (const it of allBet) {
         const res = (it.result ?? "").toUpperCase();
         const odds = parseFloat(it.odds) || 0;
         const provider = iaProviderKey(it) || (!isIaPick(it) ? "model" : null);
@@ -1078,7 +1160,7 @@
         if (sub) sub.textContent = `G ${stats.g} · P ${stats.p} · N ${stats.n}`;
       }
       el("kpiTotal").textContent = bet.length;
-      el("kpiSub").textContent = `${items.length} picks totales`;
+      el("kpiSub").textContent = `${sourceLabel(activeSource)} · ${sourceItems.length} filas`;
       el("kpiWr").textContent = wr !== null ? `${wr}%` : "--%";
       el("kpiWr").className = "kpi-value" + (wr === null ? "" : parseFloat(wr) >= 55 ? " ok" : parseFloat(wr) < 45 ? " bad" : "");
       el("kpiWrSub").textContent = `${g}G · ${p}P · ${n}N / ${resolved} resueltos`;
@@ -1089,11 +1171,17 @@
       el("kpiPend").textContent = pend;
       const displayDate = new Date(activeMonth + "-15");
       const monthName = displayDate.toLocaleString("es", { month: "long" });
-      const totalPnl = sourceStats.model.pnl + sourceStats.claude.pnl + sourceStats.deepseek.pnl + sourceStats.openai.pnl;
+      const totalPnl = bet.reduce((sum, it) => {
+        const res = (it.result ?? "").toUpperCase();
+        const odds = parseFloat(it.odds) || 0;
+        if (res === "G") return sum + (odds - 1) * 100;
+        if (res === "P") return sum - 100;
+        return sum;
+      }, 0);
       if (totalPnl !== 0 || resolved > 0) {
         const sign = totalPnl >= 0 ? "+" : "";
         const wrPart = wr !== null ? ` · ${wr}% acierto` : "";
-        el("heroSub").textContent = `${sign}${totalPnl.toFixed(0)}u en ${monthName}${wrPart}`;
+        el("heroSub").textContent = `${sourceLabel(activeSource)} · ${sign}${totalPnl.toFixed(0)}u en ${monthName}${wrPart}`;
       }
     }
 
@@ -1119,6 +1207,14 @@
           .filter(([, m]) => m.g + m.p > 0)
           .map(([name, m]) => `<span class="mkt-tag">${name} ${m.g}G·${m.p}P</span>`)
           .join("");
+        const sourceRows = activeSource === "compare"
+          ? [...row.sources.entries()].map(([src, s]) => {
+              const resolvedSrc = s.g + s.p + s.n;
+              const wrSrc = resolvedSrc > 0 ? `${((s.g / resolvedSrc) * 100).toFixed(0)}%` : "--";
+              const signSrc = s.pnl >= 0 ? "+" : "";
+              return `<div class="source-breakdown-row"><span>${sourceLabel(src)}</span><span>${s.total} · ${s.g}G-${s.p}P-${s.n}N${s.pending ? ` · ${s.pending} pend` : ""} · ${wrSrc} · ${signSrc}${s.pnl.toFixed(0)}</span></div>`;
+            }).join("")
+          : "";
         div.innerHTML = `
           <div class="league-top">
             <span class="league-name">${row.label}</span>
@@ -1128,6 +1224,7 @@
             </span>
           </div>
           <div class="league-meta">${row.total} picks · G:${row.g} · P:${row.p} · N:${row.n}${row.pending > 0 ? ` · Pend:${row.pending}` : ""}</div>
+          ${sourceRows ? `<div class="source-breakdown">${sourceRows}</div>` : ""}
           ${mktTags ? `<div class="mkt-tags">${mktTags}</div>` : ""}
           <div class="bar-track">
             <span class="bar-seg win"     style="width:${gPct}%"></span>
@@ -1259,6 +1356,10 @@
       const source = String(it?.source ?? "").trim().toLowerCase();
       const modelVersion = String(it?.model_version ?? "").trim().toLowerCase();
       return source === "ia" || ["claude-", "deepseek-", "openai-"].some(prefix => modelVersion.startsWith(prefix));
+    }
+
+    function isModelPick(it) {
+      return sourceKey(it) === "model";
     }
 
     function iaPickLabel(it) {
@@ -1398,7 +1499,8 @@
 
     function buildLeagueFilter(items) {
       const bar = el("leagueFilterBar");
-      const leagues = [...new Set(items.map(it => String(it.league ?? "sin_liga").toLowerCase()))];
+      const sourceItems = items.filter(sourceMatches);
+      const leagues = [...new Set(sourceItems.map(it => String(it.league ?? "sin_liga").toLowerCase()))];
       if (leagues.length <= 1) { bar.innerHTML = ""; return; }
       bar.innerHTML = "";
       const makeBtn = (key, label) => {
@@ -1419,7 +1521,7 @@
     }
 
     function renderPicks(items) {
-      _allBetItems = items.filter(it => ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase()) && ["G", "P", "N"].includes((it.result ?? "").toUpperCase()));
+      _allBetItems = items.filter(it => sourceMatches(it) && ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase()) && ["G", "P", "N"].includes((it.result ?? "").toUpperCase()));
       _activeLeague = "all";
       _currentPage = 1;
       buildLeagueFilter(_allBetItems);
@@ -1428,7 +1530,7 @@
 
     const CACHE_TTL = 3 * 60 * 60 * 1000; // 3 horas
 
-    function cacheKey(month) { return `picks_cache_${month}`; }
+    function cacheKey(month) { return `picks_cache_model_${month}`; }
 
     function cacheGet(month) {
       try {
@@ -1444,13 +1546,18 @@
       try { localStorage.setItem(cacheKey(month), JSON.stringify({ ts: Date.now(), items })); } catch { }
     }
 
+    function renderAll(items) {
+      renderKpis(items);
+      renderLeagues(items);
+      renderPicks(items);
+    }
+
     async function load(month) {
       if (!month) return;
       const cached = cacheGet(month);
       if (cached) {
-        renderKpis(cached);
-        renderLeagues(cached);
-        renderPicks(cached);
+        currentItems = cached;
+        renderAll(cached);
         return;
       }
       el("leagueList").innerHTML = '<div class="empty">Cargando…</div>';
@@ -1459,10 +1566,9 @@
         const res = await fetch(`${API}/picks/all/month?month=${encodeURIComponent(month)}&resolved_only=true`);
         const data = await res.json();
         const items = Array.isArray(data?.items) ? data.items : [];
+        currentItems = items;
         cacheSet(month, items);
-        renderKpis(items);
-        renderLeagues(items);
-        renderPicks(items);
+        renderAll(items);
       } catch (e) {
         el("leagueList").innerHTML = '<div class="empty">Error al cargar datos.</div>';
         el("picksTbody").innerHTML = '<tr><td colspan="7" class="empty">Error al cargar datos.</td></tr>';
@@ -1519,6 +1625,15 @@
     el("btnLastMonth").textContent = `← ${lastMonthLabel.charAt(0).toUpperCase() + lastMonthLabel.slice(1)}`;
     el("btnThisMonth").addEventListener("click", () => switchMonth(currentMonth));
     el("btnLastMonth").addEventListener("click", () => switchMonth(lastMonth));
+    document.querySelectorAll("#sourceSwitcher .source-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        activeSource = btn.dataset.source || "model";
+        document.querySelectorAll("#sourceSwitcher .source-btn").forEach(item => {
+          item.classList.toggle("active", item === btn);
+        });
+        renderAll(currentItems);
+      });
+    });
 
     load(currentMonth);
     loadCalendar();
