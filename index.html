@@ -300,41 +300,6 @@
       color: var(--bad);
     }
 
-    .state-badge {
-      border: 1px solid var(--stroke);
-      border-radius: 999px;
-      color: var(--muted);
-      font-family: var(--mono);
-      font-size: 10px;
-      font-weight: 800;
-      padding: 2px 7px;
-      white-space: nowrap;
-    }
-
-    .state-badge.active {
-      background: rgba(47, 226, 143, .10);
-      border-color: rgba(47, 226, 143, .38);
-      color: var(--ok);
-    }
-
-    .state-badge.watch {
-      background: rgba(122, 167, 255, .10);
-      border-color: rgba(122, 167, 255, .35);
-      color: var(--accent);
-    }
-
-    .state-badge.reduce {
-      background: rgba(255, 190, 92, .10);
-      border-color: rgba(255, 190, 92, .35);
-      color: #f6c356;
-    }
-
-    .state-badge.pause {
-      background: rgba(255, 91, 110, .10);
-      border-color: rgba(255, 91, 110, .38);
-      color: var(--bad);
-    }
-
     .league-meta {
       font-size: 11px;
       color: var(--muted);
@@ -692,31 +657,6 @@
       color: var(--accent);
     }
 
-    .source-switcher {
-      display: flex;
-      gap: 8px;
-      justify-content: center;
-      flex-wrap: wrap;
-      margin: 0 0 22px;
-    }
-
-    .source-btn {
-      padding: 7px 14px;
-      border-radius: 999px;
-      border: 1px solid var(--stroke);
-      background: rgba(255, 255, 255, .05);
-      color: var(--muted);
-      font-size: 12px;
-      font-weight: 700;
-      cursor: pointer;
-    }
-
-    .source-btn.active {
-      background: linear-gradient(135deg, rgba(47, 226, 143, .18), rgba(122, 167, 255, .12));
-      border-color: rgba(47, 226, 143, .35);
-      color: var(--text);
-    }
-
     .source-breakdown {
       display: grid;
       gap: 6px;
@@ -884,14 +824,6 @@
       <button class="month-btn active" id="btnThisMonth">Este mes</button>
       <button class="month-btn" id="btnLastMonth">← Mes anterior</button>
     </div>
-    <div class="source-switcher" id="sourceSwitcher">
-      <button class="source-btn active" data-source="model">Modelo</button>
-      <button class="source-btn" data-source="openai">ChatGPT</button>
-      <button class="source-btn" data-source="claude">Claude</button>
-      <button class="source-btn" data-source="deepseek">DeepSeek</button>
-      <button class="source-btn" data-source="compare">Comparativo</button>
-    </div>
-
     <!-- KPIs -->
     <div class="kpi-grid">
       <div class="kpi-card">
@@ -1079,7 +1011,6 @@
     const lastMonthLabel = lastMonthDate.toLocaleString("es", { month: "long", year: "numeric" });
 
     let activeMonth = currentMonth;
-    let activeSource = "model";
     let currentItems = [];
 
     function el(id) { return document.getElementById(id); }
@@ -1105,26 +1036,9 @@
       return { model: "Modelo", openai: "ChatGPT", claude: "Claude", deepseek: "DeepSeek", compare: "Comparativo" }[key] || key;
     }
 
-    function sourceMatches(it) {
-      const key = sourceKey(it);
-      return activeSource === "compare" ? Boolean(key) : key === activeSource;
-    }
-
-    function leagueOperationalState(row) {
-      const resolved = Number(row.g || 0) + Number(row.p || 0) + Number(row.n || 0);
-      const pnl = Number(row.pnl || 0);
-      if (resolved < 2) return { label: "SIN MUESTRA", cls: "watch" };
-      if (pnl > 0 && resolved >= 5) return { label: "ACTIVA", cls: "active" };
-      if (pnl > 0) return { label: "OBSERVAR", cls: "watch" };
-      if (pnl < 0 && resolved >= 5) return { label: "REDUCIR", cls: "reduce" };
-      if (pnl < 0) return { label: "PAUSAR", cls: "pause" };
-      return { label: "OBSERVAR", cls: "watch" };
-    }
-
     function buildLeagueSeries(items) {
       const map = new Map();
       for (const it of items) {
-        if (!sourceMatches(it)) continue;
         if (!["BET", "BET_2"].includes((it.decision ?? "").toUpperCase())) continue;
         const src = sourceKey(it);
         const key = String(it.league ?? "sin_liga").toLowerCase();
@@ -1165,8 +1079,7 @@
     }
 
     function renderKpis(items) {
-      const sourceItems = items.filter(sourceMatches);
-      const bet = items.filter(it => sourceMatches(it) && ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase()));
+      const bet = items.filter(it => ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase()));
       const allBet = items.filter(it => ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase()));
       const g = bet.filter(it => (it.result ?? "").toUpperCase() === "G").length;
       const p = bet.filter(it => (it.result ?? "").toUpperCase() === "P").length;
@@ -1206,7 +1119,7 @@
         if (sub) sub.textContent = `G ${stats.g} · P ${stats.p} · N ${stats.n}`;
       }
       el("kpiTotal").textContent = bet.length;
-      el("kpiSub").textContent = `${sourceLabel(activeSource)} · ${sourceItems.length} filas`;
+      el("kpiSub").textContent = `${items.length} filas`;
       el("kpiWr").textContent = wr !== null ? `${wr}%` : "--%";
       el("kpiWr").className = "kpi-value" + (wr === null ? "" : parseFloat(wr) >= 55 ? " ok" : parseFloat(wr) < 45 ? " bad" : "");
       el("kpiWrSub").textContent = `${g}G · ${p}P · ${n}N / ${resolved} resueltos`;
@@ -1227,7 +1140,7 @@
       if (totalPnl !== 0 || resolved > 0) {
         const sign = totalPnl >= 0 ? "+" : "";
         const wrPart = wr !== null ? ` · ${wr}% acierto` : "";
-        el("heroSub").textContent = `${sourceLabel(activeSource)} · ${sign}${totalPnl.toFixed(0)}u en ${monthName}${wrPart}`;
+        el("heroSub").textContent = `${sign}${totalPnl.toFixed(0)}u en ${monthName}${wrPart}`;
       }
     }
 
@@ -1247,26 +1160,22 @@
         const wrClass = wr === null ? "" : parseFloat(wr) >= 55 ? "good" : parseFloat(wr) < 45 ? "bad" : "";
         const pnlSign = row.pnl >= 0 ? "+" : "";
         const pnlClass = row.pnl > 0 ? "pos" : row.pnl < 0 ? "neg" : "";
-        const state = leagueOperationalState(row);
         const div = document.createElement("div");
         div.className = "league-row";
         const mktTags = [...row.markets.entries()]
           .filter(([, m]) => m.g + m.p > 0)
           .map(([name, m]) => `<span class="mkt-tag">${name} ${m.g}G·${m.p}P</span>`)
           .join("");
-        const sourceRows = activeSource === "compare"
-          ? [...row.sources.entries()].map(([src, s]) => {
-              const resolvedSrc = s.g + s.p + s.n;
-              const wrSrc = resolvedSrc > 0 ? `${((s.g / resolvedSrc) * 100).toFixed(0)}%` : "--";
-              const signSrc = s.pnl >= 0 ? "+" : "";
-              return `<div class="source-breakdown-row"><span>${sourceLabel(src)}</span><span>${s.total} · ${s.g}G-${s.p}P-${s.n}N${s.pending ? ` · ${s.pending} pend` : ""} · ${wrSrc} · ${signSrc}${s.pnl.toFixed(0)}</span></div>`;
-            }).join("")
-          : "";
+        const sourceRows = [...row.sources.entries()].map(([src, s]) => {
+          const resolvedSrc = s.g + s.p + s.n;
+          const wrSrc = resolvedSrc > 0 ? `${((s.g / resolvedSrc) * 100).toFixed(0)}%` : "--";
+          const signSrc = s.pnl >= 0 ? "+" : "";
+          return `<div class="source-breakdown-row"><span>${sourceLabel(src)}</span><span>${s.total} · ${s.g}G-${s.p}P-${s.n}N${s.pending ? ` · ${s.pending} pend` : ""} · ${wrSrc} · ${signSrc}${s.pnl.toFixed(0)}</span></div>`;
+        }).join("");
         div.innerHTML = `
           <div class="league-top">
             <span class="league-name">${row.label}</span>
             <span class="league-right">
-              <span class="state-badge ${state.cls}">${state.label}</span>
               ${wr !== null ? `<span class="wr-badge ${wrClass}">${wr}% WR</span>` : ""}
               <span class="pnl-inline ${pnlClass}">${pnlSign}${row.pnl.toFixed(0)}</span>
             </span>
@@ -1547,8 +1456,7 @@
 
     function buildLeagueFilter(items) {
       const bar = el("leagueFilterBar");
-      const sourceItems = items.filter(sourceMatches);
-      const leagues = [...new Set(sourceItems.map(it => String(it.league ?? "sin_liga").toLowerCase()))];
+      const leagues = [...new Set(items.map(it => String(it.league ?? "sin_liga").toLowerCase()))];
       if (leagues.length <= 1) { bar.innerHTML = ""; return; }
       bar.innerHTML = "";
       const makeBtn = (key, label) => {
@@ -1569,7 +1477,7 @@
     }
 
     function renderPicks(items) {
-      _allBetItems = items.filter(it => sourceMatches(it) && ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase()) && ["G", "P", "N"].includes((it.result ?? "").toUpperCase()));
+      _allBetItems = items.filter(it => ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase()) && ["G", "P", "N"].includes((it.result ?? "").toUpperCase()));
       _activeLeague = "all";
       _currentPage = 1;
       buildLeagueFilter(_allBetItems);
@@ -1673,16 +1581,6 @@
     el("btnLastMonth").textContent = `← ${lastMonthLabel.charAt(0).toUpperCase() + lastMonthLabel.slice(1)}`;
     el("btnThisMonth").addEventListener("click", () => switchMonth(currentMonth));
     el("btnLastMonth").addEventListener("click", () => switchMonth(lastMonth));
-    document.querySelectorAll("#sourceSwitcher .source-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        activeSource = btn.dataset.source || "model";
-        document.querySelectorAll("#sourceSwitcher .source-btn").forEach(item => {
-          item.classList.toggle("active", item === btn);
-        });
-        renderAll(currentItems);
-      });
-    });
-
     load(currentMonth);
     loadCalendar();
   </script>
