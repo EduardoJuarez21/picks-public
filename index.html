@@ -692,8 +692,48 @@
       border-top: 1px solid var(--stroke);
     }
 
+    /* ── Secciones estilo MLB ── */
+    .mlb-section-head {
+      display: flex;
+      align-items: flex-end;
+      justify-content: space-between;
+      gap: 10px;
+      margin: 14px 0 8px;
+      flex-wrap: wrap;
+    }
+    .mlb-section-title {
+      font-size: 10px;
+      font-weight: 800;
+      text-transform: uppercase;
+      letter-spacing: .09em;
+      color: var(--muted);
+    }
+    .mlb-section-note {
+      font-size: 12px;
+      color: var(--muted);
+    }
+    .mlb-summary-grid {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      margin-bottom: 16px;
+    }
+    .mlb-model-grid {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      margin-bottom: 12px;
+    }
+    .mlb-primary-model {
+      border-color: rgba(47, 226, 143, .28);
+      background: linear-gradient(160deg, rgba(47, 226, 143, .11), rgba(122, 167, 255, .06));
+    }
+    .mlb-primary-model .kpi-label {
+      color: rgba(47, 226, 143, .9);
+    }
+
     /* ── Mobile ── */
     @media (max-width: 600px) {
+      .mlb-summary-grid,
+      .mlb-model-grid {
+        grid-template-columns: 1fr 1fr;
+      }
       .hero h1 {
         font-size: 24px;
       }
@@ -819,13 +859,25 @@
   <!-- Contenido -->
   <div class="wrap">
 
+    <!-- PNL del día -->
+    <div style="display:flex;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap;">
+      <button id="dayBtnYesterday" class="month-btn" onclick="loadDate('yesterday')">Ayer</button>
+      <button id="dayBtnToday" class="month-btn active" onclick="loadDate('today')">Hoy</button>
+      <input type="date" id="dayPicker" style="background:rgba(255,255,255,.06);border:1px solid var(--stroke);color:var(--text);border-radius:10px;padding:7px 12px;font-size:13px;" onchange="loadDate('custom')" />
+    </div>
+    <div id="dayPnlPanel" style="margin-bottom:20px;"></div>
+
     <!-- Selector de mes -->
     <div class="month-switcher">
       <button class="month-btn active" id="btnThisMonth">Este mes</button>
       <button class="month-btn" id="btnLastMonth">← Mes anterior</button>
     </div>
     <!-- KPIs -->
-    <div class="kpi-grid">
+    <div class="mlb-section-head">
+      <span class="mlb-section-title">Resumen del mes</span>
+      <span class="mlb-section-note">Lectura rápida de volumen, acierto y pendientes</span>
+    </div>
+    <div class="kpi-grid mlb-summary-grid">
       <div class="kpi-card">
         <div class="kpi-label">Apuestas</div>
         <div class="kpi-value accent" id="kpiTotal">--</div>
@@ -841,15 +893,16 @@
         <div class="kpi-value" id="kpiPend">--</div>
         <div class="kpi-sub">por resolver</div>
       </div>
-      <div class="kpi-card">
+    </div>
+    <div class="mlb-section-head">
+      <span class="mlb-section-title">Rendimiento por modelo</span>
+      <span class="mlb-section-note">PNL acumulado del mes · $100 por pick</span>
+    </div>
+    <div class="kpi-grid mlb-model-grid">
+      <div class="kpi-card mlb-primary-model">
         <div class="kpi-label">Modelo</div>
         <div class="kpi-value" id="kpiPnl">--</div>
         <div class="kpi-sub" id="kpiPnlSub">G 0 · P 0 · N 0</div>
-      </div>
-      <div class="kpi-card">
-        <div class="kpi-label">ChatGPT</div>
-        <div class="kpi-value" id="kpiPnlChatGPT">--</div>
-        <div class="kpi-sub" id="kpiPnlChatGPTSub">G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card">
         <div class="kpi-label">Claude</div>
@@ -860,6 +913,11 @@
         <div class="kpi-label">DeepSeek</div>
         <div class="kpi-value" id="kpiPnlDeepSeek">--</div>
         <div class="kpi-sub" id="kpiPnlDeepSeekSub">G 0 · P 0 · N 0</div>
+      </div>
+      <div class="kpi-card">
+        <div class="kpi-label">ChatGPT</div>
+        <div class="kpi-value" id="kpiPnlChatGPT">--</div>
+        <div class="kpi-sub" id="kpiPnlChatGPTSub">G 0 · P 0 · N 0</div>
       </div>
     </div>
 
@@ -1583,6 +1641,162 @@
     el("btnLastMonth").addEventListener("click", () => switchMonth(lastMonth));
     load(currentMonth);
     loadCalendar();
+
+    // ── PNL del día ───────────────────────────────────────────────────────────
+
+    function isIaPick(it) {
+      const source = String(it?.source ?? "").trim().toLowerCase();
+      const mv = String(it?.model_version ?? "").trim().toLowerCase();
+      return source === "ia" || ["claude-", "deepseek-", "openai-"].some(p => mv.startsWith(p));
+    }
+
+    function iaProviderKey(it) {
+      const mv = String(it?.model_version ?? "").trim().toLowerCase();
+      if (mv.startsWith("claude-")) return "claude";
+      if (mv.startsWith("deepseek-")) return "deepseek";
+      if (mv.startsWith("openai-")) return "openai";
+      return null;
+    }
+
+    function localDateStr() {
+      const d = new Date();
+      return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+    }
+
+    let _dayStake = 100;
+
+    function renderDayPnlCards(items, targetEl) {
+      if (!targetEl) return;
+      const betItems = items.filter(it => ["bet","bet_2"].includes(String(it.decision ?? "").trim().toLowerCase()));
+      if (!betItems.length) { targetEl.innerHTML = ""; return; }
+
+      const calcPnL = (subset, amount) => {
+        let pnl = 0, won = 0, lost = 0, push = 0, pending = 0;
+        for (const it of subset) {
+          const res = String(it.result ?? "").trim().toUpperCase();
+          const odds = Number(it.odds);
+          if (res === "G") { if (Number.isFinite(odds)) pnl += (odds - 1) * amount; won++; }
+          else if (res === "P") { if (Number.isFinite(odds)) pnl -= amount; lost++; }
+          else if (res === "N") { push++; }
+          else { pending++; }
+        }
+        return { pnl, won, lost, push, pending };
+      };
+
+      const groups = [
+        { key: "model",    label: "Modelo",   picks: betItems.filter(p => !isIaPick(p)) },
+        { key: "claude",   label: "Claude",   picks: betItems.filter(p => iaProviderKey(p) === "claude") },
+        { key: "deepseek", label: "DeepSeek", picks: betItems.filter(p => iaProviderKey(p) === "deepseek") },
+        { key: "openai",   label: "ChatGPT",  picks: betItems.filter(p => iaProviderKey(p) === "openai") },
+      ].filter(g => g.picks.length > 0);
+
+      const wrap = document.createElement("div");
+      wrap.style.cssText = "background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(47,226,143,.045));border:1px solid var(--stroke);border-radius:14px;padding:14px;display:grid;gap:12px;";
+
+      const header = document.createElement("div");
+      header.style.cssText = "display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap;";
+      const titleEl = document.createElement("div");
+      titleEl.innerHTML = `<div style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);">PNL del día</div><div style="font-size:12px;color:var(--text);margin-top:2px;">Resumen de picks apostados hoy</div>`;
+      const stakeRow = document.createElement("div");
+      stakeRow.style.cssText = "display:flex;align-items:center;gap:8px;font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:var(--muted);";
+      const amountInput = document.createElement("input");
+      amountInput.type = "number"; amountInput.min = "0"; amountInput.step = "0.01"; amountInput.inputMode = "decimal";
+      amountInput.value = String(_dayStake);
+      amountInput.style.cssText = "width:88px;background:rgba(255,255,255,.07);border:1px solid var(--stroke);color:var(--text);border-radius:8px;padding:6px 8px;font-size:13px;font-family:var(--mono);";
+      const preSpan = document.createElement("span"); preSpan.textContent = "Si apuestas";
+      const sufSpan = document.createElement("span"); sufSpan.textContent = "/pick hoy";
+      stakeRow.append(preSpan, amountInput, sufSpan);
+      header.append(titleEl, stakeRow);
+
+      const rowsEl = document.createElement("div");
+      rowsEl.style.cssText = "display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;";
+
+      const makeCard = (subset, label, isIa) => {
+        const div = document.createElement("div");
+        const bgCard = isIa ? "rgba(167,122,255,.07)" : "rgba(122,167,255,.07)";
+        const brCard = isIa ? "rgba(167,122,255,.22)" : "rgba(122,167,255,.22)";
+        div.style.cssText = `display:grid;gap:8px;min-height:92px;padding:12px;border:1px solid ${brCard};border-radius:10px;background:${bgCard};font-family:var(--mono);`;
+        const bg = isIa ? "rgba(167,122,255,.15)" : "rgba(122,167,255,.12)";
+        const br = isIa ? "rgba(167,122,255,.3)" : "rgba(122,167,255,.25)";
+        const cl = isIa ? "#a77aff" : "var(--accent)";
+        div.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span style="font-size:9px;padding:2px 6px;border-radius:4px;background:${bg};border:1px solid ${br};color:${cl};font-weight:700;">${label}</span><span class="js-picks-cnt" style="font-size:10px;color:var(--muted);"></span></div>`;
+        const valEl = document.createElement("span"); valEl.style.cssText = "font-size:22px;font-weight:800;line-height:1;";
+        const metaEl = document.createElement("span"); metaEl.style.cssText = "font-size:11px;color:var(--muted);line-height:1.45;";
+        div.append(valEl, metaEl);
+        div._update = (amount) => {
+          const { pnl, won, lost, push, pending } = calcPnL(subset, amount);
+          if (!won && !lost && !push && !pending) { div.style.display = "none"; return; }
+          div.style.display = "grid";
+          valEl.textContent = `${pnl >= 0 ? "+" : "-"}$${Math.round(Math.abs(pnl)).toLocaleString("es-MX")}`;
+          valEl.style.color = pnl > 0 ? "var(--ok)" : pnl < 0 ? "var(--bad)" : "var(--muted)";
+          div.querySelector(".js-picks-cnt").textContent = `${won+lost+push+pending} picks`;
+          const parts = [];
+          if (won) parts.push(`${won}G`); if (lost) parts.push(`${lost}P`); if (push) parts.push(`${push}↩`); if (pending) parts.push(`${pending}⏳`);
+          metaEl.textContent = parts.join(" · ");
+        };
+        return div;
+      };
+
+      const totalDiv = document.createElement("div");
+      totalDiv.style.cssText = "display:grid;gap:8px;min-height:92px;padding:12px;border:1px solid rgba(47,226,143,.24);border-radius:10px;background:rgba(47,226,143,.07);font-family:var(--mono);";
+      totalDiv.innerHTML = `<div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);">Total</span><span class="js-total-cnt" style="font-size:10px;color:var(--muted);"></span></div>`;
+      const totalVal = document.createElement("span"); totalVal.style.cssText = "font-size:24px;font-weight:800;line-height:1;";
+      const totalMeta = document.createElement("span"); totalMeta.style.cssText = "font-size:11px;color:var(--muted);line-height:1.45;";
+      totalDiv.append(totalVal, totalMeta);
+
+      const cards = groups.map(g => makeCard(g.picks, g.label, g.key !== "model"));
+
+      const applyAll = (amount) => {
+        cards.forEach(c => c._update(amount));
+        const { pnl, won, lost, push, pending } = calcPnL(betItems, amount);
+        totalVal.textContent = `${pnl >= 0 ? "+" : "-"}$${Math.round(Math.abs(pnl)).toLocaleString("es-MX")}`;
+        totalVal.style.color = pnl > 0 ? "var(--ok)" : pnl < 0 ? "var(--bad)" : "var(--muted)";
+        totalDiv.querySelector(".js-total-cnt").textContent = `${won+lost+push+pending} picks`;
+        const parts = [];
+        if (won) parts.push(`${won}G`); if (lost) parts.push(`${lost}P`); if (push) parts.push(`${push}↩`); if (pending) parts.push(`${pending}⏳`);
+        totalMeta.textContent = parts.join(" · ");
+      };
+
+      amountInput.addEventListener("input", () => {
+        const v = Number(amountInput.value);
+        if (!Number.isFinite(v) || v < 0) return;
+        _dayStake = v; applyAll(v);
+      });
+
+      cards.forEach(c => rowsEl.appendChild(c));
+      rowsEl.appendChild(totalDiv);
+      wrap.append(header, rowsEl);
+      applyAll(_dayStake);
+      targetEl.innerHTML = "";
+      targetEl.appendChild(wrap);
+    }
+
+    async function fetchDayPnl(dateStr) {
+      const panel = el("dayPnlPanel");
+      if (!panel || !dateStr) { if (panel) panel.innerHTML = ""; return; }
+      try {
+        const res = await fetch(`${API}/picks/soccer?day=${encodeURIComponent(dateStr)}`);
+        if (!res.ok) { panel.innerHTML = ""; return; }
+        const data = await res.json();
+        const items = Array.isArray(data?.items) ? data.items : Array.isArray(data) ? data : [];
+        renderDayPnlCards(items, panel);
+      } catch { if (panel) panel.innerHTML = ""; }
+    }
+
+    function loadDate(which) {
+      const picker = el("dayPicker");
+      const today = localDateStr();
+      const d = new Date(); d.setDate(d.getDate() - 1);
+      const yest = `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      if (which === "today" && picker) picker.value = today;
+      else if (which === "yesterday" && picker) picker.value = yest;
+      el("dayBtnToday")?.classList.toggle("active", which === "today");
+      el("dayBtnYesterday")?.classList.toggle("active", which === "yesterday");
+      fetchDayPnl(picker?.value || today);
+    }
+
+    const _dayPickerEl = el("dayPicker");
+    if (_dayPickerEl) { _dayPickerEl.value = localDateStr(); fetchDayPnl(localDateStr()); }
   </script>
 </body>
 
