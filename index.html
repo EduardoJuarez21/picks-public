@@ -910,22 +910,22 @@
     </div>
     <div class="kpi-grid mlb-model-grid">
       <div class="kpi-card mlb-primary-model">
-        <div class="kpi-label">Modelo</div>
+        <div class="kpi-label">Pickster Core</div>
         <div class="kpi-value" id="kpiPnl">--</div>
         <div class="kpi-sub" id="kpiPnlSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">Claude</div>
+        <div class="kpi-label">Pickster Sharp</div>
         <div class="kpi-value" id="kpiPnlClaude">--</div>
         <div class="kpi-sub" id="kpiPnlClaudeSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">DeepSeek</div>
+        <div class="kpi-label">Pickster Edge</div>
         <div class="kpi-value" id="kpiPnlDeepSeek">--</div>
         <div class="kpi-sub" id="kpiPnlDeepSeekSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card">
-        <div class="kpi-label">ChatGPT</div>
+        <div class="kpi-label">Pickster Consensus</div>
         <div class="kpi-value" id="kpiPnlChatGPT">--</div>
         <div class="kpi-sub" id="kpiPnlChatGPTSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
@@ -1109,7 +1109,7 @@
     }
 
     function sourceLabel(key) {
-      return { model: "Modelo", openai: "ChatGPT", claude: "Claude", deepseek: "DeepSeek", compare: "Comparativo" }[key] || key;
+      return { model: "Pickster Core", openai: "Pickster Consensus", claude: "Pickster Sharp", deepseek: "Pickster Edge", compare: "Comparativo" }[key] || key;
     }
 
     function buildLeagueSeries(items) {
@@ -1402,9 +1402,9 @@
 
     function iaPickLabel(it) {
       const modelVersion = String(it?.model_version ?? "").trim().toLowerCase();
-      if (modelVersion.startsWith("claude-")) return "Claude";
-      if (modelVersion.startsWith("deepseek-")) return "DeepSeek";
-      if (modelVersion.startsWith("openai-")) return "ChatGPT";
+      if (modelVersion.startsWith("claude-")) return "Pickster Sharp";
+      if (modelVersion.startsWith("deepseek-")) return "Pickster Edge";
+      if (modelVersion.startsWith("openai-")) return "Pickster Consensus";
       return "IA";
     }
 
@@ -1707,10 +1707,10 @@
       };
 
       const groups = [
-        { key: "model",    label: "Modelo",   picks: betItems.filter(p => !isIaPick(p)) },
-        { key: "claude",   label: "Claude",   picks: betItems.filter(p => iaProviderKey(p) === "claude") },
-        { key: "deepseek", label: "DeepSeek", picks: betItems.filter(p => iaProviderKey(p) === "deepseek") },
-        { key: "openai",   label: "ChatGPT",  picks: betItems.filter(p => iaProviderKey(p) === "openai") },
+        { key: "model",    label: "Pickster Core",      picks: betItems.filter(p => !isIaPick(p)) },
+        { key: "claude",   label: "Pickster Sharp",     picks: betItems.filter(p => iaProviderKey(p) === "claude") },
+        { key: "deepseek", label: "Pickster Edge",      picks: betItems.filter(p => iaProviderKey(p) === "deepseek") },
+        { key: "openai",   label: "Pickster Consensus", picks: betItems.filter(p => iaProviderKey(p) === "openai") },
       ].filter(g => g.picks.length > 0);
 
       const wrap = document.createElement("div");

@@ -701,7 +701,7 @@
       <img src="/icono-p.png" alt="Pickster" width="90" height="90" style="border-radius:12px;">
     </div>
     <h1>Pickster MLB</h1>
-    <p>Predicciones de beisbol generadas por Pickster AI + modelos comparativos</p>
+    <p>Predicciones de beisbol generadas por los modelos Pickster</p>
     <div style="display:flex;flex-wrap:wrap;gap:12px;justify-content:center;margin-top:28px;">
       <a class="tg-cta" style="margin-top:0;" href="https://t.me/PicksterV_bot" target="_blank" rel="noopener">
         <svg width="22" height="22" viewBox="0 0 24 24" fill="white">
@@ -753,22 +753,22 @@
     </div>
     <div class="kpi-grid mlb-model-grid">
       <div class="kpi-card kpi-clickable mlb-primary-model" data-mlb-model-card="xgb" role="button" tabindex="0" onclick="showModelChart('xgb')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('xgb');}">
-        <div class="kpi-label">Pickster AI</div>
+        <div class="kpi-label">Pickster Core</div>
         <div class="kpi-value" id="kpiGananciaXgb">--</div>
         <div class="kpi-sub" id="kpiGananciaXgbSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card kpi-clickable" data-mlb-model-card="openai" role="button" tabindex="0" onclick="showModelChart('openai')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('openai');}">
-        <div class="kpi-label">ChatGPT</div>
+        <div class="kpi-label">Pickster Consensus</div>
         <div class="kpi-value" id="kpiGananciaChatGPT">--</div>
         <div class="kpi-sub" id="kpiGananciaChatGPTSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card kpi-clickable" data-mlb-model-card="claude" role="button" tabindex="0" onclick="showModelChart('claude')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('claude');}">
-        <div class="kpi-label">Claude</div>
+        <div class="kpi-label">Pickster Sharp</div>
         <div class="kpi-value" id="kpiGananciaClaude">--</div>
         <div class="kpi-sub" id="kpiGananciaClaudeSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
       <div class="kpi-card kpi-clickable" data-mlb-model-card="deepseek" role="button" tabindex="0" onclick="showModelChart('deepseek')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('deepseek');}">
-        <div class="kpi-label">DeepSeek</div>
+        <div class="kpi-label">Pickster Edge</div>
         <div class="kpi-value" id="kpiGananciaDeepSeek">--</div>
         <div class="kpi-sub" id="kpiGananciaDeepSeekSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
@@ -782,7 +782,7 @@
           <div
             style="font-size:11px;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.45);margin-bottom:4px;">
             Modelo</div>
-          <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">Pickster AI · Modelo estadistico MLB</div>
+          <div style="font-size:13px;color:rgba(255,255,255,.85);font-weight:500;">Pickster Core · Modelo estadistico MLB</div>
         </div>
         <div style="width:1px;background:var(--stroke);"></div>
         <div style="text-align:center;">
@@ -810,7 +810,7 @@
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
         <div style="display:flex;gap:4px;background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:999px;padding:3px;">
           <button id="btnModelAll" class="filter-btn active" onclick="setModelFilter('all',this)" style="border-radius:999px;padding:4px 12px;font-size:11px;">Todos</button>
-          <button id="btnModelXgb" class="filter-btn" onclick="setModelFilter('xgb',this)" style="border-radius:999px;padding:4px 10px;font-size:11px;color:var(--accent);">Pickster AI</button>
+          <button id="btnModelXgb" class="filter-btn" onclick="setModelFilter('xgb',this)" style="border-radius:999px;padding:4px 10px;font-size:11px;color:var(--accent);">Pickster Core</button>
           <button id="btnModelIa"  class="filter-btn" onclick="setModelFilter('ia',this)"  style="border-radius:999px;padding:4px 10px;font-size:11px;color:#a77aff;">Otros modelos</button>
         </div>
         <button id="btnBetDay" class="filter-btn active" onclick="toggleBetDay(this)">💰 Solo apostados</button>
@@ -1084,7 +1084,7 @@
     }
 
     function modelLabel(key) {
-      return { xgb: "Pickster AI", claude: "Claude", deepseek: "DeepSeek", openai: "ChatGPT", ia: "IA" }[key] || "IA";
+      return { xgb: "Pickster Core", claude: "Pickster Sharp", deepseek: "Pickster Edge", openai: "Pickster Consensus", ia: "Pickster Model" }[key] || "Pickster Model";
     }
 
     function modelGroups(preds) {
@@ -1704,7 +1704,7 @@
 
       const rows = [];
       for (const group of modelGroups(dayPicks)) {
-        rows.push(sectionHeader(group.key === "xgb" ? 'Pickster AI — Modelo estadístico' : `IA — ${group.label}`, group.key !== "xgb"));
+        rows.push(sectionHeader(group.key === "xgb" ? 'Pickster Core — Modelo estadístico' : group.label, group.key !== "xgb"));
         rows.push(...buildPickRows(group.picks, group.key !== "xgb"));
       }
       tbody.innerHTML = rows.join("");
