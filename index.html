@@ -1227,7 +1227,7 @@
       if (totalPnl !== 0 || resolved > 0) {
         const sign = totalPnl >= 0 ? "+" : "";
         const wrPart = wr !== null ? ` · ${wr}% acierto` : "";
-        el("heroSub").textContent = `${sign}${totalPnl.toFixed(0)}u en ${monthName}${wrPart}`;
+        el("heroSub").textContent = `${sign}$${Math.round(totalPnl).toLocaleString("es-MX")} en ${monthName}${wrPart}`;
       }
     }
 
@@ -1257,14 +1257,14 @@
           const resolvedSrc = s.g + s.p + s.n;
           const wrSrc = resolvedSrc > 0 ? `${((s.g / resolvedSrc) * 100).toFixed(0)}%` : "--";
           const signSrc = s.pnl >= 0 ? "+" : "";
-          return `<div class="source-breakdown-row"><span>${sourceLabel(src)}</span><span>${s.total} · ${s.g}G-${s.p}P-${s.n}N${s.pending ? ` · ${s.pending} pend` : ""} · ${wrSrc} · ${signSrc}${s.pnl.toFixed(0)}</span></div>`;
+          return `<div class="source-breakdown-row"><span>${sourceLabel(src)}</span><span>${s.total} · ${s.g}G-${s.p}P-${s.n}N${s.pending ? ` · ${s.pending} pend` : ""} · ${wrSrc} · ${signSrc}$${Math.round(s.pnl).toLocaleString("es-MX")}</span></div>`;
         }).join("");
         div.innerHTML = `
           <summary class="league-top">
             <span class="league-name">${row.label}</span>
             <span class="league-right">
               ${wr !== null ? `<span class="wr-badge ${wrClass}">${wr}% WR</span>` : ""}
-              <span class="pnl-inline ${pnlClass}">${pnlSign}${row.pnl.toFixed(0)}</span>
+              <span class="pnl-inline ${pnlClass}">${pnlSign}$${Math.round(row.pnl).toLocaleString("es-MX")}</span>
               <span class="league-chevron">▾</span>
             </span>
           </summary>
