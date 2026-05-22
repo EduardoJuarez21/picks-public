@@ -929,6 +929,11 @@
         <div class="kpi-value" id="kpiPnlChatGPT">--</div>
         <div class="kpi-sub" id="kpiPnlChatGPTSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Pickster Flash</div>
+        <div class="kpi-value" id="kpiPnlGemini">--</div>
+        <div class="kpi-sub" id="kpiPnlGeminiSub">WR -- · G 0 · P 0 · N 0</div>
+      </div>
     </div>
 
     <!-- PNL del día -->
@@ -1101,15 +1106,17 @@
         if (modelVersion.startsWith("claude-")) return "claude";
         if (modelVersion.startsWith("deepseek-")) return "deepseek";
         if (modelVersion.startsWith("openai-")) return "openai";
+        if (modelVersion.startsWith("gemini-")) return "gemini";
         return null;
       }
       if (modelVersion.startsWith("claude-")) return "claude";
       if (modelVersion.startsWith("deepseek-")) return "deepseek";
+      if (modelVersion.startsWith("gemini-")) return "gemini";
       return "model";
     }
 
     function sourceLabel(key) {
-      return { model: "Pickster Core", openai: "Pickster Consensus", claude: "Pickster Sharp", deepseek: "Pickster Edge", compare: "Comparativo" }[key] || key;
+      return { model: "Pickster Core", openai: "Pickster Consensus", claude: "Pickster Sharp", deepseek: "Pickster Edge", gemini: "Pickster Flash", compare: "Comparativo" }[key] || key;
     }
 
     function buildLeagueSeries(items) {
@@ -1168,6 +1175,7 @@
         openai: { pnl: 0, g: 0, p: 0, n: 0 },
         claude: { pnl: 0, g: 0, p: 0, n: 0 },
         deepseek: { pnl: 0, g: 0, p: 0, n: 0 },
+        gemini: { pnl: 0, g: 0, p: 0, n: 0 },
       };
       for (const it of allBet) {
         const res = (it.result ?? "").toUpperCase();
@@ -1205,6 +1213,7 @@
       setModelKpi("kpiPnlChatGPT", "kpiPnlChatGPTSub", sourceStats.openai);
       setModelKpi("kpiPnlClaude", "kpiPnlClaudeSub", sourceStats.claude);
       setModelKpi("kpiPnlDeepSeek", "kpiPnlDeepSeekSub", sourceStats.deepseek);
+      setModelKpi("kpiPnlGemini", "kpiPnlGeminiSub", sourceStats.gemini);
       el("kpiPend").textContent = pend;
       const displayDate = new Date(activeMonth + "-15");
       const monthName = displayDate.toLocaleString("es", { month: "long" });
@@ -1393,7 +1402,7 @@
     function isIaPick(it) {
       const source = String(it?.source ?? "").trim().toLowerCase();
       const modelVersion = String(it?.model_version ?? "").trim().toLowerCase();
-      return source === "ia" || ["claude-", "deepseek-", "openai-"].some(prefix => modelVersion.startsWith(prefix));
+      return source === "ia" || ["claude-", "deepseek-", "openai-", "gemini-"].some(prefix => modelVersion.startsWith(prefix));
     }
 
     function isModelPick(it) {
@@ -1405,6 +1414,7 @@
       if (modelVersion.startsWith("claude-")) return "Pickster Sharp";
       if (modelVersion.startsWith("deepseek-")) return "Pickster Edge";
       if (modelVersion.startsWith("openai-")) return "Pickster Consensus";
+      if (modelVersion.startsWith("gemini-")) return "Pickster Flash";
       return "IA";
     }
 
@@ -1413,6 +1423,7 @@
       if (modelVersion.startsWith("claude-")) return "claude";
       if (modelVersion.startsWith("deepseek-")) return "deepseek";
       if (modelVersion.startsWith("openai-")) return "openai";
+      if (modelVersion.startsWith("gemini-")) return "gemini";
       return null;
     }
 
@@ -1670,7 +1681,7 @@
     function isIaPick(it) {
       const source = String(it?.source ?? "").trim().toLowerCase();
       const mv = String(it?.model_version ?? "").trim().toLowerCase();
-      return source === "ia" || ["claude-", "deepseek-", "openai-"].some(p => mv.startsWith(p));
+      return source === "ia" || ["claude-", "deepseek-", "openai-", "gemini-"].some(p => mv.startsWith(p));
     }
 
     function iaProviderKey(it) {
@@ -1678,6 +1689,7 @@
       if (mv.startsWith("claude-")) return "claude";
       if (mv.startsWith("deepseek-")) return "deepseek";
       if (mv.startsWith("openai-")) return "openai";
+      if (mv.startsWith("gemini-")) return "gemini";
       return null;
     }
 
@@ -1711,6 +1723,7 @@
         { key: "claude",   label: "Pickster Sharp",     picks: betItems.filter(p => iaProviderKey(p) === "claude") },
         { key: "deepseek", label: "Pickster Edge",      picks: betItems.filter(p => iaProviderKey(p) === "deepseek") },
         { key: "openai",   label: "Pickster Consensus", picks: betItems.filter(p => iaProviderKey(p) === "openai") },
+        { key: "gemini",   label: "Pickster Flash",     picks: betItems.filter(p => iaProviderKey(p) === "gemini") },
       ].filter(g => g.picks.length > 0);
 
       const wrap = document.createElement("div");

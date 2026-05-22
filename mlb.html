@@ -772,6 +772,11 @@
         <div class="kpi-value" id="kpiGananciaDeepSeek">--</div>
         <div class="kpi-sub" id="kpiGananciaDeepSeekSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
+      <div class="kpi-card kpi-clickable" data-mlb-model-card="gemini" role="button" tabindex="0" onclick="showModelChart('gemini')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('gemini');}">
+        <div class="kpi-label">Pickster Flash</div>
+        <div class="kpi-value" id="kpiGananciaGemini">--</div>
+        <div class="kpi-sub" id="kpiGananciaGeminiSub">WR -- · G 0 · P 0 · N 0</div>
+      </div>
     </div>
     <div class="mlb-model-chart hidden" id="modelChartWrap"></div>
     <!-- Info modelo -->
@@ -920,7 +925,7 @@
 
     // ── KPIs ──────────────────────────────────────────────────────────────────
 
-    let _ganancia100u = null, _gananciaXgb100u = null, _gananciaClaude100u = null, _gananciaDeepSeek100u = null, _gananciaChatGpt100u = null;
+    let _ganancia100u = null, _gananciaXgb100u = null, _gananciaClaude100u = null, _gananciaDeepSeek100u = null, _gananciaChatGpt100u = null, _gananciaGemini100u = null;
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
 
     const _fmtGanEl = (elId, val, fontSize) => {
@@ -939,6 +944,7 @@
       _fmtGanEl("kpiGananciaClaude",   _gananciaClaude100u);
       _fmtGanEl("kpiGananciaDeepSeek", _gananciaDeepSeek100u);
       _fmtGanEl("kpiGananciaChatGPT",  _gananciaChatGpt100u);
+      _fmtGanEl("kpiGananciaGemini",   _gananciaGemini100u);
     }
 
     async function loadMonthStats(month) {
@@ -987,10 +993,12 @@
         _gananciaClaude100u  = d.ganancia_claude_100u  ?? null;
         _gananciaDeepSeek100u = d.ganancia_deepseek_100u ?? null;
         _gananciaChatGpt100u = d.ganancia_openai_100u  ?? null;
+        _gananciaGemini100u = d.ganancia_gemini_100u  ?? null;
         setProviderKpi("kpiGananciaXgb", "kpiGananciaXgbSub", providerStats.xgb, _gananciaXgb100u);
         setProviderKpi("kpiGananciaChatGPT", "kpiGananciaChatGPTSub", providerStats.openai, _gananciaChatGpt100u);
         setProviderKpi("kpiGananciaClaude", "kpiGananciaClaudeSub", providerStats.claude, _gananciaClaude100u);
         setProviderKpi("kpiGananciaDeepSeek", "kpiGananciaDeepSeekSub", providerStats.deepseek, _gananciaDeepSeek100u);
+        setProviderKpi("kpiGananciaGemini", "kpiGananciaGeminiSub", providerStats.gemini, _gananciaGemini100u);
       } catch (e) { console.error("stats:", e); }
       loadHistory(false, m);
     }
@@ -1063,8 +1071,8 @@
       return String(status || "").toUpperCase() === "POSTPONED";
     }
 
-    const AI_MODEL_PREFIXES = ["claude-", "deepseek-", "openai-"];
-    const MODEL_ORDER = ["xgb", "claude", "deepseek", "openai", "ia"];
+    const AI_MODEL_PREFIXES = ["claude-", "deepseek-", "openai-", "gemini-"];
+    const MODEL_ORDER = ["xgb", "claude", "deepseek", "openai", "gemini", "ia"];
 
     function modelVersion(p) {
       return String(p?.model_version || "").trim().toLowerCase();
@@ -1080,11 +1088,12 @@
       if (version.startsWith("claude-")) return "claude";
       if (version.startsWith("deepseek-")) return "deepseek";
       if (version.startsWith("openai-")) return "openai";
+      if (version.startsWith("gemini-")) return "gemini";
       return isAiPick(p) ? "ia" : "xgb";
     }
 
     function modelLabel(key) {
-      return { xgb: "Pickster Core", claude: "Pickster Sharp", deepseek: "Pickster Edge", openai: "Pickster Consensus", ia: "Pickster Model" }[key] || "Pickster Model";
+      return { xgb: "Pickster Core", claude: "Pickster Sharp", deepseek: "Pickster Edge", openai: "Pickster Consensus", gemini: "Pickster Flash", ia: "Pickster Model" }[key] || "Pickster Model";
     }
 
     function modelGroups(preds) {
@@ -1165,7 +1174,7 @@
       if (!wrap || !modelKeyValue) return;
       const month = el("monthPicker").value || currentMonth;
       const label = modelLabel(modelKeyValue);
-      const chartTabs = () => ["xgb", "claude", "deepseek", "openai"].map(key => (
+      const chartTabs = () => ["xgb", "claude", "deepseek", "openai", "gemini"].map(key => (
         `<button class="mlb-chart-tab${key === modelKeyValue ? " active" : ""}" onclick="showModelChart('${key}')">${modelLabel(key)}</button>`
       )).join("");
       document.querySelectorAll("[data-mlb-model-card]").forEach(card => card.classList.toggle("active", card.dataset.mlbModelCard === modelKeyValue));
