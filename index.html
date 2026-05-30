@@ -1737,7 +1737,7 @@
         { key: "openai",   label: "Pickster Consensus", picks: betItems.filter(p => iaProviderKey(p) === "openai") },
         { key: "gemini",   label: "Pickster Flash",     picks: betItems.filter(p => iaProviderKey(p) === "gemini") },
         { key: "grok",     label: "Pickster Pulse",     picks: betItems.filter(p => iaProviderKey(p) === "grok") },
-      ].filter(g => g.picks.length > 0);
+      ];
 
       const wrap = document.createElement("div");
       wrap.style.cssText = "background:linear-gradient(135deg,rgba(255,255,255,.075),rgba(47,226,143,.045));border:1px solid var(--stroke);border-radius:14px;padding:14px;display:grid;gap:12px;";
@@ -1774,14 +1774,13 @@
         div.append(valEl, metaEl);
         div._update = (amount) => {
           const { pnl, won, lost, push, pending } = calcPnL(subset, amount);
-          if (!won && !lost && !push && !pending) { div.style.display = "none"; return; }
           div.style.display = "grid";
           valEl.textContent = `${pnl >= 0 ? "+" : "-"}$${Math.round(Math.abs(pnl)).toLocaleString("es-MX")}`;
           valEl.style.color = pnl > 0 ? "var(--ok)" : pnl < 0 ? "var(--bad)" : "var(--muted)";
           div.querySelector(".js-picks-cnt").textContent = `${won+lost+push+pending} picks`;
           const parts = [];
           if (won) parts.push(`${won}G`); if (lost) parts.push(`${lost}P`); if (push) parts.push(`${push}↩`); if (pending) parts.push(`${pending}⏳`);
-          metaEl.textContent = parts.join(" · ");
+          metaEl.textContent = parts.length ? parts.join(" · ") : "0 picks";
         };
         return div;
       };
