@@ -1305,9 +1305,7 @@
         return parts.join(" · ") || "Sin movimientos";
       };
       const compactModelCard = (subset, label, isIa) => {
-        if (!subset.length) return "";
         const stats = calcPnL(subset);
-        if (!stats.won && !stats.lost && !stats.push && !stats.pending) return "";
         const s = stats.pnl >= 0 ? "+" : "-";
         const color = stats.pnl > 0 ? "var(--ok)" : stats.pnl < 0 ? "var(--bad)" : "var(--muted)";
         const bg = isIa ? "rgba(167,122,255,.15)" : "rgba(122,167,255,.12)";
@@ -1325,6 +1323,14 @@
           <span style="font-size:11px;color:var(--muted);line-height:1.45;">${statText(stats)}</span>
         </div>`;
       };
+      const dayModelCards = MODEL_ORDER
+        .filter(key => key !== "ia")
+        .map(key => compactModelCard(
+          betPreds.filter(p => modelKey(p) === key),
+          modelLabel(key),
+          key !== "xgb"
+        ))
+        .join("");
       const totalStats = calcPnL(betPreds);
       const totalSign = totalStats.pnl >= 0 ? "+" : "-";
       const totalColor = totalStats.pnl > 0 ? "var(--ok)" : totalStats.pnl < 0 ? "var(--bad)" : "var(--muted)";
@@ -1339,7 +1345,7 @@
             <span class="day-pnl-label" style="padding:6px 10px;border:1px solid var(--stroke);border-radius:999px;background:rgba(255,255,255,.05);">Si apuestas $100/pick hoy</span>
           </div>
           <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;">
-            ${modelGroups(betPreds).map(group => compactModelCard(group.picks, group.label, group.key !== "xgb")).join("")}
+            ${dayModelCards}
             <div style="display:grid;gap:8px;min-height:92px;padding:12px;border:1px solid rgba(47,226,143,.24);border-radius:10px;background:rgba(47,226,143,.07);font-family:var(--mono);">
               <div style="display:flex;align-items:center;justify-content:space-between;gap:8px;">
                 <span style="font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--muted);">Total</span>
