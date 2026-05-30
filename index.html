@@ -934,6 +934,11 @@
         <div class="kpi-value" id="kpiPnlGemini">--</div>
         <div class="kpi-sub" id="kpiPnlGeminiSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
+      <div class="kpi-card">
+        <div class="kpi-label">Pickster Pulse</div>
+        <div class="kpi-value" id="kpiPnlGrok">--</div>
+        <div class="kpi-sub" id="kpiPnlGrokSub">WR -- · G 0 · P 0 · N 0</div>
+      </div>
     </div>
 
     <!-- PNL del día -->
@@ -1107,16 +1112,18 @@
         if (modelVersion.startsWith("deepseek-")) return "deepseek";
         if (modelVersion.startsWith("openai-")) return "openai";
         if (modelVersion.startsWith("gemini-")) return "gemini";
+        if (modelVersion.startsWith("grok-")) return "grok";
         return null;
       }
       if (modelVersion.startsWith("claude-")) return "claude";
       if (modelVersion.startsWith("deepseek-")) return "deepseek";
       if (modelVersion.startsWith("gemini-")) return "gemini";
+      if (modelVersion.startsWith("grok-")) return "grok";
       return "model";
     }
 
     function sourceLabel(key) {
-      return { model: "Pickster Core", openai: "Pickster Consensus", claude: "Pickster Sharp", deepseek: "Pickster Edge", gemini: "Pickster Flash", compare: "Comparativo" }[key] || key;
+      return { model: "Pickster Core", openai: "Pickster Consensus", claude: "Pickster Sharp", deepseek: "Pickster Edge", gemini: "Pickster Flash", grok: "Pickster Pulse", compare: "Comparativo" }[key] || key;
     }
 
     function buildLeagueSeries(items) {
@@ -1176,6 +1183,7 @@
         claude: { pnl: 0, g: 0, p: 0, n: 0 },
         deepseek: { pnl: 0, g: 0, p: 0, n: 0 },
         gemini: { pnl: 0, g: 0, p: 0, n: 0 },
+        grok: { pnl: 0, g: 0, p: 0, n: 0 },
       };
       for (const it of allBet) {
         const res = (it.result ?? "").toUpperCase();
@@ -1214,6 +1222,7 @@
       setModelKpi("kpiPnlClaude", "kpiPnlClaudeSub", sourceStats.claude);
       setModelKpi("kpiPnlDeepSeek", "kpiPnlDeepSeekSub", sourceStats.deepseek);
       setModelKpi("kpiPnlGemini", "kpiPnlGeminiSub", sourceStats.gemini);
+      setModelKpi("kpiPnlGrok", "kpiPnlGrokSub", sourceStats.grok);
       el("kpiPend").textContent = pend;
       const displayDate = new Date(activeMonth + "-15");
       const monthName = displayDate.toLocaleString("es", { month: "long" });
@@ -1402,7 +1411,7 @@
     function isIaPick(it) {
       const source = String(it?.source ?? "").trim().toLowerCase();
       const modelVersion = String(it?.model_version ?? "").trim().toLowerCase();
-      return source === "ia" || ["claude-", "deepseek-", "openai-", "gemini-"].some(prefix => modelVersion.startsWith(prefix));
+      return source === "ia" || ["claude-", "deepseek-", "openai-", "gemini-", "grok-"].some(prefix => modelVersion.startsWith(prefix));
     }
 
     function isModelPick(it) {
@@ -1415,6 +1424,7 @@
       if (modelVersion.startsWith("deepseek-")) return "Pickster Edge";
       if (modelVersion.startsWith("openai-")) return "Pickster Consensus";
       if (modelVersion.startsWith("gemini-")) return "Pickster Flash";
+      if (modelVersion.startsWith("grok-")) return "Pickster Pulse";
       return "IA";
     }
 
@@ -1424,6 +1434,7 @@
       if (modelVersion.startsWith("deepseek-")) return "deepseek";
       if (modelVersion.startsWith("openai-")) return "openai";
       if (modelVersion.startsWith("gemini-")) return "gemini";
+      if (modelVersion.startsWith("grok-")) return "grok";
       return null;
     }
 
@@ -1681,7 +1692,7 @@
     function isIaPick(it) {
       const source = String(it?.source ?? "").trim().toLowerCase();
       const mv = String(it?.model_version ?? "").trim().toLowerCase();
-      return source === "ia" || ["claude-", "deepseek-", "openai-", "gemini-"].some(p => mv.startsWith(p));
+      return source === "ia" || ["claude-", "deepseek-", "openai-", "gemini-", "grok-"].some(p => mv.startsWith(p));
     }
 
     function iaProviderKey(it) {
@@ -1690,6 +1701,7 @@
       if (mv.startsWith("deepseek-")) return "deepseek";
       if (mv.startsWith("openai-")) return "openai";
       if (mv.startsWith("gemini-")) return "gemini";
+      if (mv.startsWith("grok-")) return "grok";
       return null;
     }
 
@@ -1724,6 +1736,7 @@
         { key: "deepseek", label: "Pickster Edge",      picks: betItems.filter(p => iaProviderKey(p) === "deepseek") },
         { key: "openai",   label: "Pickster Consensus", picks: betItems.filter(p => iaProviderKey(p) === "openai") },
         { key: "gemini",   label: "Pickster Flash",     picks: betItems.filter(p => iaProviderKey(p) === "gemini") },
+        { key: "grok",     label: "Pickster Pulse",     picks: betItems.filter(p => iaProviderKey(p) === "grok") },
       ].filter(g => g.picks.length > 0);
 
       const wrap = document.createElement("div");

@@ -777,6 +777,11 @@
         <div class="kpi-value" id="kpiGananciaGemini">--</div>
         <div class="kpi-sub" id="kpiGananciaGeminiSub">WR -- · G 0 · P 0 · N 0</div>
       </div>
+      <div class="kpi-card kpi-clickable" data-mlb-model-card="grok" role="button" tabindex="0" onclick="showModelChart('grok')" onkeydown="if(event.key==='Enter'||event.key===' '){event.preventDefault();showModelChart('grok');}">
+        <div class="kpi-label">Pickster Pulse</div>
+        <div class="kpi-value" id="kpiGananciaGrok">--</div>
+        <div class="kpi-sub" id="kpiGananciaGrokSub">WR -- · G 0 · P 0 · N 0</div>
+      </div>
     </div>
     <div class="mlb-model-chart hidden" id="modelChartWrap"></div>
     <!-- Info modelo -->
@@ -925,7 +930,7 @@
 
     // ── KPIs ──────────────────────────────────────────────────────────────────
 
-    let _ganancia100u = null, _gananciaXgb100u = null, _gananciaClaude100u = null, _gananciaDeepSeek100u = null, _gananciaChatGpt100u = null, _gananciaGemini100u = null;
+    let _ganancia100u = null, _gananciaXgb100u = null, _gananciaClaude100u = null, _gananciaDeepSeek100u = null, _gananciaChatGpt100u = null, _gananciaGemini100u = null, _gananciaGrok100u = null;
     const currentMonth = `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
 
     const _fmtGanEl = (elId, val, fontSize) => {
@@ -945,6 +950,7 @@
       _fmtGanEl("kpiGananciaDeepSeek", _gananciaDeepSeek100u);
       _fmtGanEl("kpiGananciaChatGPT",  _gananciaChatGpt100u);
       _fmtGanEl("kpiGananciaGemini",   _gananciaGemini100u);
+      _fmtGanEl("kpiGananciaGrok",     _gananciaGrok100u);
     }
 
     async function loadMonthStats(month) {
@@ -994,11 +1000,13 @@
         _gananciaDeepSeek100u = d.ganancia_deepseek_100u ?? null;
         _gananciaChatGpt100u = d.ganancia_openai_100u  ?? null;
         _gananciaGemini100u = d.ganancia_gemini_100u  ?? null;
+        _gananciaGrok100u = d.ganancia_grok_100u  ?? null;
         setProviderKpi("kpiGananciaXgb", "kpiGananciaXgbSub", providerStats.xgb, _gananciaXgb100u);
         setProviderKpi("kpiGananciaChatGPT", "kpiGananciaChatGPTSub", providerStats.openai, _gananciaChatGpt100u);
         setProviderKpi("kpiGananciaClaude", "kpiGananciaClaudeSub", providerStats.claude, _gananciaClaude100u);
         setProviderKpi("kpiGananciaDeepSeek", "kpiGananciaDeepSeekSub", providerStats.deepseek, _gananciaDeepSeek100u);
         setProviderKpi("kpiGananciaGemini", "kpiGananciaGeminiSub", providerStats.gemini, _gananciaGemini100u);
+        setProviderKpi("kpiGananciaGrok", "kpiGananciaGrokSub", providerStats.grok, _gananciaGrok100u);
       } catch (e) { console.error("stats:", e); }
       loadHistory(false, m);
     }
@@ -1071,8 +1079,8 @@
       return String(status || "").toUpperCase() === "POSTPONED";
     }
 
-    const AI_MODEL_PREFIXES = ["claude-", "deepseek-", "openai-", "gemini-"];
-    const MODEL_ORDER = ["xgb", "claude", "deepseek", "openai", "gemini", "ia"];
+    const AI_MODEL_PREFIXES = ["claude-", "deepseek-", "openai-", "gemini-", "grok-"];
+    const MODEL_ORDER = ["xgb", "claude", "deepseek", "openai", "gemini", "grok", "ia"];
 
     function modelVersion(p) {
       return String(p?.model_version || "").trim().toLowerCase();
@@ -1089,11 +1097,12 @@
       if (version.startsWith("deepseek-")) return "deepseek";
       if (version.startsWith("openai-")) return "openai";
       if (version.startsWith("gemini-")) return "gemini";
+      if (version.startsWith("grok-")) return "grok";
       return isAiPick(p) ? "ia" : "xgb";
     }
 
     function modelLabel(key) {
-      return { xgb: "Pickster Core", claude: "Pickster Sharp", deepseek: "Pickster Edge", openai: "Pickster Consensus", gemini: "Pickster Flash", ia: "Pickster Model" }[key] || "Pickster Model";
+      return { xgb: "Pickster Core", claude: "Pickster Sharp", deepseek: "Pickster Edge", openai: "Pickster Consensus", gemini: "Pickster Flash", grok: "Pickster Pulse", ia: "Pickster Model" }[key] || "Pickster Model";
     }
 
     function modelGroups(preds) {
@@ -1174,7 +1183,7 @@
       if (!wrap || !modelKeyValue) return;
       const month = el("monthPicker").value || currentMonth;
       const label = modelLabel(modelKeyValue);
-      const chartTabs = () => ["xgb", "claude", "deepseek", "openai", "gemini"].map(key => (
+      const chartTabs = () => ["xgb", "claude", "deepseek", "openai", "gemini", "grok"].map(key => (
         `<button class="mlb-chart-tab${key === modelKeyValue ? " active" : ""}" onclick="showModelChart('${key}')">${modelLabel(key)}</button>`
       )).join("");
       document.querySelectorAll("[data-mlb-model-card]").forEach(card => card.classList.toggle("active", card.dataset.mlbModelCard === modelKeyValue));
