@@ -314,6 +314,10 @@
       display: none !important;
     }
 
+    .deprecated-daily-picks {
+      display: none !important;
+    }
+
     /* ── Section title ── */
     .section-title {
       font-size: 11px;
@@ -814,7 +818,7 @@
     </div>
 
     <!-- Picks del día -->
-    <div
+    <div class="deprecated-daily-picks"
       style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
       <div class="section-title" style="margin:0;">Predicciones</div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
@@ -826,13 +830,13 @@
         <button id="btnBetDay" class="filter-btn active" onclick="toggleBetDay(this)">💰 Solo apostados</button>
       </div>
     </div>
-    <div class="date-nav">
+    <div class="date-nav deprecated-daily-picks">
       <button id="btnYesterday" onclick="loadDate('yesterday')">Ayer</button>
       <button id="btnToday" onclick="loadDate('today')" class="active">Hoy</button>
       <input type="date" id="datePicker" onchange="loadDate('custom')" />
     </div>
-    <div id="dayPnL"></div>
-    <div class="games-grid" id="gamesGrid">
+    <div id="dayPnL" class="deprecated-daily-picks"></div>
+    <div class="games-grid deprecated-daily-picks" id="gamesGrid">
       <div class="empty">Cargando…</div>
     </div>
 
@@ -1613,7 +1617,7 @@
       const tbody = el("historyTbody");
       const filtered = historyData.filter(p =>
         (betOnlyHistory ? (!!p.bet_ml || !!p.bet_ou) : true)
-      ).filter(p => p.ml_correct != null || p.ou_correct != null || isPostponedStatus(p.ml_result_status) || isPostponedStatus(p.ou_result_status));
+      );
       if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Sin historial disponible aún.</td></tr>'; const s = el("historyDaySummary"); if (s) s.innerHTML = ""; renderHistoryPager([], 0); return; }
 
       // Días únicos ordenados de más reciente a más antiguo
@@ -1751,10 +1755,8 @@
     }
 
     // ── Init ──────────────────────────────────────────────────────────────────
-    el("datePicker").value = todayStr;
     el("monthPicker").value = currentMonth;
     loadMonthStats(currentMonth);
-    loadDate("today");
   </script>
 </body>
 
