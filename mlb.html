@@ -684,9 +684,6 @@
       .mlb-model-grid { grid-template-columns: repeat(2, 1fr); }
       .kpi-card.kpi-clickable.active::after { display: none; }
       .mlb-chart-tab { padding: 5px 8px; font-size: 10px; }
-      /* Ocultar columna Odds en móvil */
-      .picks-table th:nth-child(4),
-      .picks-table td:nth-child(4) { display: none; }
     }
   </style>
 </head>
@@ -851,11 +848,12 @@
             <th>Partido</th>
             <th>Pick</th>
             <th>Odds</th>
+            <th>Resultado</th>
           </tr>
         </thead>
         <tbody id="historyTbody">
           <tr>
-            <td colspan="4" class="empty">Cargando…</td>
+            <td colspan="5" class="empty">Cargando…</td>
           </tr>
         </tbody>
       </table>
@@ -1697,8 +1695,9 @@
             rows.push(`<tr style="${mlRowStyle}">
               <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
               <td>${matchup}</td>
-              <td><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span class="badge">ML ${mlTeam}</span>${resCell(p.ml_correct, p.away_score, p.home_score, null, p.ml_result_status)}</div></td>
+              <td><span class="badge">ML ${mlTeam}</span></td>
               <td>${fmtOdds(mlOdds)}</td>
+              <td style="text-align:right;">${resCell(p.ml_correct, p.away_score, p.home_score, null, p.ml_result_status)}</td>
             </tr>`);
           }
           const ouBet = !!p.bet_ou;
@@ -1710,8 +1709,9 @@
             rows.push(`<tr style="${ouRowStyle}">
               <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
               <td>${matchup}</td>
-              <td><div style="display:flex;align-items:center;justify-content:space-between;gap:8px;"><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span>${resCell(p.ou_correct, p.away_score, p.home_score, p.ou_line, p.ou_result_status)}</div></td>
+              <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span></td>
               <td>${fmtOdds(ouOdds)}</td>
+              <td style="text-align:right;">${resCell(p.ou_correct, p.away_score, p.home_score, p.ou_line, p.ou_result_status)}</td>
             </tr>`);
           }
         }
@@ -1723,7 +1723,7 @@
         const brd = isIa ? 'rgba(167,122,255,.3)'  : 'rgba(122,167,255,.25)';
         const clr = isIa ? '#a77aff'               : 'var(--accent)';
         return `<tr>
-          <td colspan="4" style="padding:6px 10px;background:${bg};border-top:1px solid ${brd};border-bottom:1px solid ${brd};">
+          <td colspan="5" style="padding:6px 10px;background:${bg};border-top:1px solid ${brd};border-bottom:1px solid ${brd};">
             <span style="font-size:10px;font-family:var(--mono);font-weight:700;color:${clr};letter-spacing:.06em;">${label}</span>
           </td>
         </tr>`;
