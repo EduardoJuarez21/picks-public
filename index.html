@@ -1034,7 +1034,7 @@
 
     <!-- Historial de picks BET -->
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-top:32px;margin-bottom:10px;">
-      <div class="section-title" style="margin:0;">Picks del mes</div>
+      <div class="section-title" style="margin:0;">Picks por día</div>
     </div>
     <div class="league-filter-bar" id="leagueFilterBar"></div>
     <div
@@ -1446,8 +1446,7 @@
 
     let _allBetItems = [];
     let _activeLeague = "all";
-    let _currentPage = 1;
-    const PAGE_SIZE = 10;
+    let _historyDayIndex = 0;
 
     function renderPicksFiltered() {
       const tbody = el("picksTbody");
@@ -1461,9 +1460,19 @@
         return;
       }
 
+      const days = [...new Set(filtered.map(it => historyDateKey(it.day ?? "")))].filter(Boolean).sort((a, b) => b.localeCompare(a));
+      if (!days.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="empty">Sin historial disponible aún.</td></tr>';
+        pager.innerHTML = "";
+        return;
+      }
+      if (_historyDayIndex >= days.length) _historyDayIndex = 0;
+      const activeDay = days[_historyDayIndex];
+      const dayItems = filtered.filter(it => historyDateKey(it.day ?? "") === activeDay);
+
       const groups = [];
       const byMatch = new Map();
-      for (const it of filtered) {
+      for (const it of dayItems) {
         const rawDate = it.day ?? "";
         const matchStr = it.match ? capitalize(it.match) : `${capitalize(it.home)} vs ${capitalize(it.away)}`;
         const dateKey = historyDateKey(rawDate);
@@ -1477,10 +1486,7 @@
         group.items.push(it);
       }
 
-      const totalPages = Math.ceil(groups.length / PAGE_SIZE);
-      if (_currentPage > totalPages) _currentPage = totalPages;
-      const start = (_currentPage - 1) * PAGE_SIZE;
-      const page = groups.slice(start, start + PAGE_SIZE);
+      const page = groups;
       const renderPickLine = (it) => {
         const res = (it.result ?? "").toUpperCase();
         const resClass = res === "G" ? "g" : res === "P" ? "p" : res === "N" ? "n" : "pend";
@@ -1503,8 +1509,9 @@
           if (r === "G") acc.g++;
           else if (r === "P") acc.p++;
           else if (r === "N") acc.n++;
+          else acc.pending++;
           return acc;
-        }, { g: 0, p: 0, n: 0 });
+        }, { g: 0, p: 0, n: 0, pending: 0 });
         const score = groupScoreLabel(group.items);
         const tr = document.createElement("tr");
         tr.innerHTML = `
@@ -1514,7 +1521,7 @@
                 <span class="history-group-date">${group.rawDate ? formatDayLabel(group.rawDate) : "--"}</span>
                 <span class="history-group-match">${group.matchStr}</span>
                 <span class="history-group-score">${score || "--"}</span>
-                <span class="history-group-count"><span class="res g">${counts.g}G</span><span class="res p">${counts.p}P</span>${counts.n ? `<span class="res n">${counts.n}N</span>` : ""}</span>
+                <span class="history-group-count"><span class="res g">${counts.g}G</span><span class="res p">${counts.p}P</span>${counts.n ? `<span class="res n">${counts.n}N</span>` : ""}${counts.pending ? `<span class="res pend">${counts.pending}Pend</span>` : ""}</span>
                 <span class="history-group-toggle"><span class="toggle-label">Ver detalle</span><span class="toggle-icon">▾</span></span>
               </summary>
               <div class="history-pick-list">${group.items.map(renderPickLine).join("")}</div>
@@ -1523,40 +1530,25 @@
         tbody.appendChild(tr);
       }
 
-      // Render pager
+      // Render day pager
       pager.innerHTML = "";
-      if (totalPages <= 1) return;
-      const mkBtn = (label, page, disabled, active) => {
+      const prev = _historyDayIndex + 1;
+      const next = _historyDayIndex - 1;
+      const mkBtn = (label, idx, disabled) => {
         const btn = document.createElement("button");
-        btn.className = "pager-btn" + (active ? " active" : "");
+        btn.className = "pager-btn";
         btn.textContent = label;
         btn.disabled = disabled;
-        btn.addEventListener("click", () => { _currentPage = page; renderPicksFiltered(); });
+        btn.addEventListener("click", () => { _historyDayIndex = idx; renderPicksFiltered(); });
         return btn;
       };
-      pager.appendChild(mkBtn("←", _currentPage - 1, _currentPage === 1, false));
-      const range = [];
-      for (let i = 1; i <= totalPages; i++) {
-        if (i === 1 || i === totalPages || Math.abs(i - _currentPage) <= 1) range.push(i);
-        else if (range[range.length - 1] !== "…") range.push("…");
-      }
-      for (const r of range) {
-        if (r === "…") {
-          const s = document.createElement("span");
-          s.className = "pager-info";
-          s.textContent = "…";
-          pager.appendChild(s);
-        } else {
-          pager.appendChild(mkBtn(r, r, false, r === _currentPage));
-        }
-      }
-      pager.appendChild(mkBtn("→", _currentPage + 1, _currentPage === totalPages, false));
+      pager.appendChild(mkBtn(prev < days.length ? `< ${days[prev]}` : "<", prev, prev >= days.length));
       const info = document.createElement("span");
       info.className = "pager-info";
-      info.textContent = `${start + 1}–${Math.min(start + PAGE_SIZE, groups.length)} de ${groups.length}`;
+      info.textContent = activeDay;
       pager.appendChild(info);
+      pager.appendChild(mkBtn(next >= 0 ? `${days[next]} >` : ">", next, next < 0));
     }
-
     function buildLeagueFilter(items) {
       const bar = el("leagueFilterBar");
       const leagues = [...new Set(items.map(it => String(it.league ?? "sin_liga").toLowerCase()))];
@@ -1569,7 +1561,7 @@
         btn.dataset.league = key;
         btn.addEventListener("click", () => {
           _activeLeague = key;
-          _currentPage = 1;
+          _historyDayIndex = 0;
           bar.querySelectorAll(".league-filter-btn").forEach(b => b.classList.toggle("active", b.dataset.league === key));
           renderPicksFiltered();
         });
@@ -1580,16 +1572,16 @@
     }
 
     function renderPicks(items) {
-      _allBetItems = items.filter(it => ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase()) && ["G", "P", "N"].includes((it.result ?? "").toUpperCase()));
+      _allBetItems = items.filter(it => ["BET", "BET_2"].includes((it.decision ?? "").toUpperCase()));
       _activeLeague = "all";
-      _currentPage = 1;
+      _historyDayIndex = 0;
       buildLeagueFilter(_allBetItems);
       renderPicksFiltered();
     }
 
     const CACHE_TTL = 3 * 60 * 60 * 1000; // 3 horas
 
-    function cacheKey(month) { return `picks_cache_model_${month}`; }
+    function cacheKey(month) { return `picks_cache_model_by_day_${month}`; }
 
     function cacheGet(month) {
       try {
@@ -1620,9 +1612,9 @@
         return;
       }
       el("leagueList").innerHTML = '<div class="empty">Cargando…</div>';
-      el("picksTbody").innerHTML = '<tr><td colspan="6" class="empty">Cargando…</td></tr>';
+      el("picksTbody").innerHTML = '<tr><td colspan="7" class="empty">Cargando…</td></tr>';
       try {
-        const res = await fetch(`${API}/picks/all/month?month=${encodeURIComponent(month)}&resolved_only=true`);
+        const res = await fetch(`${API}/picks/all/month?month=${encodeURIComponent(month)}`);
         const data = await res.json();
         const items = Array.isArray(data?.items) ? data.items : [];
         currentItems = items;
