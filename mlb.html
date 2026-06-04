@@ -1641,9 +1641,12 @@
     function goToHistoryDay(idx) { historyDayIndex = idx; renderHistory(); }
     function renderHistory() {
       const tbody = el("historyTbody");
-      const filtered = historyData.filter(p =>
-        (betOnlyHistory ? (!!p.bet_ml || !!p.bet_ou) : true)
-      );
+      const isResolvedResult = (correct, resultStatus) =>
+        correct === true || correct === false || isPushStatus(resultStatus);
+      const hasPublicResolvedPick = (p) =>
+        (((!betOnlyHistory || !!p.bet_ml) && isResolvedResult(p.ml_correct, p.ml_result_status)) ||
+         ((!betOnlyHistory || !!p.bet_ou) && isResolvedResult(p.ou_correct, p.ou_result_status)));
+      const filtered = historyData.filter(hasPublicResolvedPick);
       if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Sin historial disponible aún.</td></tr>'; const s = el("historyDaySummary"); if (s) s.innerHTML = ""; renderHistoryPager([], 0); return; }
 
       // Días únicos ordenados de más reciente a más antiguo
@@ -1657,20 +1660,16 @@
       const stats = {};
       for (const p of dayPicks) {
         const key = modelKey(p);
-        const bucket = stats[key] || (stats[key] = { mlWon:0,mlLost:0,mlPush:0,mlPend:0,ouWon:0,ouLost:0,ouPush:0,ouPend:0 });
-        if (!betOnlyHistory || !!p.bet_ml) {
+        const bucket = stats[key] || (stats[key] = { mlWon:0,mlLost:0,mlPush:0,ouWon:0,ouLost:0,ouPush:0 });
+        if ((!betOnlyHistory || !!p.bet_ml) && isResolvedResult(p.ml_correct, p.ml_result_status)) {
           if (p.ml_correct === true) bucket.mlWon++;
           else if (p.ml_correct === false) bucket.mlLost++;
           else if (isPushStatus(p.ml_result_status)) bucket.mlPush++;
-          else if (isPostponedStatus(p.ml_result_status)) {}
-          else bucket.mlPend++;
         }
-        if (!betOnlyHistory || !!p.bet_ou) {
+        if ((!betOnlyHistory || !!p.bet_ou) && isResolvedResult(p.ou_correct, p.ou_result_status)) {
           if (p.ou_correct === true) bucket.ouWon++;
           else if (p.ou_correct === false) bucket.ouLost++;
           else if (isPushStatus(p.ou_result_status)) bucket.ouPush++;
-          else if (isPostponedStatus(p.ou_result_status)) {}
-          else bucket.ouPend++;
         }
       }
       const summaryEl = el("historyDaySummary");
@@ -1717,7 +1716,7 @@
         for (const p of picks) {
           const matchup = `<b>${p.away_abbr}</b> @ <b>${p.home_abbr}</b>`;
           const mlBet = !!p.bet_ml;
-          if (!betOnlyHistory || mlBet) {
+          if ((!betOnlyHistory || mlBet) && isResolvedResult(p.ml_correct, p.ml_result_status)) {
             const mlRowStyle = (mlBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '') + `background:${modelBg};`;
             const mlTeam = p.ml_pick === "home" ? p.home_abbr : p.away_abbr;
             const mlOdds = p.ml_pick === "home" ? p.home_ml_odds : p.away_ml_odds;
@@ -1730,7 +1729,7 @@
             </tr>`);
           }
           const ouBet = !!p.bet_ou;
-          if (!betOnlyHistory || ouBet) {
+          if ((!betOnlyHistory || ouBet) && isResolvedResult(p.ou_correct, p.ou_result_status)) {
             const ouRowStyle = (ouBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '') + `background:${modelBg};`;
             const ouLineVal = p.ou_line || 8.5;
             const ouPickLabel = `${p.ou_pick?.toUpperCase()} ${ouLineVal}`;
