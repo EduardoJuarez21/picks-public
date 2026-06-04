@@ -1071,8 +1071,8 @@
     async function loadDate(which) {
       let target;
       [el("btnYesterday"), el("btnToday")].forEach(b => b.classList.remove("active"));
-      if (which === "today") { target = todayStr; el("btnToday").classList.add("active"); }
-      else if (which === "yesterday") { target = yesterdayStr; el("btnYesterday").classList.add("active"); }
+      if (which === "today") { target = todayStr; el("btnToday").classList.add("active"); el("datePicker").value = target; }
+      else if (which === "yesterday") { target = yesterdayStr; el("btnYesterday").classList.add("active"); el("datePicker").value = target; }
       else { target = el("datePicker").value; }
 
       if (!target) return;
@@ -1784,6 +1784,7 @@
 
     // ── Init ──────────────────────────────────────────────────────────────────
     el("monthPicker").value = currentMonth;
+    el("datePicker").value = todayStr;
     loadMonthStats(currentMonth);
   </script>
 </body>
