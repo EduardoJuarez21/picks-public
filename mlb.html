@@ -360,7 +360,8 @@
       border: 1px solid var(--stroke);
       color: var(--text);
       border-radius: 10px;
-      padding: 7px 12px;
+      padding: 10px 14px;
+      min-height: 42px;
       font-size: 13px;
     }
 
@@ -847,7 +848,7 @@
       style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
       <div class="section-title" style="margin:0;">Predicciones</div>
       <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap;">
-        <div style="display:flex;gap:4px;background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:999px;padding:3px;">
+        <div style="display:none;gap:4px;background:rgba(255,255,255,.05);border:1px solid var(--stroke);border-radius:999px;padding:3px;">
           <button id="btnModelAll" class="filter-btn active" onclick="setModelFilter('all',this)" style="border-radius:999px;padding:4px 12px;font-size:11px;">Todos</button>
           <button id="btnModelXgb" class="filter-btn" onclick="setModelFilter('xgb',this)" style="border-radius:999px;padding:4px 10px;font-size:11px;color:var(--accent);">Pickster Core</button>
           <button id="btnModelIa"  class="filter-btn" onclick="setModelFilter('ia',this)"  style="border-radius:999px;padding:4px 10px;font-size:11px;color:#a77aff;">Otros modelos</button>
@@ -856,8 +857,8 @@
       </div>
     </div>
     <div class="date-nav deprecated-daily-picks">
-      <button id="btnYesterday" onclick="loadDate('yesterday')">Ayer</button>
-      <button id="btnToday" onclick="loadDate('today')" class="active">Hoy</button>
+      <button id="btnYesterday" class="hidden" onclick="loadDate('yesterday')">Ayer</button>
+      <button id="btnToday" onclick="loadDate('today')" class="active hidden">Hoy</button>
       <input type="date" id="datePicker" onchange="loadDate('custom')" />
     </div>
     <div id="dayPnL" class="deprecated-daily-picks"></div>
