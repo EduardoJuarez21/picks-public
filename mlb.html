@@ -1124,7 +1124,7 @@
     }
 
     const AI_MODEL_PREFIXES = ["claude-", "deepseek-", "openai-", "gemini-", "grok-"];
-    const MODEL_ORDER = ["xgb", "claude", "deepseek", "openai", "gemini", "grok", "ia"];
+    const MODEL_ORDER = ["xgb", "claude", "claude2", "deepseek", "deepseek2", "openai", "openai2", "gemini", "gemini2", "grok", "grok2", "ia"];
 
     function modelVersion(p) {
       return String(p?.model_version || "").trim().toLowerCase();
@@ -1137,6 +1137,11 @@
 
     function modelKey(p) {
       const version = modelVersion(p);
+      if (version === "claude-haiku-4-5-sharp-2" || version.includes("sharp-2")) return "claude2";
+      if (version.startsWith("deepseek-") && version.includes("-v2-")) return "deepseek2";
+      if (version.startsWith("openai-") && version.includes("-v2-")) return "openai2";
+      if (version.startsWith("gemini-") && version.includes("-v2-")) return "gemini2";
+      if (version.startsWith("grok-") && version.includes("-v2-")) return "grok2";
       if (version.startsWith("claude-")) return "claude";
       if (version.startsWith("deepseek-")) return "deepseek";
       if (version.startsWith("openai-")) return "openai";
@@ -1146,7 +1151,20 @@
     }
 
     function modelLabel(key) {
-      return { xgb: "Pickster Core", claude: "Pickster Sharp", deepseek: "Pickster Edge", openai: "Pickster Consensus", gemini: "Pickster Flash", grok: "Pickster Pulse", ia: "Pickster Model" }[key] || "Pickster Model";
+      return {
+        xgb: "Pickster Core",
+        claude: "Pickster Sharp",
+        claude2: "Pickster Sharp 2",
+        deepseek: "Pickster Edge",
+        deepseek2: "Pickster Edge 2",
+        openai: "Pickster Consensus",
+        openai2: "Pickster Consensus 2",
+        gemini: "Pickster Flash",
+        gemini2: "Pickster Flash 2",
+        grok: "Pickster Pulse",
+        grok2: "Pickster Pulse 2",
+        ia: "Pickster Model"
+      }[key] || "Pickster Model";
     }
 
     function modelGroups(preds) {
