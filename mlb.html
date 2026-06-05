@@ -447,8 +447,9 @@
     }
 
     .history-matchup {
-      display: grid;
-      gap: 2px;
+      display: flex;
+      align-items: center;
+      gap: 5px;
       min-width: 0;
     }
 
@@ -465,6 +466,7 @@
       font-size: 9px;
       line-height: 1;
       font-weight: 700;
+      white-space: nowrap;
     }
 
     .pitchers {
@@ -1771,7 +1773,7 @@
         const modelBg = isIa ? 'rgba(167,122,255,.04)' : 'rgba(122,167,255,.03)';
         for (const p of picks) {
           const gameTime = fmtGameTime(p.game_time_utc);
-          const timeLine = gameTime ? `<span class="history-matchup-time">${gameTime}</span>` : "";
+          const timeLine = gameTime ? `<span class="history-matchup-time">· ${gameTime}</span>` : "";
           const matchup = `<div class="history-matchup"><span class="history-matchup-main"><b>${p.away_abbr}</b> @ <b>${p.home_abbr}</b></span>${timeLine}</div>`;
           const mlBet = !!p.bet_ml;
           if ((!betOnlyHistory || mlBet) && p.ml_pick) {
