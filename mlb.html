@@ -447,9 +447,8 @@
     }
 
     .history-matchup {
-      display: flex;
-      align-items: center;
-      gap: 5px;
+      display: grid;
+      gap: 3px;
       min-width: 0;
     }
 
@@ -464,7 +463,7 @@
       color: var(--muted);
       font-family: var(--mono);
       font-size: 9px;
-      line-height: 1;
+      line-height: 1.05;
       font-weight: 700;
       white-space: nowrap;
     }
@@ -1093,7 +1092,7 @@
 
     async function fetchPredictions(dateStr) {
       const isToday = dateStr === todayStr;
-      const cacheKey = "preds_v2_" + dateStr;
+      const cacheKey = "preds_v3_time_" + dateStr;
       if (!isToday) {
         const cached = cacheGet(cacheKey);
         if (cached) return cached;
@@ -1773,7 +1772,7 @@
         const modelBg = isIa ? 'rgba(167,122,255,.04)' : 'rgba(122,167,255,.03)';
         for (const p of picks) {
           const gameTime = fmtGameTime(p.game_time_utc);
-          const timeLine = gameTime ? `<span class="history-matchup-time">· ${gameTime}</span>` : "";
+          const timeLine = gameTime ? `<span class="history-matchup-time">${gameTime}</span>` : "";
           const matchup = `<div class="history-matchup"><span class="history-matchup-main"><b>${p.away_abbr}</b> @ <b>${p.home_abbr}</b></span>${timeLine}</div>`;
           const mlBet = !!p.bet_ml;
           if ((!betOnlyHistory || mlBet) && p.ml_pick) {
