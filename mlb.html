@@ -729,13 +729,15 @@
         display: none;
       }
       .picks-table th:nth-child(2),
-      .picks-table td:nth-child(2) { width: 30%; }
+      .picks-table td:nth-child(2) { width: 26%; }
       .picks-table th:nth-child(3),
-      .picks-table td:nth-child(3) { width: 37%; }
+      .picks-table td:nth-child(3) { width: 16%; text-align: center; }
       .picks-table th:nth-child(4),
-      .picks-table td:nth-child(4) { width: 13%; text-align: center; }
+      .picks-table td:nth-child(4) { width: 34%; }
       .picks-table th:nth-child(5),
-      .picks-table td:nth-child(5) { width: 20%; }
+      .picks-table td:nth-child(5) { width: 10%; text-align: center; }
+      .picks-table th:nth-child(6),
+      .picks-table td:nth-child(6) { width: 14%; }
       .picks-table th,
       .picks-table td {
         border-left: none;
@@ -911,6 +913,7 @@
           <tr>
             <th>Fecha</th>
             <th>Partido</th>
+            <th>Hora</th>
             <th>Pick</th>
             <th>Odds</th>
             <th>Res</th>
@@ -918,7 +921,7 @@
         </thead>
         <tbody id="historyTbody">
           <tr>
-            <td colspan="5" class="empty">Cargando…</td>
+            <td colspan="6" class="empty">Cargando…</td>
           </tr>
         </tbody>
       </table>
@@ -1092,7 +1095,7 @@
 
     async function fetchPredictions(dateStr) {
       const isToday = dateStr === todayStr;
-      const cacheKey = "preds_v4_time_inline_" + dateStr;
+      const cacheKey = "preds_v5_time_column_" + dateStr;
       if (!isToday) {
         const cached = cacheGet(cacheKey);
         if (cached) return cached;
@@ -1702,7 +1705,7 @@
         (((!betOnlyHistory || !!p.bet_ml) && p.ml_pick) ||
          ((!betOnlyHistory || !!p.bet_ou) && p.ou_pick));
       const filtered = historyData.filter(hasPublicPick);
-      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="5" class="empty">Sin historial disponible aún.</td></tr>'; const s = el("historyDaySummary"); if (s) s.innerHTML = ""; renderHistoryPager([], 0); return; }
+      if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Sin historial disponible aún.</td></tr>'; const s = el("historyDaySummary"); if (s) s.innerHTML = ""; renderHistoryPager([], 0); return; }
 
       // Días únicos ordenados de más reciente a más antiguo
       const days = [...new Set(filtered.map(p => p.game_date))].sort((a, b) => b.localeCompare(a));
@@ -1773,8 +1776,8 @@
         const modelBg = isIa ? 'rgba(167,122,255,.04)' : 'rgba(122,167,255,.03)';
         for (const p of picks) {
           const gameTime = fmtGameTime(p.game_time_utc || p.game_time || p.start_time_utc || p.kickoff_utc);
-          const timeInline = gameTime ? ` <span class="history-matchup-time">${gameTime}</span>` : "";
-          const matchup = `<div class="history-matchup"><span class="history-matchup-main"><b>${p.away_abbr}</b> @ <b>${p.home_abbr}</b>${timeInline}</span></div>`;
+          const matchup = `<div class="history-matchup"><span class="history-matchup-main"><b>${p.away_abbr}</b> @ <b>${p.home_abbr}</b></span></div>`;
+          const timeCell = gameTime ? `<span class="history-matchup-time">${gameTime}</span>` : `<span style="color:var(--muted);">-</span>`;
           const mlBet = !!p.bet_ml;
           if ((!betOnlyHistory || mlBet) && p.ml_pick) {
             const mlRowStyle = (mlBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '') + `background:${modelBg};`;
@@ -1783,6 +1786,7 @@
             rows.push(`<tr style="${mlRowStyle}">
               <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
               <td>${matchup}</td>
+              <td style="text-align:center;">${timeCell}</td>
               <td><span class="badge">ML ${mlTeam}</span></td>
               <td>${fmtOdds(mlOdds)}</td>
               <td style="text-align:right;">${resCell(p.ml_correct, p.away_score, p.home_score, null, p.ml_result_status)}</td>
@@ -1797,6 +1801,7 @@
             rows.push(`<tr style="${ouRowStyle}">
               <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
               <td>${matchup}</td>
+              <td style="text-align:center;">${timeCell}</td>
               <td><span class="badge" style="color:${p.ou_pick==='over'?'var(--ok)':'#7aa7ff'}">${ouPickLabel}</span></td>
               <td>${fmtOdds(ouOdds)}</td>
               <td style="text-align:right;">${resCell(p.ou_correct, p.away_score, p.home_score, p.ou_line, p.ou_result_status)}</td>
@@ -1811,7 +1816,7 @@
         const brd = isIa ? 'rgba(167,122,255,.3)'  : 'rgba(122,167,255,.25)';
         const clr = isIa ? '#a77aff'               : 'var(--accent)';
         return `<tr>
-          <td colspan="5" style="padding:6px 10px;background:${bg};border-top:1px solid ${brd};border-bottom:1px solid ${brd};">
+          <td colspan="6" style="padding:6px 10px;background:${bg};border-top:1px solid ${brd};border-bottom:1px solid ${brd};">
             <span style="font-size:10px;font-family:var(--mono);font-weight:700;color:${clr};letter-spacing:.06em;">${label}</span>
           </td>
         </tr>`;
