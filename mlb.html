@@ -441,7 +441,7 @@
 
     .game-date-label {
       font-size: 11px;
-      color: var(--muted);
+      color: var(--accent);
       font-family: var(--mono);
       flex-shrink: 0;
     }
@@ -1092,7 +1092,7 @@
 
     async function fetchPredictions(dateStr) {
       const isToday = dateStr === todayStr;
-      const cacheKey = "preds_v3_time_" + dateStr;
+      const cacheKey = "preds_v4_time_inline_" + dateStr;
       if (!isToday) {
         const cached = cacheGet(cacheKey);
         if (cached) return cached;
@@ -1123,6 +1123,7 @@
     function fmtGameTime(utcStr) {
       if (!utcStr) return null;
       const d = new Date(utcStr);
+      if (Number.isNaN(d.getTime())) return null;
       // UTC-6
       const local = new Date(d.getTime() - 6 * 60 * 60 * 1000);
       const h = local.getUTCHours();
@@ -1771,9 +1772,9 @@
         const rows = [];
         const modelBg = isIa ? 'rgba(167,122,255,.04)' : 'rgba(122,167,255,.03)';
         for (const p of picks) {
-          const gameTime = fmtGameTime(p.game_time_utc);
-          const timeLine = gameTime ? `<span class="history-matchup-time">${gameTime}</span>` : "";
-          const matchup = `<div class="history-matchup"><span class="history-matchup-main"><b>${p.away_abbr}</b> @ <b>${p.home_abbr}</b></span>${timeLine}</div>`;
+          const gameTime = fmtGameTime(p.game_time_utc || p.game_time || p.start_time_utc || p.kickoff_utc);
+          const timeInline = gameTime ? ` <span class="history-matchup-time">${gameTime}</span>` : "";
+          const matchup = `<div class="history-matchup"><span class="history-matchup-main"><b>${p.away_abbr}</b> @ <b>${p.home_abbr}</b>${timeInline}</span></div>`;
           const mlBet = !!p.bet_ml;
           if ((!betOnlyHistory || mlBet) && p.ml_pick) {
             const mlRowStyle = (mlBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '') + `background:${modelBg};`;
