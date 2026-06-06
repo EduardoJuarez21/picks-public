@@ -1701,10 +1701,10 @@
       const tbody = el("historyTbody");
       const isResolvedResult = (correct, resultStatus) =>
         correct === true || correct === false || isPushStatus(resultStatus);
-      const hasPublicResolvedPick = (p) =>
-        (((!betOnlyHistory || !!p.bet_ml) && p.ml_pick && isResolvedResult(p.ml_correct, p.ml_result_status)) ||
-         ((!betOnlyHistory || !!p.bet_ou) && p.ou_pick && isResolvedResult(p.ou_correct, p.ou_result_status)));
-      const filtered = historyData.filter(hasPublicResolvedPick);
+      const hasPublicPick = (p) =>
+        (((!betOnlyHistory || !!p.bet_ml) && p.ml_pick) ||
+         ((!betOnlyHistory || !!p.bet_ou) && p.ou_pick));
+      const filtered = historyData.filter(hasPublicPick);
       if (!filtered.length) { tbody.innerHTML = '<tr><td colspan="6" class="empty">Sin historial disponible aún.</td></tr>'; const s = el("historyDaySummary"); if (s) s.innerHTML = ""; renderHistoryPager([], 0); return; }
 
       // Días únicos ordenados de más reciente a más antiguo
@@ -1718,16 +1718,18 @@
       const stats = {};
       for (const p of dayPicks) {
         const key = modelKey(p);
-        const bucket = stats[key] || (stats[key] = { mlWon:0,mlLost:0,mlPush:0,ouWon:0,ouLost:0,ouPush:0 });
-        if ((!betOnlyHistory || !!p.bet_ml) && p.ml_pick && isResolvedResult(p.ml_correct, p.ml_result_status)) {
+        const bucket = stats[key] || (stats[key] = { mlWon:0,mlLost:0,mlPush:0,mlPend:0,ouWon:0,ouLost:0,ouPush:0,ouPend:0 });
+        if ((!betOnlyHistory || !!p.bet_ml) && p.ml_pick) {
           if (p.ml_correct === true) bucket.mlWon++;
           else if (p.ml_correct === false) bucket.mlLost++;
           else if (isPushStatus(p.ml_result_status)) bucket.mlPush++;
+          else if (!isPostponedStatus(p.ml_result_status)) bucket.mlPend++;
         }
-        if ((!betOnlyHistory || !!p.bet_ou) && p.ou_pick && isResolvedResult(p.ou_correct, p.ou_result_status)) {
+        if ((!betOnlyHistory || !!p.bet_ou) && p.ou_pick) {
           if (p.ou_correct === true) bucket.ouWon++;
           else if (p.ou_correct === false) bucket.ouLost++;
           else if (isPushStatus(p.ou_result_status)) bucket.ouPush++;
+          else if (!isPostponedStatus(p.ou_result_status)) bucket.ouPend++;
         }
       }
       const summaryEl = el("historyDaySummary");
@@ -1736,8 +1738,9 @@
           const won  = mkt === 'ml' ? s.mlWon  : s.ouWon;
           const lost = mkt === 'ml' ? s.mlLost : s.ouLost;
           const push = mkt === 'ml' ? s.mlPush : s.ouPush;
-          if (!won && !lost && !push) return '<span style="color:var(--muted);font-size:11px;">–</span>';
-          return `<span style="color:var(--ok);font-weight:700;">${won}G</span><span style="color:var(--muted);">/</span><span style="color:var(--bad);font-weight:700;">${lost}P</span>${push ? `<span style="color:#f9a825;font-size:11px;margin-left:2px;">${push}↩</span>` : ''}`;
+          const pend = mkt === 'ml' ? s.mlPend : s.ouPend;
+          if (!won && !lost && !push && !pend) return '<span style="color:var(--muted);font-size:11px;">–</span>';
+          return `<span style="color:var(--ok);font-weight:700;">${won}G</span><span style="color:var(--muted);">/</span><span style="color:var(--bad);font-weight:700;">${lost}P</span>${push ? `<span style="color:#f9a825;font-size:11px;margin-left:2px;">${push}↩</span>` : ''}${pend ? `<span style="color:var(--muted);font-size:11px;margin-left:2px;">${pend}⏳</span>` : ''}`;
         };
         const modelRow = (label, isIa, s) => {
           const bg  = isIa ? 'rgba(167,122,255,.15)' : 'rgba(122,167,255,.12)';
@@ -1821,10 +1824,14 @@
 
       const rows = [];
       for (const group of modelGroups(dayPicks)) {
+        const pickRows = buildPickRows(group.picks, group.key !== "xgb");
+        if (!pickRows.length) continue;
         rows.push(sectionHeader(group.key === "xgb" ? 'Pickster Core — Modelo estadístico' : group.label, group.key !== "xgb"));
-        rows.push(...buildPickRows(group.picks, group.key !== "xgb"));
+        rows.push(...pickRows);
       }
-      tbody.innerHTML = rows.join("");
+      tbody.innerHTML = rows.length
+        ? rows.join("")
+        : '<tr><td colspan="6" class="empty">Sin picks resueltos para este día.</td></tr>';
       renderHistoryPager(days, historyDayIndex);
     }
 
