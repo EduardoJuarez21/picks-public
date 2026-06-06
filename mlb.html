@@ -1022,7 +1022,7 @@
       _fmtGanEl("kpiGananciaGrok",     _gananciaGrok100u);
     }
 
-    async function loadMonthStats(month) {
+    async function loadMonthStats(month, loadHistory = true) {
       const m = month || currentMonth;
       el("monthPicker").value = m;
       el("btnCurMonth").style.background = m === currentMonth ? "rgba(122,167,255,.15)" : "rgba(255,255,255,.05)";
@@ -1077,7 +1077,7 @@
         setProviderKpi("kpiGananciaGemini", "kpiGananciaGeminiSub", providerStats.gemini, _gananciaGemini100u);
         setProviderKpi("kpiGananciaGrok", "kpiGananciaGrokSub", providerStats.grok, _gananciaGrok100u);
       } catch (e) { console.error("stats:", e); }
-      loadHistory(false, m);
+      if (loadHistory) return loadHistory(false, m);
     }
 
     function loadPrevMonth() {
@@ -1104,6 +1104,21 @@
       if (!r.ok) throw new Error("http " + r.status);
       const d = await r.json();
       if (!isToday) cacheSet(cacheKey, d, picksTTL());
+      return d;
+    }
+
+    async function fetchPredictionRange(dateFrom, dateTo, forceRefresh = false) {
+      const cacheKey = `preds_range_v1_${dateFrom}_${dateTo}`;
+      const includesToday = dateFrom <= todayStr && dateTo >= todayStr;
+      if (!forceRefresh && !includesToday) {
+        const cached = cacheGet(cacheKey);
+        if (cached) return cached;
+      }
+      const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo });
+      const r = await fetch(`${API}/mlb/predictions?${params}`);
+      if (!r.ok) throw new Error("http " + r.status);
+      const d = await r.json();
+      if (!includesToday) cacheSet(cacheKey, d, picksTTL());
       return d;
     }
 
@@ -1667,11 +1682,18 @@
           return;
         }
         const days = monthDays(targetMonth);
-        const results = await Promise.all(
-          days.map(d => fetchPredictions(d).catch(() => ({ predictions: [] })))
+        if (!days.length) return;
+        const result = await fetchPredictionRange(
+          days[0],
+          days[days.length - 1],
+          forceRefresh,
         );
-        historyData = results.flatMap(r => r.predictions || []);
+        historyData = result.predictions || [];
         historyMonth = targetMonth;
+        if (targetMonth === currentMonth) {
+          currentPreds = historyData.filter(p => String(p.game_date || "").split("T")[0] === todayStr);
+          renderGames(currentPreds);
+        }
         renderHistory();
         if (selectedChartModel) renderModelChart(selectedChartModel);
         const pending  = historyData.reduce((n, p) => n + (p.bet_ml && p.ml_correct == null && !isPushStatus(p.ml_result_status) && !isPostponedStatus(p.ml_result_status) ? 1 : 0) + (p.bet_ou && p.ou_correct == null && !isPushStatus(p.ou_result_status) && !isPostponedStatus(p.ou_result_status) ? 1 : 0), 0);
@@ -1853,8 +1875,10 @@
     // ── Init ──────────────────────────────────────────────────────────────────
     el("monthPicker").value = currentMonth;
     el("datePicker").value = todayStr;
-    loadMonthStats(currentMonth);
-    loadDate("today");
+    Promise.all([
+      loadMonthStats(currentMonth, false),
+      loadHistory(false, currentMonth),
+    ]);
   </script>
 </body>
 
