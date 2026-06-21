@@ -1100,7 +1100,7 @@
         const cached = cacheGet(cacheKey);
         if (cached) return cached;
       }
-      const r = await fetch(`${API}/mlb/predictions?date=${dateStr}`);
+      const r = await fetch(`${API}/mlb/predictions?date=${dateStr}&scope=main`);
       if (!r.ok) throw new Error("http " + r.status);
       const d = await r.json();
       if (!isToday) cacheSet(cacheKey, d, picksTTL());
@@ -1114,7 +1114,7 @@
         const cached = cacheGet(cacheKey);
         if (cached) return cached;
       }
-      const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo });
+      const params = new URLSearchParams({ date_from: dateFrom, date_to: dateTo, scope: "main" });
       const r = await fetch(`${API}/mlb/predictions?${params}`);
       if (!r.ok) throw new Error("http " + r.status);
       const d = await r.json();
@@ -1795,6 +1795,12 @@
 
       const buildPickRows = (picks, isIa) => {
         const rows = [];
+        const seenRows = new Set();
+        const pushUnique = (key, html) => {
+          if (seenRows.has(key)) return;
+          seenRows.add(key);
+          rows.push(html);
+        };
         const modelBg = isIa ? 'rgba(167,122,255,.04)' : 'rgba(122,167,255,.03)';
         for (const p of picks) {
           const gameTime = fmtGameTime(p.game_time_utc || p.game_time || p.start_time_utc || p.kickoff_utc);
@@ -1805,7 +1811,7 @@
             const mlRowStyle = (mlBet ? 'border-left:2px solid rgba(255,196,0,.5);' : '') + `background:${modelBg};`;
             const mlTeam = p.ml_pick === "home" ? p.home_abbr : p.away_abbr;
             const mlOdds = p.ml_pick === "home" ? p.home_ml_odds : p.away_ml_odds;
-            rows.push(`<tr style="${mlRowStyle}">
+            pushUnique(`ML|${p.game_pk}|${mlTeam}|${mlOdds}|${p.ml_result_status}|${p.ml_correct}`, `<tr style="${mlRowStyle}">
               <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
               <td>${matchup}</td>
               <td style="text-align:center;">${timeCell}</td>
@@ -1820,7 +1826,7 @@
             const ouLineVal = p.ou_line || 8.5;
             const ouPickLabel = `${p.ou_pick?.toUpperCase()} ${ouLineVal}`;
             const ouOdds = p.ou_pick === 'over' ? p.over_odds : p.under_odds;
-            rows.push(`<tr style="${ouRowStyle}">
+            pushUnique(`OU|${p.game_pk}|${p.ou_pick}|${ouLineVal}|${ouOdds}|${p.ou_result_status}|${p.ou_correct}`, `<tr style="${ouRowStyle}">
               <td style="white-space:nowrap;color:var(--muted)">${fmtDate(p.game_date)}</td>
               <td>${matchup}</td>
               <td style="text-align:center;">${timeCell}</td>
