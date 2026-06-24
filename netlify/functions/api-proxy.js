@@ -61,7 +61,8 @@ exports.handler = async function handler(event) {
       headers: upstreamHeaders,
       body: hasBody ? body : undefined,
     });
-    const text = await upstreamRes.text();
+    let text = await upstreamRes.text();
+    text = compactMlbPredictionsResponse(path, query, text);
     const responseHeaders = {
       "content-type": upstreamRes.headers.get("content-type") || "application/json; charset=utf-8",
       "cache-control": "no-store",
@@ -164,6 +165,24 @@ function stringifyQuery(query) {
     params.append(k, String(v));
   }
   return params.toString();
+}
+
+function compactMlbPredictionsResponse(path, query, text) {
+  if (String(path || "") !== "mlb/predictions") return text;
+  const params = new URLSearchParams(query || "");
+  if (String(params.get("include_picks") || "").toLowerCase() === "true") return text;
+
+  try {
+    const data = JSON.parse(text);
+    if (!Array.isArray(data?.predictions)) return text;
+    for (const item of data.predictions) {
+      if (item && typeof item === "object") delete item.picks;
+    }
+    data.include_picks = false;
+    return JSON.stringify(data);
+  } catch {
+    return text;
+  }
 }
 
 function json(statusCode, payload) {
