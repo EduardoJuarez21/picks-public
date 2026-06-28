@@ -960,6 +960,8 @@
     const tomorrowStr = fmtDate(tomorrow);
 
     let historyData = [];
+    let dailySeries = [];
+    let dailySeriesMonth = "";
     let historyMonth = "";
     let selectedChartModel = null;
     let betOnlyDay     = true;
@@ -1077,7 +1079,26 @@
         setProviderKpi("kpiGananciaGemini", "kpiGananciaGeminiSub", providerStats.gemini, _gananciaGemini100u);
         setProviderKpi("kpiGananciaGrok", "kpiGananciaGrokSub", providerStats.grok, _gananciaGrok100u);
       } catch (e) { console.error("stats:", e); }
-      if (loadHistory) return loadHistory(false, m);
+      if (loadHistory) return loadDailySeries(false, m);
+    }
+
+    async function loadDailySeries(forceRefresh = false, month) {
+      const m = month || el("monthPicker").value || currentMonth;
+      if (!forceRefresh && dailySeriesMonth === m && dailySeries.length) {
+        if (selectedChartModel) renderModelChart(selectedChartModel);
+        return;
+      }
+      const key = `daily_series_v1_${m}`;
+      let d = !forceRefresh ? cacheGet(key) : null;
+      if (!d) {
+        const r = await fetch(`${API}/mlb/stats/daily-series?month=${m}`);
+        if (!r.ok) throw new Error("http " + r.status);
+        d = await r.json();
+        cacheSet(key, d, TTL);
+      }
+      dailySeries = d.series || [];
+      dailySeriesMonth = m;
+      if (selectedChartModel) renderModelChart(selectedChartModel);
     }
 
     function loadPrevMonth() {
@@ -1134,7 +1155,12 @@
       try {
         const d = await fetchPredictions(target);
         currentPreds = d.predictions || [];
+        historyData = historyData
+          .filter(p => pickDate(p) !== target)
+          .concat(currentPreds);
+        historyMonth = (target || "").slice(0, 7);
         renderGames(currentPreds);
+        renderHistory();
       } catch (e) { el("gamesGrid").innerHTML = '<div class="empty">Error de conexión.</div>'; }
     }
 
@@ -1258,6 +1284,22 @@
       const month = el("monthPicker").value || currentMonth;
       const days = monthDays(month);
       const byDay = Object.fromEntries(days.map(day => [day, { day, pnl: 0, won: 0, lost: 0, push: 0, pending: 0 }]));
+      if (dailySeriesMonth === month && dailySeries.length) {
+        for (const row of dailySeries) {
+          if (row.model_key !== modelKeyValue || !byDay[row.day]) continue;
+          byDay[row.day].pnl += Number(row.pnl_100u || 0);
+          byDay[row.day].won += Number(row.won || 0);
+          byDay[row.day].lost += Number(row.lost || 0);
+          byDay[row.day].push += Number(row.push || 0);
+          byDay[row.day].pending += Number(row.pending || 0);
+        }
+        let cumulative = 0;
+        return days.map(day => {
+          const row = byDay[day];
+          cumulative += row.pnl;
+          return { ...row, cumulative };
+        });
+      }
       for (const p of historyData) {
         if (modelKey(p) !== modelKeyValue) continue;
         const day = pickDate(p);
@@ -1292,7 +1334,7 @@
       document.querySelectorAll("[data-mlb-model-card]").forEach(card => card.classList.toggle("active", card.dataset.mlbModelCard === modelKeyValue));
       wrap.classList.remove("hidden");
       const head = (meta, value = "") => `<div class="mlb-model-chart-head"><div><div class="mlb-model-chart-title">Rendimiento diario · ${label}</div><div class="mlb-model-chart-meta">${meta}</div></div><div style="display:flex;align-items:center;gap:12px;flex-wrap:wrap;justify-content:flex-end;">${value}<div class="mlb-chart-model-tabs">${chartTabs()}</div></div></div>`;
-      if (historyMonth !== month) {
+      if (dailySeriesMonth !== month && historyMonth !== month) {
         wrap.innerHTML = `${head(`${month} · $100 por pick · PnL acumulado`)}<div class="mlb-model-chart-empty">Cargando historial del mes...</div>`;
         return;
       }
@@ -1366,7 +1408,7 @@
       selectedChartModel = modelKeyValue;
       const month = el("monthPicker").value || currentMonth;
       renderModelChart(modelKeyValue);
-      if (historyMonth !== month) loadHistory(false, month);
+      if (dailySeriesMonth !== month) loadDailySeries(false, month);
       const wrap = el("modelChartWrap");
       if (wrap) wrap.scrollIntoView({ block: "nearest", behavior: "smooth" });
     }
@@ -1883,7 +1925,8 @@
     el("datePicker").value = todayStr;
     Promise.all([
       loadMonthStats(currentMonth, false),
-      loadHistory(false, currentMonth),
+      loadDailySeries(false, currentMonth),
+      loadDate("today"),
     ]);
   </script>
 </body>
